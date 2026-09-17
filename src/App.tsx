@@ -228,7 +228,7 @@ export default function App() {
             transition={{ duration: 0.5 }}
           >
             <img
-              src="/me.JPG"
+              src={`${import.meta.env.BASE_URL}me.JPG`}
               alt="Hemosoo"
               className="w-full h-full object-cover rounded shadow-2xl"
               fetchPriority="high"
@@ -272,7 +272,7 @@ export default function App() {
               </motion.button>
 
               <a
-                href="/resume.pdf"
+                href={`${import.meta.env.BASE_URL}resume.pdf`}
                 target="_blank"
                 rel="noreferrer"
                 className="text-[#A7A7A7] hover:text-white transition-colors text-sm font-semibold uppercase tracking-wider"

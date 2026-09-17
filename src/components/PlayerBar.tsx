@@ -46,7 +46,7 @@ export default function PlayerBar({
       {/* Track info */}
       <div className="flex items-center gap-3 w-[30%] min-w-0">
         <img
-          src="/me.JPG"
+          src={`${import.meta.env.BASE_URL}me.JPG`}
           alt="cover"
           className="w-14 h-14 object-cover rounded flex-shrink-0"
         />
