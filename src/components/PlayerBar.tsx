@@ -11,15 +11,31 @@ interface Props {
   track: Track;
   isPlaying: boolean;
   progress: number;
+  totalSeconds: number;
+  hasPrev: boolean;
+  hasNext: boolean;
   onPlayPause: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onSeek: (pct: number) => void;
 }
 
-function fmt(progress: number): string {
-  const secs = Math.floor((progress / 100) * (15 * 60));
-  return `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+function fmt(secs: number): string {
+  return `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}`;
 }
 
-export default function PlayerBar({ track, isPlaying, progress, onPlayPause }: Props) {
+export default function PlayerBar({
+  track,
+  isPlaying,
+  progress,
+  totalSeconds,
+  hasPrev,
+  hasNext,
+  onPlayPause,
+  onPrev,
+  onNext,
+  onSeek,
+}: Props) {
   return (
     <motion.div
       className="fixed inset-x-0 bottom-0 h-[90px] bg-[#181818] border-t border-white/10 z-50 flex items-center px-4 gap-4"
@@ -44,8 +60,10 @@ export default function PlayerBar({ track, isPlaying, progress, onPlayPause }: P
       <div className="flex flex-col items-center gap-2 flex-1">
         <div className="flex items-center gap-6">
           <button
-            className="text-[#A7A7A7] hover:text-white transition-colors"
-            aria-label="Previous"
+            onClick={onPrev}
+            disabled={!hasPrev}
+            className="text-[#A7A7A7] enabled:hover:text-white transition-colors disabled:opacity-30 disabled:cursor-default"
+            aria-label="Previous track"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
@@ -71,8 +89,10 @@ export default function PlayerBar({ track, isPlaying, progress, onPlayPause }: P
           </motion.button>
 
           <button
-            className="text-[#A7A7A7] hover:text-white transition-colors"
-            aria-label="Next"
+            onClick={onNext}
+            disabled={!hasNext}
+            className="text-[#A7A7A7] enabled:hover:text-white transition-colors disabled:opacity-30 disabled:cursor-default"
+            aria-label="Next track"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
@@ -83,16 +103,32 @@ export default function PlayerBar({ track, isPlaying, progress, onPlayPause }: P
         {/* Progress bar */}
         <div className="flex items-center gap-2 w-full max-w-md">
           <span className="text-[11px] text-[#A7A7A7] w-9 text-right tabular-nums">
-            {fmt(progress)}
+            {fmt((progress / 100) * totalSeconds)}
           </span>
-          <div className="group relative flex-1 h-1 rounded-full bg-white/20 cursor-pointer">
+          <div
+            role="slider"
+            tabIndex={0}
+            aria-label="Seek"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progress)}
+            onClick={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              onSeek(Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100)));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowRight") onSeek(Math.min(100, progress + 5));
+              if (e.key === "ArrowLeft") onSeek(Math.max(0, progress - 5));
+            }}
+            className="group relative flex-1 h-1 rounded-full bg-white/20 cursor-pointer"
+          >
             <motion.div
               className="absolute inset-y-0 left-0 rounded-full bg-white group-hover:bg-[#1DB954] transition-colors"
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.1 }}
             />
           </div>
-          <span className="text-[11px] text-[#A7A7A7] w-9 tabular-nums">15:00</span>
+          <span className="text-[11px] text-[#A7A7A7] w-9 tabular-nums">{fmt(totalSeconds)}</span>
         </div>
       </div>
 

@@ -51,6 +51,15 @@ const PROJECTS = [
 
 const SKILLS = ["TypeScript", "React", "Python", "Node.js", "AWS", "SQL"];
 
+/** "3:24" → 204 */
+function toSeconds(d: string): number {
+  const [m, s] = d.split(":").map(Number);
+  return m * 60 + s;
+}
+
+const TOTAL_SECONDS = TRACKS.reduce((sum, t) => sum + toSeconds(t.duration), 0);
+const TOTAL_LABEL = `${Math.round(TOTAL_SECONDS / 60)} min`;
+
 // ─── Small components ─────────────────────────────────────────────────────────
 
 
@@ -93,7 +102,12 @@ function TrackRow({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault(); // Space would otherwise scroll the page
+          onClick();
+        }
+      }}
       initial={reduced ? false : { opacity: 0, x: -8 }}
       animate={reduced ? false : { opacity: 1, x: 0 }}
       transition={{ delay: index * 0.07 }}
@@ -138,7 +152,7 @@ function TrackRow({
 
 export default function App() {
   const [activeId, setActiveId] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
   const reduced = useReducedMotion();
 
@@ -161,10 +175,7 @@ export default function App() {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const track = TRACKS.find((t) => t.sectionId === entry.target.id);
-            if (track) {
-              setActiveId(track.id);
-              setIsPlaying(true);
-            }
+            if (track) setActiveId(track.id);
           }
         }
       },
@@ -181,6 +192,19 @@ export default function App() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setIsPlaying(true);
   };
+
+  const step = (delta: number) => {
+    const i = TRACKS.findIndex((t) => t.id === activeId);
+    const next = TRACKS[i + delta];
+    if (next) scrollTo(next.sectionId);
+  };
+
+  const seek = (pct: number) => {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({ top: (pct / 100) * total, behavior: "smooth" });
+  };
+
+  const activeIndex = TRACKS.findIndex((t) => t.id === activeId);
 
   const inViewProps = (delay = 0) => ({
     initial: reduced ? {} : { opacity: 0, y: 20 },
@@ -231,7 +255,7 @@ export default function App() {
               <br />
               <span className="text-white font-medium">{TRACKS.length} tracks</span>
               <span className="mx-2 opacity-30">·</span>
-              <span></span>
+              <span>{TOTAL_LABEL}</span>
             </p>
 
             <div className="flex items-center gap-5 mt-4">
@@ -369,7 +393,13 @@ export default function App() {
         track={activeTrack}
         isPlaying={isPlaying}
         progress={progress}
+        totalSeconds={TOTAL_SECONDS}
+        hasPrev={activeIndex > 0}
+        hasNext={activeIndex < TRACKS.length - 1}
         onPlayPause={() => setIsPlaying((p) => !p)}
+        onPrev={() => step(-1)}
+        onNext={() => step(1)}
+        onSeek={seek}
       />
     </div>
   );
