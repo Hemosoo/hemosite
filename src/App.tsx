@@ -16,11 +16,11 @@ interface Track {
 
 const TRACKS: Track[] = [
   { id: 1, title: "About Me",               album: "Introduction",   duration: "3:24", sectionId: "about"       },
-  { id: 2, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024" },
-  { id: 3, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025" },
+  { id: 2, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem"      },
+  { id: 3, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp"         },
   { id: 4, title: "EntryID Platform",       album: "Amazon · 2026",  duration: "3:05", sectionId: "amazon-2026" },
-  { id: 5, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem"      },
-  { id: 6, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp"         },
+  { id: 5, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025" },
+  { id: 6, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024" },
   { id: 7, title: "Let's Connect",          album: "Contact",        duration: "0:42", sectionId: "contact"     },
 ];
 
@@ -36,32 +36,6 @@ interface Role {
 
 const EXPERIENCE: Role[] = [
   {
-    id: "amazon-2024",
-    num: "02",
-    title: "Gateway & Bedrock",
-    period: "May – Aug 2024",
-    tech: ["SageMaker", "Amazon Bedrock", "Spark SQL"],
-    duration: "2:40",
-    bullets: [
-      "Built an LLM-powered widget title generator using SageMaker, Amazon Bedrock, and prompt engineering, generating optimized titles for 10,000+ customer queries on the Amazon.com Gateway.",
-      "Developed Spark SQL data pipelines and contributed to widget architecture spanning backend processing and frontend integration.",
-      "Won 3rd place in an internal operational excellence hackathon for “IMReady,” an LLM-based tool that recommended cost-effective EC2 configurations from service metrics.",
-    ],
-  },
-  {
-    id: "amazon-2025",
-    num: "03",
-    title: "Network Health Service",
-    period: "May – Aug 2025",
-    tech: ["AWS CDK", "TypeScript", "Lambda", "SNS"],
-    duration: "3:12",
-    bullets: [
-      "Served as the first developer on the Network Health Service, building the AWS infrastructure and the Missed Call Module to identify customer calls affected by poor agent network quality.",
-      "Created an end-to-end pipeline in AWS CDK using TypeScript, Lambda, API Gateway, and SNS, including a reusable internal package for metric calculation and data processing.",
-      "Integrated the service with Amazon Customer Service systems, enabling real-time visibility into agent connectivity issues.",
-    ],
-  },
-  {
     id: "amazon-2026",
     num: "04",
     title: "EntryID Platform",
@@ -74,12 +48,39 @@ const EXPERIENCE: Role[] = [
       "Designed a bulk CSV upload system by evaluating 5 architectures and implementing merge-based writes that prevent silent attribute deletion.",
     ],
   },
+  {
+    id: "amazon-2025",
+    num: "05",
+    title: "Network Health Service",
+    period: "May – Aug 2025",
+    tech: ["AWS CDK", "TypeScript", "Lambda", "SNS"],
+    duration: "3:12",
+    bullets: [
+      "Served as the first developer on the Network Health Service, building the AWS infrastructure and the Missed Call Module to identify customer calls affected by poor agent network quality.",
+      "Created an end-to-end pipeline in AWS CDK using TypeScript, Lambda, API Gateway, and SNS, including a reusable internal package for metric calculation and data processing.",
+      "Integrated the service with Amazon Customer Service systems, enabling real-time visibility into agent connectivity issues.",
+    ],
+  },
+  {
+    id: "amazon-2024",
+    num: "06",
+    title: "Gateway & Bedrock",
+    period: "May – Aug 2024",
+    tech: ["SageMaker", "Amazon Bedrock", "Spark SQL"],
+    duration: "2:40",
+    bullets: [
+      "Built an LLM-powered widget title generator using SageMaker, Amazon Bedrock, and prompt engineering, generating optimized titles for 10,000+ customer queries on the Amazon.com Gateway.",
+      "Developed Spark SQL data pipelines and contributed to widget architecture spanning backend processing and frontend integration.",
+      "Won 3rd place in an internal operational excellence hackathon for “IMReady,” an LLM-based tool that recommended cost-effective EC2 configurations from service metrics.",
+    ],
+  },
 ];
+
 
 const PROJECTS = [
   {
     id: "holdem",
-    num: "05",
+    num: "02",
     title: "Hold'em Bot",
     tech: ["Python", "CFR", "OpenCV"],
     duration: "2:38",
@@ -89,7 +90,7 @@ const PROJECTS = [
   },
   {
     id: "mcp",
-    num: "06",
+    num: "03",
     title: "Learning Tool MCP",
     tech: ["Python", "MCP"],
     duration: "2:22",
@@ -388,6 +389,28 @@ export default function App() {
           </p>
         </motion.section>
 
+        {/* Side projects */}
+        {PROJECTS.map((proj, i) => (
+          <motion.section key={proj.id} id={proj.id} {...inViewProps(i * 0.04)}>
+            <SectionMeta num={proj.num} duration={proj.duration} />
+            <div className="bg-[#181818] rounded-xl p-6 border border-white/5 hover:border-white/10 transition-colors">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
+                <h2 className="text-3xl font-black">{proj.title}</h2>
+                <a
+                  href={proj.repo}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-semibold text-[#A7A7A7] hover:text-[#1DB954] transition-colors"
+                >
+                  View on GitHub ↗
+                </a>
+              </div>
+              <p className="text-sm text-[#6A6A6A] mb-4">{proj.tech.join(" · ")}</p>
+              <p className="text-[#A7A7A7] leading-relaxed">{proj.blurb}</p>
+            </div>
+          </motion.section>
+        ))}
+
         {/* Experience — three summers at Amazon */}
         {EXPERIENCE.map((role, i) => (
           <motion.section key={role.id} id={role.id} {...inViewProps(i * 0.04)}>
@@ -409,28 +432,6 @@ export default function App() {
                 ))}
               </ul>
               <p className="mt-5 text-sm text-[#6A6A6A]">{role.tech.join(" · ")}</p>
-            </div>
-          </motion.section>
-        ))}
-
-        {/* Side projects */}
-        {PROJECTS.map((proj, i) => (
-          <motion.section key={proj.id} id={proj.id} {...inViewProps(i * 0.04)}>
-            <SectionMeta num={proj.num} duration={proj.duration} />
-            <div className="bg-[#181818] rounded-xl p-6 border border-white/5 hover:border-white/10 transition-colors">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
-                <h2 className="text-3xl font-black">{proj.title}</h2>
-                <a
-                  href={proj.repo}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm font-semibold text-[#A7A7A7] hover:text-[#1DB954] transition-colors"
-                >
-                  View on GitHub ↗
-                </a>
-              </div>
-              <p className="text-sm text-[#6A6A6A] mb-4">{proj.tech.join(" · ")}</p>
-              <p className="text-[#A7A7A7] leading-relaxed">{proj.blurb}</p>
             </div>
           </motion.section>
         ))}
