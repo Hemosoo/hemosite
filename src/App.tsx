@@ -15,41 +15,91 @@ interface Track {
 }
 
 const TRACKS: Track[] = [
-  { id: 1, title: "About Me",                   album: "Introduction",      duration: "3:24", sectionId: "about"   },
-  { id: 2, title: "Roomies",                     album: "React · TypeScript", duration: "2:47", sectionId: "roomies" },
-  { id: 3, title: "Network Health Service",      album: "AWS · CDK",          duration: "3:12", sectionId: "network" },
-  { id: 4, title: "Book ↔ Movie Recommender",   album: "Python · ML",        duration: "2:55", sectionId: "books"   },
-  { id: 5, title: "Let's Connect",              album: "Contact",            duration: "0:42", sectionId: "contact" },
+  { id: 1, title: "About Me",               album: "Introduction",   duration: "3:24", sectionId: "about"       },
+  { id: 2, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024" },
+  { id: 3, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025" },
+  { id: 4, title: "EntryID Platform",       album: "Amazon · 2026",  duration: "3:05", sectionId: "amazon-2026" },
+  { id: 5, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem"      },
+  { id: 6, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp"         },
+  { id: 7, title: "Let's Connect",          album: "Contact",        duration: "0:42", sectionId: "contact"     },
+];
+
+interface Role {
+  id: string;
+  num: string;
+  title: string;
+  period: string;
+  tech: string[];
+  duration: string;
+  bullets: string[];
+}
+
+const EXPERIENCE: Role[] = [
+  {
+    id: "amazon-2024",
+    num: "02",
+    title: "Gateway & Bedrock",
+    period: "May – Aug 2024",
+    tech: ["SageMaker", "Amazon Bedrock", "Spark SQL"],
+    duration: "2:40",
+    bullets: [
+      "Built an LLM-powered widget title generator using SageMaker, Amazon Bedrock, and prompt engineering, generating optimized titles for 10,000+ customer queries on the Amazon.com Gateway.",
+      "Developed Spark SQL data pipelines and contributed to widget architecture spanning backend processing and frontend integration.",
+      "Won 3rd place in an internal operational excellence hackathon for “IMReady,” an LLM-based tool that recommended cost-effective EC2 configurations from service metrics.",
+    ],
+  },
+  {
+    id: "amazon-2025",
+    num: "03",
+    title: "Network Health Service",
+    period: "May – Aug 2025",
+    tech: ["AWS CDK", "TypeScript", "Lambda", "SNS"],
+    duration: "3:12",
+    bullets: [
+      "Served as the first developer on the Network Health Service, building the AWS infrastructure and the Missed Call Module to identify customer calls affected by poor agent network quality.",
+      "Created an end-to-end pipeline in AWS CDK using TypeScript, Lambda, API Gateway, and SNS, including a reusable internal package for metric calculation and data processing.",
+      "Integrated the service with Amazon Customer Service systems, enabling real-time visibility into agent connectivity issues.",
+    ],
+  },
+  {
+    id: "amazon-2026",
+    num: "04",
+    title: "EntryID Platform",
+    period: "May – Aug 2026",
+    tech: ["React", "Lambda", "DynamoDB", "Smithy"],
+    duration: "3:05",
+    bullets: [
+      "Built the EntryID plugin for Amazon Customer Service’s centralized configuration platform, replacing unvalidated legacy write paths for 5,200+ routing configurations read at runtime by Amazon Connect.",
+      "Developed and launched full-stack CRUD and audit tooling using React, API Gateway, Lambda, DynamoDB, and Smithy, enabling self-service access for 70+ operations users.",
+      "Designed a bulk CSV upload system by evaluating 5 architectures and implementing merge-based writes that prevent silent attribute deletion.",
+    ],
+  },
 ];
 
 const PROJECTS = [
   {
-    id: "roomies",
-    num: "02",
-    title: "Roomies",
-    tech: ["React", "TypeScript"],
-    duration: "2:47",
-    blurb: "Mobile app for shared tasks & schedules between roommates. Clean UI, realtime sync.",
+    id: "holdem",
+    num: "05",
+    title: "Hold'em Bot",
+    tech: ["Python", "CFR", "OpenCV"],
+    duration: "2:38",
+    repo: "https://github.com/Hemosoo/holdem-bot",
+    blurb:
+      "Texas Hold'em simulator with full betting rounds, position-aware strategy bots with GTO big-blind defence ranges, a CFR self-play trainer, and an OpenCV screen reader.",
   },
   {
-    id: "network",
-    num: "03",
-    title: "Network Health Service",
-    tech: ["AWS", "CDK"],
-    duration: "3:12",
-    blurb: "Serverless pipeline to monitor & alert on network events, built infrastructure-as-code.",
-  },
-  {
-    id: "books",
-    num: "04",
-    title: "Book ↔ Movie Recommender",
-    tech: ["Python", "ML"],
-    duration: "2:55",
-    blurb: "Pairs titles by themes & metadata using NLP-based ranking to bridge books and film.",
+    id: "mcp",
+    num: "06",
+    title: "Learning Tool MCP",
+    tech: ["Python", "MCP"],
+    duration: "2:22",
+    repo: "https://github.com/Hemosoo/learning-tool-mcp",
+    blurb:
+      "An MCP server that turns PDFs into flashcards and quizzes, with session tracking. Runs locally for a single user, with no LLM inside the server itself.",
   },
 ];
 
-const SKILLS = ["TypeScript", "React", "Python", "Node.js", "AWS", "SQL"];
+const SKILLS = ["TypeScript", "React", "Python", "Java", "AWS", "SQL"];
 
 /** "3:24" → 204 */
 function toSeconds(d: string): number {
@@ -251,7 +301,7 @@ export default function App() {
               Hemosoo
             </h1>
             <p className="text-sm text-[#A7A7A7] mt-1 leading-relaxed">
-              Full-stack developer · Musician · For fun Athlete · CS Student
+              Full-stack developer · 3× Amazon SDE Intern · Musician · CS @ Penn
               <br />
               <span className="text-white font-medium">{TRACKS.length} tracks</span>
               <span className="mx-2 opacity-30">·</span>
@@ -320,23 +370,65 @@ export default function App() {
           <SectionMeta num="01" duration="3:24" />
           <h2 className="text-4xl font-black mb-5">About Me</h2>
           <p className="text-[#A7A7A7] leading-relaxed text-lg max-w-2xl">
-            I love learning new things. Currently a CS junior focused on
-            full-stack development, systems, and applied machine learning. I work with TypeScript,
+            I love learning new things. Currently a CS senior at Penn, submatriculating
+            into a master&apos;s in Computer and Information Science, focused on full-stack
+            development, systems, and applied machine learning. I work with TypeScript,
             React, and Python — building backend services and scalable systems that feel
             intentional and good to use. Outside of coding, I sing Acapella, play poker, and am on the
-            journey to dunking. 
+            journey to dunking.
+          </p>
+          <p className="mt-4 text-[#A7A7A7] leading-relaxed max-w-2xl">
+            Three summers as an SDE intern at Amazon in Seattle. Amazon Future Engineer
+            scholar ($40,000). Before Penn I built AtaxiaV, a Unity and Leap Motion
+            rehabilitation platform presented at the International Congress for Ataxia
+            Research, which took 1st place in the CA-33 Congressional App Challenge.
           </p>
           <p className="mt-5 text-sm text-[#6A6A6A] tracking-wide">
             {SKILLS.join(" · ")}
           </p>
         </motion.section>
 
-        {/* Projects */}
+        {/* Experience — three summers at Amazon */}
+        {EXPERIENCE.map((role, i) => (
+          <motion.section key={role.id} id={role.id} {...inViewProps(i * 0.04)}>
+            <SectionMeta num={role.num} duration={role.duration} />
+            <div className="bg-[#181818] rounded-xl p-6 border border-white/5 hover:border-white/10 transition-colors">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
+                <h2 className="text-3xl font-black">{role.title}</h2>
+                <span className="text-sm text-[#6A6A6A] tabular-nums">{role.period}</span>
+              </div>
+              <p className="text-sm text-[#1DB954] font-semibold mb-4">
+                Software Development Engineer Intern · Amazon · Seattle, WA
+              </p>
+              <ul className="space-y-3">
+                {role.bullets.map((b) => (
+                  <li key={b} className="flex gap-3 text-[#A7A7A7] leading-relaxed">
+                    <span aria-hidden className="text-[#1DB954] flex-shrink-0">▸</span>
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 text-sm text-[#6A6A6A]">{role.tech.join(" · ")}</p>
+            </div>
+          </motion.section>
+        ))}
+
+        {/* Side projects */}
         {PROJECTS.map((proj, i) => (
           <motion.section key={proj.id} id={proj.id} {...inViewProps(i * 0.04)}>
             <SectionMeta num={proj.num} duration={proj.duration} />
             <div className="bg-[#181818] rounded-xl p-6 border border-white/5 hover:border-white/10 transition-colors">
-              <h2 className="text-3xl font-black mb-1">{proj.title}</h2>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
+                <h2 className="text-3xl font-black">{proj.title}</h2>
+                <a
+                  href={proj.repo}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-semibold text-[#A7A7A7] hover:text-[#1DB954] transition-colors"
+                >
+                  View on GitHub ↗
+                </a>
+              </div>
               <p className="text-sm text-[#6A6A6A] mb-4">{proj.tech.join(" · ")}</p>
               <p className="text-[#A7A7A7] leading-relaxed">{proj.blurb}</p>
             </div>
@@ -345,7 +437,7 @@ export default function App() {
 
         {/* Contact */}
         <motion.section id="contact" {...inViewProps()}>
-          <SectionMeta num="05" duration="0:42" />
+          <SectionMeta num="07" duration="0:42" />
           <h2 className="text-4xl font-black mb-3">Let&apos;s Connect</h2>
           <p className="text-[#A7A7A7] mb-6 leading-relaxed max-w-xl">
             Want to collaborate, chat about internships, or just see more work? Say hi.
