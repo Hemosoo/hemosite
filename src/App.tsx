@@ -1,5 +1,5 @@
 import "./index.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Equalizer from "./components/Equalizer";
 import PlayerBar from "./components/PlayerBar";
@@ -12,16 +12,19 @@ interface Track {
   album: string;
   duration: string;
   sectionId: string;
+  /** File under public/audio/. A missing file falls back to the scroll-driven
+   *  player, so the site behaves unchanged until real audio is dropped in. */
+  audio: string;
 }
 
 const TRACKS: Track[] = [
-  { id: 1, title: "About Me",               album: "Introduction",   duration: "3:24", sectionId: "about"       },
-  { id: 2, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem"      },
-  { id: 3, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp"         },
-  { id: 4, title: "EntryID Platform",       album: "Amazon · 2026",  duration: "3:05", sectionId: "amazon-2026" },
-  { id: 5, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025" },
-  { id: 6, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024" },
-  { id: 7, title: "Let's Connect",          album: "Contact",        duration: "0:42", sectionId: "contact"     },
+  { id: 1, title: "About Me",               album: "Introduction",   duration: "3:24", sectionId: "about",       audio: "about.mp3"             },
+  { id: 2, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem",      audio: "holdem-bot.mp3"        },
+  { id: 3, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp",         audio: "learning-tool-mcp.mp3" },
+  { id: 4, title: "EntryID Platform",       album: "Amazon · 2026",  duration: "3:05", sectionId: "amazon-2026", audio: "amazon-2026.mp3"       },
+  { id: 5, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025", audio: "amazon-2025.mp3"       },
+  { id: 6, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024", audio: "amazon-2024.mp3"       },
+  { id: 7, title: "Let's Connect",          album: "Contact",        duration: "0:42", sectionId: "contact",     audio: "contact.mp3"           },
 ];
 
 interface Role {
@@ -207,6 +210,14 @@ export default function App() {
   const [progress, setProgress] = useState(0);
   const reduced = useReducedMotion();
 
+  // ── Audio ──
+  // hasAudio flips false whenever a file is missing or undecodable, which is
+  // the state today: the player then falls back to its scroll-driven behaviour.
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [hasAudio, setHasAudio] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+
   const activeTrack = TRACKS.find((t) => t.id === activeId) ?? TRACKS[0];
 
   // Sync scroll → progress bar
@@ -250,12 +261,47 @@ export default function App() {
     if (next) scrollTo(next.sectionId);
   };
 
+  // With audio loaded the bar scrubs the song; without it, it scrubs the page.
   const seek = (pct: number) => {
+    const el = audioRef.current;
+    if (hasAudio && el && Number.isFinite(el.duration)) {
+      el.currentTime = (pct / 100) * el.duration;
+      setAudioProgress(pct);
+      return;
+    }
     const total = document.documentElement.scrollHeight - window.innerHeight;
     window.scrollTo({ top: (pct / 100) * total, behavior: "smooth" });
   };
 
   const activeIndex = TRACKS.findIndex((t) => t.id === activeId);
+
+  // Point the element at the active track. Scrolling into a section changes
+  // activeId, so the song follows the section.
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el) return;
+    setHasAudio(false);
+    setAudioProgress(0);
+    setAudioDuration(0);
+    el.src = `${import.meta.env.BASE_URL}audio/${activeTrack.audio}`;
+    el.load();
+  }, [activeTrack]);
+
+  // Browsers reject playback until the visitor interacts with the page. When
+  // that happens, drop the UI back to paused rather than showing a silent
+  // "playing" state.
+  const attemptPlay = useCallback(() => {
+    audioRef.current?.play().catch((err: DOMException) => {
+      if (err.name === "NotAllowedError") setIsPlaying(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || !hasAudio) return;
+    if (isPlaying) attemptPlay();
+    else el.pause();
+  }, [isPlaying, hasAudio, attemptPlay]);
 
   const inViewProps = (delay = 0) => ({
     initial: reduced ? {} : { opacity: 0, y: 20 },
@@ -482,11 +528,29 @@ export default function App() {
       </div>
 
       {/* ── Player bar ── */}
+      <audio
+        ref={audioRef}
+        preload="metadata"
+        onCanPlay={() => {
+          setHasAudio(true);
+          if (isPlaying) attemptPlay();
+        }}
+        onError={() => setHasAudio(false)}
+        onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
+        onTimeUpdate={(e) => {
+          const { currentTime, duration } = e.currentTarget;
+          if (Number.isFinite(duration) && duration > 0) {
+            setAudioProgress((currentTime / duration) * 100);
+          }
+        }}
+        onEnded={() => step(1)}
+      />
+
       <PlayerBar
         track={activeTrack}
         isPlaying={isPlaying}
-        progress={progress}
-        totalSeconds={TOTAL_SECONDS}
+        progress={hasAudio ? audioProgress : progress}
+        totalSeconds={hasAudio ? audioDuration : TOTAL_SECONDS}
         hasPrev={activeIndex > 0}
         hasNext={activeIndex < TRACKS.length - 1}
         onPlayPause={() => setIsPlaying((p) => !p)}
