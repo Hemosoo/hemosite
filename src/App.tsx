@@ -1,5 +1,5 @@
 import "./index.css";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Equalizer from "./components/Equalizer";
 import PlayerBar from "./components/PlayerBar";
@@ -12,20 +12,63 @@ interface Track {
   album: string;
   duration: string;
   sectionId: string;
-  /** File under public/audio/. A missing file falls back to the scroll-driven
-   *  player, so the site behaves unchanged until real audio is dropped in. */
-  audio: string;
+  /** Spotify track URI ("spotify:track:<id>") or a share URL. Empty means no
+   *  embed for this section, and the player keeps its scroll-driven fallback. */
+  spotify: string;
 }
 
 const TRACKS: Track[] = [
-  { id: 1, title: "About Me",               album: "Introduction",   duration: "3:24", sectionId: "about",       audio: "about.mp3"             },
-  { id: 2, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem",      audio: "holdem-bot.mp3"        },
-  { id: 3, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp",         audio: "learning-tool-mcp.mp3" },
-  { id: 4, title: "EntryID Platform",       album: "Amazon · 2026",  duration: "3:05", sectionId: "amazon-2026", audio: "amazon-2026.mp3"       },
-  { id: 5, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025", audio: "amazon-2025.mp3"       },
-  { id: 6, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024", audio: "amazon-2024.mp3"       },
-  { id: 7, title: "Let's Connect",          album: "Contact",        duration: "0:42", sectionId: "contact",     audio: "contact.mp3"           },
+  { id: 1, title: "About Me",               album: "Introduction",   duration: "3:24", sectionId: "about",       spotify: "" },
+  { id: 2, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem",      spotify: "" },
+  { id: 3, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp",         spotify: "" },
+  { id: 4, title: "EntryID Platform",       album: "Amazon · 2026",  duration: "3:05", sectionId: "amazon-2026", spotify: "" },
+  { id: 5, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025", spotify: "" },
+  { id: 6, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024", spotify: "" },
+  { id: 7, title: "Let's Connect",          album: "Contact",        duration: "0:42", sectionId: "contact",     spotify: "" },
 ];
+
+/** Any track wired up yet? Controls whether the embed renders at all. */
+const HAS_SPOTIFY = TRACKS.some((t) => t.spotify !== "");
+
+// ─── Spotify iFrame API ───────────────────────────────────────────────────────
+
+interface SpotifyPlaybackData {
+  playingURI: string;
+  isPaused: boolean;
+  isBuffering: boolean;
+  /** milliseconds */
+  duration: number;
+  /** milliseconds */
+  position: number;
+}
+
+interface SpotifyEmbedController {
+  loadUri(uri: string): void;
+  play(): void;
+  pause(): void;
+  resume(): void;
+  togglePlay(): void;
+  seek(seconds: number): void;
+  destroy(): void;
+  addListener(
+    event: "ready" | "playback_started" | "playback_update",
+    cb: (e: { data: SpotifyPlaybackData }) => void
+  ): void;
+}
+
+interface SpotifyIFrameAPI {
+  createController(
+    element: HTMLElement,
+    options: { uri: string; width: string | number; height: string | number },
+    callback: (controller: SpotifyEmbedController) => void
+  ): void;
+}
+
+declare global {
+  interface Window {
+    __spotifyIframeApi?: SpotifyIFrameAPI;
+  }
+}
 
 interface Role {
   id: string;
@@ -210,13 +253,17 @@ export default function App() {
   const [progress, setProgress] = useState(0);
   const reduced = useReducedMotion();
 
-  // ── Audio ──
-  // hasAudio flips false whenever a file is missing or undecodable, which is
-  // the state today: the player then falls back to its scroll-driven behaviour.
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [hasAudio, setHasAudio] = useState(false);
-  const [audioProgress, setAudioProgress] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(0);
+  // ── Spotify ──
+  // embedReady stays false until a controller exists, so with no URIs wired up
+  // the player keeps its original scroll-driven behaviour.
+  const embedRef = useRef<HTMLDivElement>(null);
+  const controllerRef = useRef<SpotifyEmbedController | null>(null);
+  const [embedReady, setEmbedReady] = useState(false);
+  const [embedProgress, setEmbedProgress] = useState(0);
+  const [embedDuration, setEmbedDuration] = useState(0);
+  // Read inside the track-change effect without making it re-run on play/pause.
+  const isPlayingRef = useRef(isPlaying);
+  isPlayingRef.current = isPlaying;
 
   const activeTrack = TRACKS.find((t) => t.id === activeId) ?? TRACKS[0];
 
@@ -261,12 +308,12 @@ export default function App() {
     if (next) scrollTo(next.sectionId);
   };
 
-  // With audio loaded the bar scrubs the song; without it, it scrubs the page.
+  // With an embed loaded the bar scrubs the song; without it, it scrubs the page.
   const seek = (pct: number) => {
-    const el = audioRef.current;
-    if (hasAudio && el && Number.isFinite(el.duration)) {
-      el.currentTime = (pct / 100) * el.duration;
-      setAudioProgress(pct);
+    const c = controllerRef.current;
+    if (embedReady && c && embedDuration > 0) {
+      c.seek((pct / 100) * embedDuration);
+      setEmbedProgress(pct);
       return;
     }
     const total = document.documentElement.scrollHeight - window.innerHeight;
@@ -275,33 +322,63 @@ export default function App() {
 
   const activeIndex = TRACKS.findIndex((t) => t.id === activeId);
 
-  // Point the element at the active track. Scrolling into a section changes
-  // activeId, so the song follows the section.
+  // Create the embed controller once the iFrame API is available. index.html
+  // stashes the API on window, so this works whether the script resolves
+  // before or after React mounts.
   useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-    setHasAudio(false);
-    setAudioProgress(0);
-    setAudioDuration(0);
-    el.src = `${import.meta.env.BASE_URL}audio/${activeTrack.audio}`;
-    el.load();
-  }, [activeTrack]);
+    if (!HAS_SPOTIFY) return;
+    let controller: SpotifyEmbedController | null = null;
+    let cancelled = false;
 
-  // Browsers reject playback until the visitor interacts with the page. When
-  // that happens, drop the UI back to paused rather than showing a silent
-  // "playing" state.
-  const attemptPlay = useCallback(() => {
-    audioRef.current?.play().catch((err: DOMException) => {
-      if (err.name === "NotAllowedError") setIsPlaying(false);
-    });
+    const init = (api: SpotifyIFrameAPI) => {
+      if (cancelled || !embedRef.current) return;
+      const first = TRACKS.find((t) => t.spotify)?.spotify ?? "";
+      api.createController(
+        embedRef.current,
+        { uri: first, width: "100%", height: 80 },
+        (c) => {
+          if (cancelled) {
+            c.destroy();
+            return;
+          }
+          controller = c;
+          controllerRef.current = c;
+          setEmbedReady(true);
+          // Spotify owns the transport, so mirror its state rather than
+          // tracking our own and drifting out of sync.
+          c.addListener("playback_update", (e) => {
+            const { duration, position, isPaused } = e.data;
+            setEmbedDuration(duration / 1000);
+            setEmbedProgress(duration > 0 ? (position / duration) * 100 : 0);
+            setIsPlaying(!isPaused);
+          });
+        }
+      );
+    };
+
+    const onReady = () => {
+      if (window.__spotifyIframeApi) init(window.__spotifyIframeApi);
+    };
+    if (window.__spotifyIframeApi) init(window.__spotifyIframeApi);
+    else window.addEventListener("spotify-iframe-api-ready", onReady);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("spotify-iframe-api-ready", onReady);
+      controller?.destroy();
+      controllerRef.current = null;
+    };
   }, []);
 
+  // Scrolling into a section swaps the song.
   useEffect(() => {
-    const el = audioRef.current;
-    if (!el || !hasAudio) return;
-    if (isPlaying) attemptPlay();
-    else el.pause();
-  }, [isPlaying, hasAudio, attemptPlay]);
+    const c = controllerRef.current;
+    if (!c || !activeTrack.spotify) return;
+    c.loadUri(activeTrack.spotify);
+    // Autoplay is blocked until the visitor interacts; Spotify reports the
+    // real state back through playback_update either way.
+    if (isPlayingRef.current) c.resume();
+  }, [activeTrack]);
 
   const inViewProps = (delay = 0) => ({
     initial: reduced ? {} : { opacity: 0, y: 20 },
@@ -311,7 +388,7 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white pb-[90px]">
+    <div className={`min-h-screen bg-[#121212] text-white ${HAS_SPOTIFY ? "pb-[190px]" : "pb-[90px]"}`}>
 
       {/* ── Playlist header ── */}
       <div className="bg-gradient-to-b from-[#1a3d2a] via-[#1a1a1a] to-[#121212]">
@@ -528,32 +605,27 @@ export default function App() {
       </div>
 
       {/* ── Player bar ── */}
-      <audio
-        ref={audioRef}
-        preload="metadata"
-        onCanPlay={() => {
-          setHasAudio(true);
-          if (isPlaying) attemptPlay();
-        }}
-        onError={() => setHasAudio(false)}
-        onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
-        onTimeUpdate={(e) => {
-          const { currentTime, duration } = e.currentTarget;
-          if (Number.isFinite(duration) && duration > 0) {
-            setAudioProgress((currentTime / duration) * 100);
-          }
-        }}
-        onEnded={() => step(1)}
-      />
+      {/* Spotify requires its player stay visible; it docks above the bar. */}
+      {HAS_SPOTIFY && (
+        <div className="fixed inset-x-0 bottom-[90px] z-40 bg-[#181818] border-t border-white/10 px-4 py-2">
+          <div className="max-w-5xl mx-auto">
+            <div ref={embedRef} />
+          </div>
+        </div>
+      )}
 
       <PlayerBar
         track={activeTrack}
         isPlaying={isPlaying}
-        progress={hasAudio ? audioProgress : progress}
-        totalSeconds={hasAudio ? audioDuration : TOTAL_SECONDS}
+        progress={embedReady ? embedProgress : progress}
+        totalSeconds={embedReady ? embedDuration : TOTAL_SECONDS}
         hasPrev={activeIndex > 0}
         hasNext={activeIndex < TRACKS.length - 1}
-        onPlayPause={() => setIsPlaying((p) => !p)}
+        onPlayPause={() => {
+          const c = controllerRef.current;
+          if (embedReady && c) c.togglePlay();
+          else setIsPlaying((p) => !p);
+        }}
         onPrev={() => step(-1)}
         onNext={() => step(1)}
         onSeek={seek}

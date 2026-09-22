@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hemosoo • Developer</title>
+    <!-- Capture the iFrame API even if it initialises before React mounts. -->
+    <script>
+      window.onSpotifyIframeApiReady = function (api) {
+        window.__spotifyIframeApi = api;
+        window.dispatchEvent(new Event("spotify-iframe-api-ready"));
+      };
+    </script>
+    <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
   </head>
   <body>
     <div id="root"></div>
