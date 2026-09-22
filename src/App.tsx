@@ -18,13 +18,13 @@ interface Track {
 }
 
 const TRACKS: Track[] = [
-  { id: 1, title: "About Me",               album: "Introduction",   duration: "3:24", sectionId: "about",       spotify: "" },
-  { id: 2, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem",      spotify: "" },
-  { id: 3, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp",         spotify: "" },
-  { id: 4, title: "EntryID Platform",       album: "Amazon · 2026",  duration: "3:05", sectionId: "amazon-2026", spotify: "" },
-  { id: 5, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025", spotify: "" },
-  { id: 6, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024", spotify: "" },
-  { id: 7, title: "Let's Connect",          album: "Contact",        duration: "0:42", sectionId: "contact",     spotify: "" },
+  { id: 1, title: "About Me",               album: "Introduction",   duration: "3:24", sectionId: "about",       spotify: "spotify:track:3BmaFHt6q91CmMrA7fLLRC" }, // Petals on the Moon
+  { id: 2, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem",      spotify: "spotify:track:7snQQk1zcKl8gZ92AnueZW" }, // Sweet Child O' Mine
+  { id: 3, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp",         spotify: "spotify:track:7u0yW2XPSJozIGdUSRET19" }, // Suddenly
+  { id: 4, title: "EntryID Platform",       album: "Amazon · 2026",  duration: "3:05", sectionId: "amazon-2026", spotify: "spotify:track:1a19jsjG2DvbN1fVJonKUU" }, // Beaches
+  { id: 5, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025", spotify: "spotify:track:6FDzlEOK29XWew1qfnGhaU" }, // impossible
+  { id: 6, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024", spotify: "spotify:track:2mWfVxEo4xZYDaz0v7hYrN" }, // Juna
+  { id: 7, title: "Let's Connect",          album: "Contact",        duration: "0:42", sectionId: "contact",     spotify: "spotify:track:7vgTNTaEz3CsBZ1N4YQalM" }, // Ghost Town
 ];
 
 /** Any track wired up yet? Controls whether the embed renders at all. */
