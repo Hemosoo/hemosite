@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Equalizer from "./components/Equalizer";
 import PlayerBar from "./components/PlayerBar";
+import Sidebar from "./components/Sidebar";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -250,7 +251,6 @@ function TrackRow({
 export default function App() {
   const [activeId, setActiveId] = useState(1);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [progress, setProgress] = useState(0);
   const reduced = useReducedMotion();
 
   // ── Spotify ──
@@ -258,24 +258,11 @@ export default function App() {
   // the player keeps its original scroll-driven behaviour.
   const embedRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<SpotifyEmbedController | null>(null);
-  const [embedReady, setEmbedReady] = useState(false);
-  const [embedProgress, setEmbedProgress] = useState(0);
-  const [embedDuration, setEmbedDuration] = useState(0);
   // Read inside the track-change effect without making it re-run on play/pause.
   const isPlayingRef = useRef(isPlaying);
   isPlayingRef.current = isPlaying;
 
   const activeTrack = TRACKS.find((t) => t.id === activeId) ?? TRACKS[0];
-
-  // Sync scroll → progress bar
-  useEffect(() => {
-    const onScroll = () => {
-      const total = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(total > 0 ? (window.scrollY / total) * 100 : 0);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   // Sync scroll → active track (IntersectionObserver)
   useEffect(() => {
@@ -308,18 +295,6 @@ export default function App() {
     if (next) scrollTo(next.sectionId);
   };
 
-  // With an embed loaded the bar scrubs the song; without it, it scrubs the page.
-  const seek = (pct: number) => {
-    const c = controllerRef.current;
-    if (embedReady && c && embedDuration > 0) {
-      c.seek((pct / 100) * embedDuration);
-      setEmbedProgress(pct);
-      return;
-    }
-    const total = document.documentElement.scrollHeight - window.innerHeight;
-    window.scrollTo({ top: (pct / 100) * total, behavior: "smooth" });
-  };
-
   const activeIndex = TRACKS.findIndex((t) => t.id === activeId);
 
   // Create the embed controller once the iFrame API is available. index.html
@@ -343,15 +318,11 @@ export default function App() {
           }
           controller = c;
           controllerRef.current = c;
-          setEmbedReady(true);
           // Spotify owns the transport, so mirror its state rather than
           // tracking our own and drifting out of sync.
-          c.addListener("playback_update", (e) => {
-            const { duration, position, isPaused } = e.data;
-            setEmbedDuration(duration / 1000);
-            setEmbedProgress(duration > 0 ? (position / duration) * 100 : 0);
-            setIsPlaying(!isPaused);
-          });
+          // Only the play state is still ours to render (the row equalizers);
+          // position and duration belong to Spotify's player now.
+          c.addListener("playback_update", (e) => setIsPlaying(!e.data.isPaused));
         }
       );
     };
@@ -388,7 +359,17 @@ export default function App() {
   });
 
   return (
-    <div className={`min-h-screen bg-[#121212] text-white ${HAS_SPOTIFY ? "pb-[190px]" : "pb-[90px]"}`}>
+    <div className="min-h-screen bg-[#121212] text-white">
+
+      <Sidebar
+        items={TRACKS}
+        activeId={activeId}
+        isPlaying={isPlaying}
+        resumeHref={`${import.meta.env.BASE_URL}resume.pdf`}
+        onNavigate={scrollTo}
+      />
+
+      <div className="lg:ml-60 pb-[104px]">
 
       {/* ── Playlist header ── */}
       <div className="bg-gradient-to-b from-[#1a3d2a] via-[#1a1a1a] to-[#121212]">
@@ -434,7 +415,10 @@ export default function App() {
 
             <div className="flex items-center gap-5 mt-4">
               <motion.button
-                onClick={() => scrollTo("about")}
+                onClick={() => {
+                  scrollTo("about");
+                  controllerRef.current?.resume();
+                }}
                 className="w-14 h-14 bg-[#1DB954] rounded-full flex items-center justify-center shadow-lg flex-shrink-0"
                 whileHover={{ scale: 1.06, backgroundColor: "#1ed760" }}
                 whileTap={{ scale: 0.95 }}
@@ -610,32 +594,17 @@ export default function App() {
         </footer>
       </div>
 
-      {/* ── Player bar ── */}
-      {/* Spotify requires its player stay visible; it docks above the bar. */}
-      {HAS_SPOTIFY && (
-        <div className="fixed inset-x-0 bottom-[90px] z-40 bg-[#181818] border-t border-white/10 px-4 py-2">
-          <div className="max-w-5xl mx-auto">
-            <div ref={embedRef} />
-          </div>
-        </div>
-      )}
+      </div>
 
+      {/* ── Player bar: Spotify's embed is the transport ── */}
       <PlayerBar
-        track={activeTrack}
-        isPlaying={isPlaying}
-        progress={embedReady ? embedProgress : progress}
-        totalSeconds={embedReady ? embedDuration : TOTAL_SECONDS}
+        embedRef={embedRef}
         hasPrev={activeIndex > 0}
         hasNext={activeIndex < TRACKS.length - 1}
-        onPlayPause={() => {
-          const c = controllerRef.current;
-          if (embedReady && c) c.togglePlay();
-          else setIsPlaying((p) => !p);
-        }}
         onPrev={() => step(-1)}
         onNext={() => step(1)}
-        onSeek={seek}
       />
+
     </div>
   );
 }
