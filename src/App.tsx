@@ -445,14 +445,20 @@ export default function App() {
                 </svg>
               </motion.button>
 
-              <a
+              <motion.a
                 href={`${import.meta.env.BASE_URL}resume.pdf`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-[#A7A7A7] hover:text-white transition-colors text-sm font-semibold uppercase tracking-wider"
+                className="inline-flex items-center gap-2 border-2 border-white text-white hover:bg-white hover:text-black transition-colors px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
               >
-                Resume ↗
-              </a>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 2v6h6" />
+                </svg>
+                Resume
+              </motion.a>
             </div>
           </motion.div>
         </section>
