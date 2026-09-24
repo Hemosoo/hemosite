@@ -14,7 +14,7 @@ export default function Equalizer() {
       {BARS.map((bar, i) => (
         <motion.div
           key={i}
-          className="flex-1 bg-[#1DB954] rounded-sm"
+          className="flex-1 bg-green rounded-sm"
           animate={reduced ? { height: "8px" } : { height: bar.keyframes }}
           transition={
             reduced
