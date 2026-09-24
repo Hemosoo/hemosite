@@ -282,12 +282,32 @@ export default function App() {
       {/* ── Hero ── */}
       <header className="relative flex min-h-[88vh] items-center overflow-hidden px-6">
         <Ambience />
-        <div className="relative mx-auto w-full max-w-4xl py-24">
+        <div className="relative mx-auto flex w-full max-w-4xl flex-col gap-10 py-24 md:flex-row md:items-center md:gap-14">
+          <motion.div
+            initial={reduced ? {} : { opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="relative order-first shrink-0 md:order-last"
+          >
+            <div
+              aria-hidden
+              className="absolute -inset-3 rounded-[2.25rem] bg-gradient-to-br from-primary/40 to-accent/40 blur-2xl"
+            />
+            <img
+              src={`${import.meta.env.BASE_URL}me.jpg`}
+              alt="Hemosoo Woo"
+              width={224}
+              height={224}
+              fetchPriority="high"
+              className="relative h-32 w-32 rounded-3xl object-cover ring-1 ring-line md:h-56 md:w-56"
+            />
+          </motion.div>
+
           <motion.div
             initial={reduced ? {} : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col gap-6"
+            className="flex min-w-0 flex-1 flex-col gap-6"
           >
             <Eyebrow>CS @ Penn · 3× Amazon SDE Intern</Eyebrow>
 
