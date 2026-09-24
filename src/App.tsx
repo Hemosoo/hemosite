@@ -1,9 +1,9 @@
 import "./index.css";
 import { useState, useEffect, useRef } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import Equalizer from "./components/Equalizer";
-import PlayerBar from "./components/PlayerBar";
-import Sidebar from "./components/Sidebar";
+import { motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
+import { AuroraText } from "./components/godui/aurora-text";
+import NowPlaying from "./components/NowPlaying";
+import SectionDock from "./components/SectionDock";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -14,18 +14,20 @@ interface Track {
   duration: string;
   sectionId: string;
   /** Spotify track URI ("spotify:track:<id>") or a share URL. Empty means no
-   *  embed for this section, and the player keeps its scroll-driven fallback. */
+   *  embed for this section. */
   spotify: string;
+  /** Glyph shown in the dock; the title is the hover label. */
+  icon: string;
 }
 
 const TRACKS: Track[] = [
-  { id: 1, title: "About Me",               album: "Introduction",   duration: "3:24", sectionId: "about",       spotify: "spotify:track:3BmaFHt6q91CmMrA7fLLRC" }, // Petals on the Moon
-  { id: 2, title: "Hold'em Bot",            album: "Python · CFR",   duration: "2:38", sectionId: "holdem",      spotify: "spotify:track:7snQQk1zcKl8gZ92AnueZW" }, // Sweet Child O' Mine
-  { id: 3, title: "Learning Tool MCP",      album: "Python · MCP",   duration: "2:22", sectionId: "mcp",         spotify: "spotify:track:7u0yW2XPSJozIGdUSRET19" }, // Suddenly
-  { id: 4, title: "EntryID Platform",       album: "Amazon · 2026",  duration: "3:05", sectionId: "amazon-2026", spotify: "spotify:track:1a19jsjG2DvbN1fVJonKUU" }, // Beaches
-  { id: 5, title: "Network Health Service", album: "Amazon · 2025",  duration: "3:12", sectionId: "amazon-2025", spotify: "spotify:track:6FDzlEOK29XWew1qfnGhaU" }, // impossible
-  { id: 6, title: "Gateway & Bedrock",      album: "Amazon · 2024",  duration: "2:40", sectionId: "amazon-2024", spotify: "spotify:track:2mWfVxEo4xZYDaz0v7hYrN" }, // Juna
-  { id: 7, title: "Let's Connect",          album: "Contact",        duration: "0:42", sectionId: "contact",     spotify: "spotify:track:7vgTNTaEz3CsBZ1N4YQalM" }, // Ghost Town
+  { id: 1, title: "About Me",               icon: "1", duration: "3:24", album: "Introduction",  sectionId: "about",       spotify: "spotify:track:3BmaFHt6q91CmMrA7fLLRC" }, // Petals on the Moon
+  { id: 2, title: "Hold'em Bot",            icon: "2", duration: "2:38", album: "Python · CFR",  sectionId: "holdem",      spotify: "spotify:track:7snQQk1zcKl8gZ92AnueZW" }, // Sweet Child O' Mine
+  { id: 3, title: "Learning Tool MCP",      icon: "3", duration: "2:22", album: "Python · MCP",  sectionId: "mcp",         spotify: "spotify:track:7u0yW2XPSJozIGdUSRET19" }, // Suddenly
+  { id: 4, title: "EntryID Platform",       icon: "4", duration: "3:05", album: "Amazon · 2026", sectionId: "amazon-2026", spotify: "spotify:track:1a19jsjG2DvbN1fVJonKUU" }, // Beaches
+  { id: 5, title: "Network Health Service", icon: "5", duration: "3:12", album: "Amazon · 2025", sectionId: "amazon-2025", spotify: "spotify:track:6FDzlEOK29XWew1qfnGhaU" }, // impossible
+  { id: 6, title: "Gateway & Bedrock",      icon: "6", duration: "2:40", album: "Amazon · 2024", sectionId: "amazon-2024", spotify: "spotify:track:2mWfVxEo4xZYDaz0v7hYrN" }, // Juna
+  { id: 7, title: "Let's Connect",          icon: "7", duration: "0:42", album: "Contact",       sectionId: "contact",     spotify: "spotify:track:7vgTNTaEz3CsBZ1N4YQalM" }, // Ghost Town
 ];
 
 /** Any track wired up yet? Controls whether the embed renders at all. */
@@ -149,122 +151,59 @@ const PROJECTS = [
 
 const SKILLS = ["TypeScript", "React", "Python", "Java", "AWS", "SQL"];
 
-/** "3:24" → 204 */
-function toSeconds(d: string): number {
-  const [m, s] = d.split(":").map(Number);
-  return m * 60 + s;
+
+// ─── Presentation ─────────────────────────────────────────────────────────────
+
+const ACCENTS = ["text-primary", "text-accent", "text-cyan", "text-green", "text-yellow"];
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-dim">
+      {children}
+    </span>
+  );
 }
 
-const TOTAL_SECONDS = TRACKS.reduce((sum, t) => sum + toSeconds(t.duration), 0);
-const TOTAL_LABEL = `${Math.round(TOTAL_SECONDS / 60)} min`;
-
-// ─── Small components ─────────────────────────────────────────────────────────
-
-
-function SectionMeta({ num, duration }: { num: string; duration: string }) {
+function Chip({ children, tone = "" }: { children: React.ReactNode; tone?: string }) {
   return (
-    <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-      <span className="text-xs text-[#6A6A6A] uppercase tracking-[0.15em]">Track {num}</span>
-      <span className="text-xs text-[#6A6A6A] tabular-nums">{duration}</span>
+    <span
+      className={`rounded-full border border-line bg-surface-2/60 px-2.5 py-1 text-xs font-medium ${
+        tone || "text-subtle"
+      }`}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Ambient wash behind the hero. Two soft radial glows in the two accent
+ *  colours — the only place the palette is allowed to be loud. */
+function Ambience() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="absolute -top-40 left-1/4 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[120px]" />
+      <div className="absolute -top-24 right-0 h-[28rem] w-[28rem] rounded-full bg-accent/12 blur-[120px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,transparent_35%,var(--color-bg)_78%)]" />
     </div>
   );
 }
 
-// ─── TrackRow ─────────────────────────────────────────────────────────────────
-
-function TrackRow({
-  track,
-  index,
-  isActive,
-  isPlaying,
-  onClick,
-}: {
-  track: Track;
-  index: number;
-  isActive: boolean;
-  isPlaying: boolean;
-  onClick: () => void;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const reduced = useReducedMotion();
-
-  return (
-    <motion.div
-      role="button"
-      tabIndex={0}
-      aria-label={`Jump to ${track.title}`}
-      className={`grid items-center px-4 py-3 rounded-md cursor-pointer select-none transition-colors duration-100 ${
-        hovered || isActive ? "bg-white/5" : ""
-      }`}
-      style={{ gridTemplateColumns: "2rem 1fr 1fr 3.5rem", gap: "1rem" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault(); // Space would otherwise scroll the page
-          onClick();
-        }
-      }}
-      initial={reduced ? false : { opacity: 0, x: -8 }}
-      animate={reduced ? false : { opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.07 }}
-    >
-      {/* Number / Equalizer / Play icon */}
-      <div className="flex items-center justify-center w-8">
-        {isActive && isPlaying ? (
-          <Equalizer />
-        ) : hovered ? (
-          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        ) : (
-          <span
-            className={`text-sm tabular-nums ${isActive ? "text-[#1DB954]" : "text-[#A7A7A7]"}`}
-          >
-            {index}
-          </span>
-        )}
-      </div>
-
-      {/* Title + subtitle */}
-      <div className="min-w-0">
-        <p className={`font-medium truncate ${isActive ? "text-[#1DB954]" : "text-white"}`}>
-          {track.title}
-        </p>
-        <p className="text-sm text-[#A7A7A7] truncate">Hemosoo</p>
-      </div>
-
-      {/* Album */}
-      <div className="hidden md:block min-w-0">
-        <p className="text-sm text-[#A7A7A7] truncate">{track.album}</p>
-      </div>
-
-      {/* Duration */}
-      <div className="text-sm text-[#A7A7A7] text-right tabular-nums">{track.duration}</div>
-    </motion.div>
-  );
-}
-
-// ─── App ──────────────────────────────────────────────────────────────────────
-
 export default function App() {
   const [activeId, setActiveId] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const reduced = useReducedMotion();
-
-  // ── Spotify ──
-  // embedReady stays false until a controller exists, so with no URIs wired up
-  // the player keeps its original scroll-driven behaviour.
-  const embedRef = useRef<HTMLDivElement>(null);
-  const controllerRef = useRef<SpotifyEmbedController | null>(null);
-  // Read inside the track-change effect without making it re-run on play/pause.
-  const isPlayingRef = useRef(isPlaying);
-  isPlayingRef.current = isPlaying;
 
   const activeTrack = TRACKS.find((t) => t.id === activeId) ?? TRACKS[0];
 
-  // Sync scroll → active track (IntersectionObserver)
+  const embedRef = useRef<HTMLDivElement>(null);
+  const controllerRef = useRef<SpotifyEmbedController | null>(null);
+  const isPlayingRef = useRef(isPlaying);
+  isPlayingRef.current = isPlaying;
+
+  // Honest scroll indicator — it reflects real page position, nothing more.
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 220, damping: 40, mass: 0.2 });
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -275,7 +214,7 @@ export default function App() {
           }
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0.35 }
     );
     TRACKS.forEach((t) => {
       const el = document.getElementById(t.sectionId);
@@ -284,22 +223,9 @@ export default function App() {
     return () => observer.disconnect();
   }, []);
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    setIsPlaying(true);
-  };
+  const scrollTo = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
 
-  const step = (delta: number) => {
-    const i = TRACKS.findIndex((t) => t.id === activeId);
-    const next = TRACKS[i + delta];
-    if (next) scrollTo(next.sectionId);
-  };
-
-  const activeIndex = TRACKS.findIndex((t) => t.id === activeId);
-
-  // Create the embed controller once the iFrame API is available. index.html
-  // stashes the API on window, so this works whether the script resolves
-  // before or after React mounts.
   useEffect(() => {
     if (!HAS_SPOTIFY) return;
     let controller: SpotifyEmbedController | null = null;
@@ -307,29 +233,19 @@ export default function App() {
 
     const init = (api: SpotifyIFrameAPI) => {
       if (cancelled || !embedRef.current) return;
-      const first = TRACKS.find((t) => t.spotify)?.spotify ?? "";
       api.createController(
         embedRef.current,
-        { uri: first, width: "100%", height: 80 },
+        { uri: TRACKS.find((t) => t.spotify)?.spotify ?? "", width: "100%", height: 80 },
         (c) => {
-          if (cancelled) {
-            c.destroy();
-            return;
-          }
+          if (cancelled) return c.destroy();
           controller = c;
           controllerRef.current = c;
-          // Spotify owns the transport, so mirror its state rather than
-          // tracking our own and drifting out of sync.
-          // Only the play state is still ours to render (the row equalizers);
-          // position and duration belong to Spotify's player now.
           c.addListener("playback_update", (e) => setIsPlaying(!e.data.isPaused));
         }
       );
     };
 
-    const onReady = () => {
-      if (window.__spotifyIframeApi) init(window.__spotifyIframeApi);
-    };
+    const onReady = () => window.__spotifyIframeApi && init(window.__spotifyIframeApi);
     if (window.__spotifyIframeApi) init(window.__spotifyIframeApi);
     else window.addEventListener("spotify-iframe-api-ready", onReady);
 
@@ -346,265 +262,198 @@ export default function App() {
     const c = controllerRef.current;
     if (!c || !activeTrack.spotify) return;
     c.loadUri(activeTrack.spotify);
-    // Autoplay is blocked until the visitor interacts; Spotify reports the
-    // real state back through playback_update either way.
     if (isPlayingRef.current) c.resume();
   }, [activeTrack]);
 
-  const inViewProps = (delay = 0) => ({
-    initial: reduced ? {} : { opacity: 0, y: 20 },
+  const reveal = (delay = 0) => ({
+    initial: reduced ? {} : { opacity: 0, y: 24 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-60px" } as const,
-    transition: { duration: 0.6, delay },
+    viewport: { once: true, margin: "-80px" } as const,
+    transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as const },
   });
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
-
-      <Sidebar
-        items={TRACKS}
-        activeId={activeId}
-        isPlaying={isPlaying}
-        resumeHref={`${import.meta.env.BASE_URL}resume.pdf`}
-        onNavigate={scrollTo}
+    <div className="relative min-h-screen bg-bg text-text">
+      <motion.div
+        style={{ scaleX }}
+        className="fixed inset-x-0 top-0 z-50 h-[3px] origin-left bg-gradient-to-r from-primary via-accent to-cyan"
       />
 
-      <div className="lg:ml-60 pb-[104px]">
-
-      {/* ── Playlist header ── */}
-      <div className="bg-gradient-to-b from-[#1a3d2a] via-[#1a1a1a] to-[#121212]">
-        <section className="max-w-5xl mx-auto px-6 pt-16 pb-8 flex flex-col sm:flex-row items-end gap-6">
-
-          {/* Cover art */}
+      {/* ── Hero ── */}
+      <header className="relative flex min-h-[88vh] items-center overflow-hidden px-6">
+        <Ambience />
+        <div className="relative mx-auto w-full max-w-4xl py-24">
           <motion.div
-            className="w-44 h-44 sm:w-52 sm:h-52 flex-shrink-0"
-            initial={reduced ? {} : { opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <img
-              src={`${import.meta.env.BASE_URL}me.JPG`}
-              alt="Hemosoo"
-              className="w-full h-full object-cover rounded shadow-2xl"
-              fetchPriority="high"
-              width={208}
-              height={208}
-            />
-          </motion.div>
-
-          {/* Playlist info */}
-          <motion.div
-            className="flex flex-col gap-1.5"
-            initial={reduced ? {} : { opacity: 0, y: 16 }}
+            initial={reduced ? {} : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col gap-6"
           >
-            <span className="text-xs font-bold uppercase tracking-widest text-white/50">
-              Public Playlist
-            </span>
-            <h1 className="text-5xl sm:text-7xl font-black tracking-tight leading-none">
-              Hemosoo
+            <Eyebrow>CS @ Penn · 3× Amazon SDE Intern</Eyebrow>
+
+            <h1 className="text-6xl font-black leading-[0.95] tracking-tight sm:text-8xl">
+              <AuroraText colors={["#61afef", "#c678dd", "#56b6c2", "#98c379"]}>
+                Hemosoo Woo
+              </AuroraText>
             </h1>
-            <p className="text-sm text-[#A7A7A7] mt-1 leading-relaxed">
-              Full-stack developer · 3× Amazon SDE Intern · Musician · CS @ Penn
-              <br />
-              <span className="text-white font-medium">{TRACKS.length} tracks</span>
-              <span className="mx-2 opacity-30">·</span>
-              <span>{TOTAL_LABEL}</span>
+
+            <p className="max-w-2xl text-lg leading-relaxed text-subtle">
+              Full-stack developer building backend services and scalable systems that feel
+              intentional and good to use. Three summers at Amazon on customer-service
+              infrastructure. I also sing acapella, play poker, and am on the journey to dunking.
             </p>
 
-            <div className="flex items-center gap-5 mt-4">
-              <motion.button
-                onClick={() => {
-                  scrollTo("about");
-                  controllerRef.current?.resume();
-                }}
-                className="w-14 h-14 bg-[#1DB954] rounded-full flex items-center justify-center shadow-lg flex-shrink-0"
-                whileHover={{ scale: 1.06, backgroundColor: "#1ed760" }}
-                whileTap={{ scale: 0.95 }}
-                aria-label="Play"
-              >
-                <svg className="w-6 h-6 text-black translate-x-px" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </motion.button>
-
-              <motion.a
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <a
                 href={`${import.meta.env.BASE_URL}resume.pdf`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 border-2 border-white text-white hover:bg-white hover:text-black transition-colors px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
+                className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-[#0b0d10] transition-transform hover:scale-[1.03]"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14 2v6h6" />
                 </svg>
                 Resume
-              </motion.a>
+              </a>
+              {[
+                { label: "GitHub", href: "https://github.com/Hemosoo" },
+                { label: "LinkedIn", href: "https://www.linkedin.com/in/hemosoowoo" },
+                { label: "Email", href: "mailto:hemosoo.woo@gmail.com" },
+              ].map((l) => (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  target={l.href.startsWith("mailto") ? undefined : "_blank"}
+                  rel="noreferrer"
+                  className="rounded-full border border-line px-5 py-3 text-sm font-semibold text-subtle transition-colors hover:border-primary/60 hover:text-text"
+                >
+                  {l.label}
+                </a>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-6">
+              {SKILLS.map((s, i) => (
+                <Chip key={s} tone={ACCENTS[i % ACCENTS.length]}>
+                  {s}
+                </Chip>
+              ))}
             </div>
           </motion.div>
-        </section>
-      </div>
-
-      {/* ── Track table ── */}
-      <section className="max-w-5xl mx-auto px-6 pt-4 pb-2">
-        {/* Column headers */}
-        <div
-          className="grid px-4 py-2 mb-1 border-b border-white/10 text-xs font-semibold uppercase tracking-wider text-[#6A6A6A]"
-          style={{ gridTemplateColumns: "2rem 1fr 1fr 3.5rem", gap: "1rem" }}
-        >
-          <span className="text-center">#</span>
-          <span>Title</span>
-          <span className="hidden md:block">Album</span>
-          {/* clock icon */}
-          <svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" />
-          </svg>
         </div>
+      </header>
 
-        {TRACKS.map((track, i) => (
-          <TrackRow
-            key={track.id}
-            track={track}
-            index={i + 1}
-            isActive={activeId === track.id}
-            isPlaying={isPlaying}
-            onClick={() => scrollTo(track.sectionId)}
-          />
-        ))}
-      </section>
-
-      {/* ── Content sections ── */}
-      <div className="max-w-5xl mx-auto px-6 space-y-20">
-
-        {/* About */}
-        <motion.section id="about" {...inViewProps()}>
-          <SectionMeta num="01" duration="3:24" />
-          <h2 className="text-4xl font-black mb-5">About Me</h2>
-          <p className="text-[#A7A7A7] leading-relaxed text-lg max-w-2xl">
-            I love learning new things. Currently a CS senior at Penn, submatriculating
-            into a master&apos;s in Computer and Information Science, focused on full-stack
-            development, systems, and applied machine learning. I work with TypeScript,
-            React, and Python — building backend services and scalable systems that feel
-            intentional and good to use. Outside of coding, I sing Acapella, play poker, and am on the
-            journey to dunking.
+      <main className="mx-auto max-w-4xl px-6 pb-40">
+        {/* ── About ── */}
+        <motion.section id="about" {...reveal()} className="scroll-mt-24 border-t border-line py-20">
+          <Eyebrow>About</Eyebrow>
+          <h2 className="mt-4 text-4xl font-black tracking-tight">Still learning, on purpose</h2>
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-subtle">
+            A CS senior at Penn, submatriculating into a master&apos;s in Computer and Information
+            Science, focused on full-stack development, systems, and applied machine learning.
           </p>
-          <p className="mt-4 text-[#A7A7A7] leading-relaxed max-w-2xl">
-            Three summers as an SDE intern at Amazon in Seattle. Amazon Future Engineer
-            scholar ($40,000). Before Penn I built AtaxiaV, a Unity and Leap Motion
-            rehabilitation platform presented at the International Congress for Ataxia
+          <p className="mt-4 max-w-2xl leading-relaxed text-subtle">
+            Amazon Future Engineer scholar ($40,000). Before Penn I built AtaxiaV, a Unity and Leap
+            Motion rehabilitation platform presented at the International Congress for Ataxia
             Research, which took 1st place in the CA-33 Congressional App Challenge.
           </p>
-          <p className="mt-5 text-sm text-[#6A6A6A] tracking-wide">
-            {SKILLS.join(" · ")}
-          </p>
         </motion.section>
 
-        {/* Side projects */}
-        {PROJECTS.map((proj, i) => (
-          <motion.section key={proj.id} id={proj.id} {...inViewProps(i * 0.04)}>
-            <SectionMeta num={proj.num} duration={proj.duration} />
-            <div className="bg-[#181818] rounded-xl p-6 border border-white/5 hover:border-white/10 transition-colors">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
-                <h2 className="text-3xl font-black">{proj.title}</h2>
-                <a
-                  href={proj.repo}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm font-semibold text-[#A7A7A7] hover:text-[#1DB954] transition-colors"
-                >
-                  View on GitHub ↗
-                </a>
-              </div>
-              <p className="text-sm text-[#6A6A6A] mb-4">{proj.tech.join(" · ")}</p>
-              <p className="text-[#A7A7A7] leading-relaxed">{proj.blurb}</p>
-            </div>
-          </motion.section>
-        ))}
+        {/* ── Projects ── */}
+        <section className="border-t border-line py-20">
+          <Eyebrow>Building</Eyebrow>
+          <h2 className="mt-4 text-4xl font-black tracking-tight">Side projects</h2>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2">
+            {PROJECTS.map((proj, i) => (
+              <motion.a
+                key={proj.id}
+                id={proj.id}
+                href={proj.repo}
+                target="_blank"
+                rel="noreferrer"
+                {...reveal(i * 0.06)}
+                whileHover={reduced ? undefined : { y: -4 }}
+                className="group scroll-mt-24 rounded-2xl border border-line bg-surface p-6 transition-colors hover:border-primary/50"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className="text-2xl font-bold tracking-tight">{proj.title}</h3>
+                  <span className="text-dim transition-colors group-hover:text-primary">↗</span>
+                </div>
+                <p className="mt-3 leading-relaxed text-subtle">{proj.blurb}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {proj.tech.map((t, j) => (
+                    <Chip key={t} tone={ACCENTS[j % ACCENTS.length]}>
+                      {t}
+                    </Chip>
+                  ))}
+                </div>
+              </motion.a>
+            ))}
+          </div>
+        </section>
 
-        {/* Experience — three summers at Amazon */}
-        {EXPERIENCE.map((role, i) => (
-          <motion.section key={role.id} id={role.id} {...inViewProps(i * 0.04)}>
-            <SectionMeta num={role.num} duration={role.duration} />
-            <div className="bg-[#181818] rounded-xl p-6 border border-white/5 hover:border-white/10 transition-colors">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
-                <h2 className="text-3xl font-black">{role.title}</h2>
-                <span className="text-sm text-[#6A6A6A] tabular-nums">{role.period}</span>
-              </div>
-              <p className="text-sm text-[#1DB954] font-semibold mb-4">
-                Software Development Engineer Intern · Amazon · Seattle, WA
-              </p>
-              <ul className="space-y-3">
-                {role.bullets.map((b) => (
-                  <li key={b} className="flex gap-3 text-[#A7A7A7] leading-relaxed">
-                    <span aria-hidden className="text-[#1DB954] flex-shrink-0">▸</span>
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-5 text-sm text-[#6A6A6A]">{role.tech.join(" · ")}</p>
-            </div>
-          </motion.section>
-        ))}
+        {/* ── Experience ── */}
+        <section className="border-t border-line py-20">
+          <Eyebrow>Worked</Eyebrow>
+          <h2 className="mt-4 text-4xl font-black tracking-tight">Three summers at Amazon</h2>
+          <div className="mt-10 flex flex-col gap-5">
+            {EXPERIENCE.map((role, i) => (
+              <motion.article
+                key={role.id}
+                id={role.id}
+                {...reveal(i * 0.05)}
+                className="scroll-mt-24 rounded-2xl border border-line bg-surface p-6 transition-colors hover:border-accent/40 sm:p-8"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <h3 className="text-2xl font-bold tracking-tight">{role.title}</h3>
+                  <span className="font-mono text-sm text-dim">{role.period}</span>
+                </div>
+                <p className="mt-1 text-sm font-semibold text-accent">
+                  SDE Intern · Amazon · Seattle, WA
+                </p>
+                <ul className="mt-5 flex flex-col gap-3">
+                  {role.bullets.map((b) => (
+                    <li key={b} className="flex gap-3 leading-relaxed text-subtle">
+                      <span aria-hidden className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {role.tech.map((t, j) => (
+                    <Chip key={t} tone={ACCENTS[j % ACCENTS.length]}>
+                      {t}
+                    </Chip>
+                  ))}
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </section>
 
-        {/* Contact */}
-        <motion.section id="contact" {...inViewProps()}>
-          <SectionMeta num="07" duration="0:42" />
-          <h2 className="text-4xl font-black mb-3">Let&apos;s Connect</h2>
-          <p className="text-[#A7A7A7] mb-6 leading-relaxed max-w-xl">
+        {/* ── Contact ── */}
+        <motion.section id="contact" {...reveal()} className="scroll-mt-24 border-t border-line py-20">
+          <Eyebrow>Contact</Eyebrow>
+          <h2 className="mt-4 text-4xl font-black tracking-tight">Let&apos;s connect</h2>
+          <p className="mt-5 max-w-xl leading-relaxed text-subtle">
             Want to collaborate, chat about internships, or just see more work? Say hi.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <motion.a
-              href="mailto:hemosoo.woo@gmail.com"
-              className="inline-flex items-center gap-2 bg-[#1DB954] text-black font-bold px-5 py-3 rounded-full text-sm"
-              whileHover={{ scale: 1.04, backgroundColor: "#1ed760" }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Email Me
-            </motion.a>
-            <motion.a
-              href="https://github.com/hemosoo"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 border border-white/20 text-white font-semibold px-5 py-3 rounded-full text-sm hover:border-white/40 transition-colors"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              GitHub ↗
-            </motion.a>
-            <motion.a
-              href="https://www.linkedin.com/in/hemosoowoo"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 border border-white/20 text-white font-semibold px-5 py-3 rounded-full text-sm hover:border-white/40 transition-colors"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              LinkedIn ↗
-            </motion.a>
-          </div>
+          <a
+            href="mailto:hemosoo.woo@gmail.com"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 text-sm font-bold text-[#0b0d10] transition-transform hover:scale-[1.03]"
+          >
+            hemosoo.woo@gmail.com
+          </a>
         </motion.section>
 
-        {/* Footer */}
-        <footer className="py-8 border-t border-white/10 text-sm text-[#6A6A6A]">
-          © {new Date().getFullYear()} Hemosoo Woo · Built with React + Vite + Tailwind
+        <footer className="border-t border-line py-10 text-sm text-dim">
+          © {new Date().getFullYear()} Hemosoo Woo · Built with React, Vite and Tailwind
         </footer>
-      </div>
+      </main>
 
-      </div>
-
-      {/* ── Player bar: Spotify's embed is the transport ── */}
-      <PlayerBar
-        embedRef={embedRef}
-        hasPrev={activeIndex > 0}
-        hasNext={activeIndex < TRACKS.length - 1}
-        onPrev={() => step(-1)}
-        onNext={() => step(1)}
-      />
-
+      <SectionDock items={TRACKS} activeId={activeId} onNavigate={scrollTo} />
+      <NowPlaying title={activeTrack.title} isPlaying={isPlaying} embedRef={embedRef} />
     </div>
   );
 }
