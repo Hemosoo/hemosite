@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Terminal from "./components/Terminal";
 import PokerTable from "./components/PokerTable";
 import Hero from "./components/Hero";
+import Cursor from "./components/Cursor";
 import NowPlaying from "./components/NowPlaying";
 import { TRACKS } from "./data";
 import type { CommandResult } from "./terminal/commands";
@@ -134,6 +135,8 @@ export default function App() {
       />
 
       {pokerOpen && <PokerTable onClose={() => setPokerOpen(false)} />}
+
+      <Cursor />
     </div>
   );
 }

@@ -123,6 +123,17 @@
   }
 }
 
+/* Only set by the custom cursor component, and only when a fine pointer is
+   present, so touch and keyboard users keep the native behaviour. The
+   element+class selector outranks Tailwind's cursor utilities without
+   needing !important. */
+@media (pointer: fine) {
+  html.cursor-none,
+  html.cursor-none * {
+    cursor: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
