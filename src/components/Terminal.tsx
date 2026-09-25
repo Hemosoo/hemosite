@@ -274,13 +274,10 @@ export default function Terminal({ onEffect }: Props) {
         <div className="mx-auto max-w-3xl text-[13.5px] leading-[1.7] sm:text-sm">
           {blocks.map((b) => renderBlock(b, b.lines))}
           {pending && renderBlock(pending, pendingLines, true)}
-          <div ref={endRef} />
-        </div>
-      </div>
 
-      <div className="border-t border-line bg-surface/40 px-4 py-3 sm:px-8">
-        <div className="mx-auto flex max-w-3xl flex-col gap-3">
-          <label className="flex items-center gap-2 text-[13.5px] sm:text-sm">
+          {/* The live prompt sits in the stream rather than in a fixed bar, so
+              it walks down the page behind each command the way a shell does. */}
+          <label className="flex items-center gap-2">
             <span className="flex-shrink-0">{PROMPT}</span>
             <span className="sr-only">Enter a command</span>
             <input
@@ -298,7 +295,7 @@ export default function Terminal({ onEffect }: Props) {
             />
           </label>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-5 pb-16">
             {QUICK.map((c) => (
               <button
                 key={c}
@@ -309,6 +306,8 @@ export default function Terminal({ onEffect }: Props) {
               </button>
             ))}
           </div>
+
+          <div ref={endRef} />
         </div>
       </div>
     </div>
