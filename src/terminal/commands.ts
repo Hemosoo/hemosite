@@ -14,7 +14,10 @@ export interface CommandResult {
   /** Wipe the scrollback instead of appending. */
   clear?: boolean;
   /** Side effects the shell owns rather than the command. */
-  effect?: { kind: "open"; href: string } | { kind: "music"; action: "toggle" | "next" };
+  effect?:
+    | { kind: "open"; href: string }
+    | { kind: "music"; action: "toggle" | "next" }
+    | { kind: "poker" };
 }
 
 export interface Command {
@@ -206,9 +209,10 @@ const music: Command = {
 const poker: Command = {
   name: "poker",
   summary: "sit down at a no-limit hold'em table",
-  // Handled by the session interceptor in App; this entry exists so `help`
-  // lists it and tab-completion knows the word.
-  run: () => ({ lines: [] }),
+  run: () => ({
+    lines: [[t("dealing you in…", ok)]],
+    effect: { kind: "poker" },
+  }),
 };
 
 export const COMMANDS: Command[] = [

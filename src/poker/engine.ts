@@ -49,6 +49,8 @@ export interface Table {
   log: string[];
   /** Set once the hand is over. */
   result: string[] | null;
+  /** True when the hand ended at showdown, so hole cards may be shown. */
+  revealed: boolean;
 }
 
 export const SEAT_NAMES = [
@@ -88,6 +90,7 @@ export function createTable(seats = 6, stack = 10000, bigBlind = 100): Table {
     handNo: 0,
     log: [],
     result: null,
+    revealed: false,
   };
 }
 
@@ -125,6 +128,7 @@ export function startHand(t: Table, rng: () => number = Math.random): Table {
   const s = clone(t);
   s.handNo += 1;
   s.result = null;
+  s.revealed = false;
   s.log = [];
   s.board = [];
   s.deck = shuffle(makeDeck(), rng);
@@ -449,6 +453,7 @@ function award(t: Table, pots: Pot[], reveal: boolean): Table {
   }
 
   s.street = "showdown";
+  s.revealed = reveal;
   s.result = lines;
   s.log.push(...lines);
   return s;
