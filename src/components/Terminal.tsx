@@ -38,9 +38,9 @@ const QUICK = ["whoami", "work", "projects", "contact", "resume"];
 
 /** Characters per second, and the ceiling on how long any one block may take.
  *  Long output speeds up rather than dragging — nobody waits out a `help`. */
-const CPS = 900;
-const MAX_MS = 900;
-const MIN_MS = 140;
+const CPS = 650;
+const MAX_MS = 1200;
+const MIN_MS = 180;
 
 const lineChars = (line: Line) => line.reduce((n, s) => n + s.t.length, 0);
 /** +1 per line for its newline, so blank lines still take a beat. */
