@@ -77,16 +77,18 @@ export default function CardHand() {
     offset: ["start start", "end end"],
   });
 
-  // Rise from below the fold, fan apart, then turn over.
-  const rise = useTransform(scrollYProgress, [0, 0.42], ["46vh", "0vh"]);
-  const scale = useTransform(scrollYProgress, [0, 0.42], [0.86, 1]);
-  const leftX = useTransform(scrollYProgress, [0.18, 0.62], ["0%", "-56%"]);
-  const rightX = useTransform(scrollYProgress, [0.18, 0.62], ["0%", "56%"]);
-  const leftRot = useTransform(scrollYProgress, [0.18, 0.62], [-4, -12]);
-  const rightRot = useTransform(scrollYProgress, [0.18, 0.62], [2, 10]);
-  const flipL = useTransform(scrollYProgress, [0.46, 0.78], [0, 180]);
-  const flipR = useTransform(scrollYProgress, [0.52, 0.84], [0, 180]);
-  const captionIn = useTransform(scrollYProgress, [0.82, 0.96], [0, 1]);
+  // Rise from below the fold, fan apart, then turn over. Every stage starts
+  // earlier than it used to, and the cards begin nearer the fold, so they are
+  // already on screen rather than waiting to be scrolled into.
+  const rise = useTransform(scrollYProgress, [0, 0.3], ["34vh", "0vh"]);
+  const scale = useTransform(scrollYProgress, [0, 0.3], [0.88, 1]);
+  const leftX = useTransform(scrollYProgress, [0.08, 0.48], ["0%", "-56%"]);
+  const rightX = useTransform(scrollYProgress, [0.08, 0.48], ["0%", "56%"]);
+  const leftRot = useTransform(scrollYProgress, [0.08, 0.48], [-4, -12]);
+  const rightRot = useTransform(scrollYProgress, [0.08, 0.48], [2, 10]);
+  const flipL = useTransform(scrollYProgress, [0.34, 0.64], [0, 180]);
+  const flipR = useTransform(scrollYProgress, [0.4, 0.7], [0, 180]);
+  const captionIn = useTransform(scrollYProgress, [0.74, 0.9], [0, 1]);
 
   return (
     <section ref={ref} className="relative h-[280vh] bg-bg">
