@@ -1,16 +1,14 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import CursorRings from "./CursorRings";
+import { useCursorBands, bandGradient } from "../hooks/useCursorBands";
 
-/**
- * Full-height wordmark that fades out as the shell below scrolls up.
- *
- * `isolate` plus an opaque background confines the cursor bands to this
- * section, and `overflow-hidden` clips them to its box — together that's what
- * keeps the effect on the name and off the rest of the page.
- */
+/** Full-height wordmark that fades out as the shell below scrolls up. The
+ *  cursor bands are painted into the text itself, so nothing else is
+ *  affected and no clipping or isolation is needed. */
 export default function Hero() {
   const ref = useRef<HTMLElement>(null);
+  const nameRef = useRef<HTMLHeadingElement>(null);
+  useCursorBands(nameRef);
   const reduced = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -25,11 +23,19 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="relative isolate flex h-[100svh] items-center justify-center overflow-hidden bg-bg"
+      className="relative flex h-[100svh] items-center justify-center overflow-hidden bg-bg"
     >
       <motion.h1
-        style={reduced ? undefined : { opacity, scale, y }}
-        className="select-none px-6 text-center text-[clamp(3.25rem,15vw,11rem)] font-bold leading-[0.85] tracking-tight text-white"
+        ref={nameRef}
+        style={{
+          ...(reduced ? {} : { opacity, scale, y }),
+          backgroundImage: bandGradient(),
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          color: "transparent",
+          WebkitTextFillColor: "transparent",
+        }}
+        className="select-none px-6 text-center text-[clamp(3.25rem,15vw,11rem)] font-bold leading-[0.85] tracking-tight"
       >
         <span className="block">Hemosoo</span>
         <span className="block">Woo</span>
@@ -43,7 +49,6 @@ export default function Hero() {
         <div aria-hidden className="mt-1">↓</div>
       </motion.div>
 
-      <CursorRings />
     </section>
   );
 }
