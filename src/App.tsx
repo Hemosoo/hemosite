@@ -2,7 +2,7 @@ import "./index.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Terminal from "./components/Terminal";
 import PokerTable from "./components/PokerTable";
-import CursorRings from "./components/CursorRings";
+import Hero from "./components/Hero";
 import NowPlaying from "./components/NowPlaying";
 import { TRACKS } from "./data";
 import type { CommandResult } from "./terminal/commands";
@@ -106,8 +106,10 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-bg font-mono text-subtle">
-      <header className="flex items-center gap-4 border-b border-line px-4 py-3 text-xs sm:px-8 sm:text-[13px]">
+    <div className="min-h-[100svh] bg-bg font-mono text-subtle">
+      <Hero />
+
+      <header className="sticky top-0 z-20 flex items-center gap-4 border-y border-line bg-bg/90 px-4 py-3 text-xs backdrop-blur sm:px-8 sm:text-[13px]">
         <span className="text-dim">hemosoo.dev</span>
         <span className="flex-1" />
         <button
@@ -123,6 +125,7 @@ export default function App() {
       <Terminal onEffect={onEffect} />
 
       <NowPlaying
+        pinned
         open={musicOpen}
         title={TRACKS[trackIndex].title}
         isPlaying={isPlaying}
@@ -130,10 +133,6 @@ export default function App() {
         onClose={() => setMusicOpen(false)}
       />
 
-      <CursorRings />
-
-      {/* Above the rings, and isolated, so the felt and card faces keep their
-          own colours instead of being re-hued. */}
       {pokerOpen && <PokerTable onClose={() => setPokerOpen(false)} />}
     </div>
   );

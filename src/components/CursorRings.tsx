@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
 
 /**
- * `color` takes hue and saturation from this layer and luminosity from the
- * backdrop. At luminosity zero that resolves to black whatever the hue, so a
- * pure #000 page is immune while every lit pixel is fully recoloured —
- * including near-white bold text, which `hue` could not move because a hue
- * rotation is imperceptible at 92% luminance.
+ * `multiply` is the right blend once this is scoped to white-on-black:
+ * black x anything is black, white x colour is exactly that colour. So the
+ * backdrop is untouched and the name takes the band colour at full strength.
+ *
+ * (`color` — used when this ran page-wide — takes luminosity from the
+ * backdrop, which means pure white stays white. Wrong for a white wordmark.)
  */
-const BLEND = "color" as const;
+const BLEND = "multiply" as const;
 
 /** Ring boundaries in px from the cursor, and the colour of each band. */
 const BANDS: [number, string][] = [
@@ -17,18 +18,11 @@ const BANDS: [number, string][] = [
 ];
 const RADIUS = BANDS[BANDS.length - 1][0];
 
-// Spring, not a lerp: the rings carry momentum and trail the pointer.
-//
 // What reads as "delay" while dragging is steady-state lag, which is
-// velocity * (1 - FRICTION) / STIFFNESS — not settle time. The first pass
-// tuned settle time and left lag at 25px on a 330px ring, about 7%, which is
-// invisible. Both constants had to come down together: raising friction to
-// kill bounce cancels the lag it was meant to allow.
-//
-// At 1200px/s the rings now sit ~124px behind, about 38% of the radius.
+// velocity * (1 - FRICTION) / STIFFNESS — not settle time after a step.
 const STIFFNESS = 0.09;
 const FRICTION = 0.35;
-/** Fixed step so the feel doesn't change between a 60Hz and a 120Hz display. */
+/** Fixed step so the feel is the same on a 60Hz and a 120Hz display. */
 const STEP_MS = 1000 / 60;
 
 const gradient = () => {
@@ -39,20 +33,25 @@ const gradient = () => {
   return `radial-gradient(circle at center, ${stops.join(", ")}, transparent ${RADIUS}px)`;
 };
 
-/** Concentric colour bands that trail the cursor, recolouring text. */
+/**
+ * Colour bands that trail the cursor and recolour whatever they cross.
+ *
+ * Scoped to its parent, which must be `relative isolate overflow-hidden` with
+ * an opaque background: `isolate` keeps the blend from reaching the page, and
+ * the clip stops the bands painting outside the parent's box.
+ */
 export default function CursorRings() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Nothing to follow without a real pointer.
     if (!window.matchMedia?.("(pointer: fine)").matches) return;
-
     const el = ref.current;
-    if (!el) return;
+    const host = el?.parentElement;
+    if (!el || !host) return;
 
     const snap = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const target = { x: innerWidth / 2, y: innerHeight / 2 };
-    const at = { ...target };
+    const target = { x: 0, y: 0 };
+    const at = { x: 0, y: 0 };
     const vel = { x: 0, y: 0 };
     let raf = 0;
     let last = 0;
@@ -60,8 +59,9 @@ export default function CursorRings() {
     let visible = false;
 
     const onMove = (e: PointerEvent) => {
-      target.x = e.clientX;
-      target.y = e.clientY;
+      const rect = host.getBoundingClientRect();
+      target.x = e.clientX - rect.left;
+      target.y = e.clientY - rect.top;
       if (!visible) {
         visible = true;
         at.x = target.x;
@@ -74,7 +74,6 @@ export default function CursorRings() {
 
     const tick = (ts: number) => {
       if (!last) last = ts;
-      // Cap the catch-up so a backgrounded tab doesn't fling the rings.
       carry += Math.min(ts - last, 100);
       last = ts;
 
@@ -108,7 +107,7 @@ export default function CursorRings() {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none fixed left-0 top-0 z-30 opacity-0 transition-opacity duration-500 will-change-transform"
+      className="pointer-events-none absolute left-0 top-0 opacity-0 transition-opacity duration-500 will-change-transform"
       style={{
         width: RADIUS * 2,
         height: RADIUS * 2,

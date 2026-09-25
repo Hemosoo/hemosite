@@ -144,13 +144,17 @@ export default function Terminal({ onEffect }: Props) {
     return () => cancelAnimationFrame(raf);
   }, [pending, finishPending]);
 
-  // Stick to the bottom. Never smooth mid-animation — that fights the reveal.
+  // Follow new output, but only once the visitor has run something. On load
+  // the page must stay on the hero instead of being scrolled to the prompt.
+  const interacted = useRef(false);
   useEffect(() => {
+    if (!interacted.current) return;
     endRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
   }, [blocks, revealed]);
 
   const submit = useCallback(
     (raw: string) => {
+      interacted.current = true;
       finishPending();
       const value = raw.trim();
       setInput("");
@@ -263,7 +267,7 @@ export default function Terminal({ onEffect }: Props) {
 
   return (
     <div
-      className="flex min-h-0 flex-1 flex-col"
+      className="min-h-[60svh] w-full"
       onClick={(e) => {
         if (window.getSelection()?.toString()) return;
         if ((e.target as HTMLElement).closest("a,button")) return;
@@ -272,7 +276,7 @@ export default function Terminal({ onEffect }: Props) {
       }}
     >
       <div
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-8"
+        className="px-4 py-6 sm:px-8"
         role="log"
         aria-live="polite"
         aria-label="Terminal output"
