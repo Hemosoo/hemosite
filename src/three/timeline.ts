@@ -52,14 +52,24 @@ export const CUE = {
   crease: [2.15, 2.75],
   nose1: [2.75, 3.55],
   nose2: [3.5, 4.35],
-  half: [4.3, 5.0],
-  wings: [4.95, 5.75],
+  /**
+   * The body fold and the wing fold deliberately overlap.
+   *
+   * Run in sequence, the halves reach 77 degrees with the wings still flat,
+   * so the wings point straight up and sit there: measured peak 1.24 above
+   * the card plane, held for ~0.6s. That is the "explosive" swing. Starting
+   * the wings 18% into the body fold lets them counter-rotate as the body
+   * closes, so the wings stay near level and only the keel drops — peak 0.65,
+   * and they still finish last, which keeps a readable wing beat.
+   */
+  half: [4.3, 5.15],
+  wings: [4.45, 5.3],
 
   /** Finished plane, held and turned to show itself off. */
-  hero: [5.75, 6.45],
-  launch: [6.45, 6.95],
-  flight: [6.85, 10.6],
-  reset: [10.6, 11.9],
+  hero: [5.4, 6.1],
+  launch: [6.1, 6.6],
+  flight: [6.5, 10.3],
+  reset: [10.3, 11.6],
 } as const;
 
 /** No fold value may be non-zero before this. */

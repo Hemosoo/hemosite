@@ -182,11 +182,14 @@ export default function FoldingCard({
   back,
   aspect,
   deckTop,
+  startScale,
 }: {
   face: THREE.Texture;
   back: THREE.Texture;
   aspect: number;
   deckTop: THREE.Vector3;
+  /** Matches the deck, so at rest the card is indistinguishable from it. */
+  startScale: number;
 }) {
   const root = useRef<THREE.Group>(null);
   const L = useRef<HalfRefs>(mkRefs()).current;
@@ -216,7 +219,9 @@ export default function FoldingCard({
     // opens at FOLD_START — after the card has left the deck and settled.
     // A shallow centre crease is scored first and then relaxed: the paper
     // remembers the line before anything folds along it.
-    const scored = seg(t, CUE.crease[0], CUE.crease[1], 0, 0.3, sineInOut);
+    // Scoring only: 0.3 rad lifted the halves 0.37 above the plane, which
+    // reads as a fold rather than a crease being marked. 0.12 peaks at 0.15.
+    const scored = seg(t, CUE.crease[0], CUE.crease[1], 0, 0.12, sineInOut);
     const relax = 1 - seg(t, CUE.crease[1], CUE.nose2[0], 0, 0.6, sineInOut);
     const nose1 = seg(t, CUE.nose1[0], CUE.nose1[1], 0, FLAT, power2InOut);
     const nose2 = seg(t, CUE.nose2[0], CUE.nose2[1], 0, FLAT, power2InOut);
@@ -299,8 +304,19 @@ export default function FoldingCard({
     const exit = span(t, CUE.flight[1] - 0.5, CUE.flight[1]);
     const enter = span(t, CUE.reset[1] - 0.4, CUE.reset[1]);
     const vis = DEBUG_FOLD_PROGRESS == null ? 1 - exit + enter : 1;
+
+    // The card starts at the deck's scale and grows into the foreground as it
+    // is drawn out, so the deck stays a small background source and this one
+    // card becomes the subject. Combined with ~4 units of travel toward the
+    // camera, the apparent size change is larger than the scale factor alone.
+    const grow = THREE.MathUtils.lerp(
+      startScale,
+      1,
+      sineInOut(span(t, CUE.lift[0], CUE.drift[1]))
+    );
+
     g.visible = vis > 0.02;
-    g.scale.setScalar(THREE.MathUtils.clamp(vis, 0.001, 1));
+    g.scale.setScalar(grow * THREE.MathUtils.clamp(vis, 0.001, 1));
   });
 
   return (

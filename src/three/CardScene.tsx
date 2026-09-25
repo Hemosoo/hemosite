@@ -31,6 +31,10 @@ function Rig({ onAspect }: { onAspect: (a: number) => void }) {
   return null;
 }
 
+/** Resting size of the deck. The extracted card starts here and grows to 1. */
+const DECK_SCALE = 0.55;
+const ORIGIN = new THREE.Vector3(0, 0, 0);
+
 function Scene({ shadows, quality }: { shadows: boolean; quality: number }) {
   const [aspect, setAspect] = useState(1.6);
   const face = useMemo(() => makeFaceTexture(quality), [quality]);
@@ -42,9 +46,19 @@ function Scene({ shadows, quality }: { shadows: boolean; quality: number }) {
     back.dispose();
   }, [face, back]);
 
-  const deckPos = useMemo(() => new THREE.Vector3(-3.35, -2.35, 0.2), []);
+  /**
+   * The deck is a background source, not the subject: smaller and set back in
+   * depth, so the card that leaves it can become the thing you look at.
+   */
+  const deckPos = useMemo(() => new THREE.Vector3(-3.55, -2.15, -1.4), []);
+  // Top of the stack, in world units, accounting for the deck's own scale.
   const deckTop = useMemo(
-    () => new THREE.Vector3(deckPos.x, deckPos.y + deckTopOffset(), deckPos.z),
+    () =>
+      new THREE.Vector3(
+        deckPos.x,
+        deckPos.y + deckTopOffset() * DECK_SCALE,
+        deckPos.z
+      ),
     [deckPos]
   );
 
@@ -52,11 +66,19 @@ function Scene({ shadows, quality }: { shadows: boolean; quality: number }) {
     <>
       <Rig onAspect={setAspect} />
       <Lighting shadows={shadows} />
-      <Deck position={deckPos} back={back} />
-      <FoldingCard face={face} back={back} aspect={aspect} deckTop={deckTop} />
+      <group position={deckPos} scale={DECK_SCALE}>
+        <Deck position={ORIGIN} back={back} />
+      </group>
+      <FoldingCard
+        face={face}
+        back={back}
+        aspect={aspect}
+        deckTop={deckTop}
+        startScale={DECK_SCALE}
+      />
       {/* Catches the deck's shadow; invisible against the black otherwise. */}
       {shadows && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.42, 0]} receiveShadow>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.22, 0]} receiveShadow>
           <planeGeometry args={[40, 40]} />
           <shadowMaterial opacity={0.5} />
         </mesh>
