@@ -12,15 +12,22 @@ const BLEND = "color" as const;
 /** Ring boundaries in px from the cursor, and the colour of each band. */
 const BANDS: [number, string][] = [
   [100, "#61afef"],
-  [210, "#c678dd"],
+  [210, "#e5c07b"],
   [330, "#98c379"],
 ];
 const RADIUS = BANDS[BANDS.length - 1][0];
 
-// Spring, not a lerp: the rings carry momentum, overshoot slightly on a fast
-// drag and settle back, instead of easing in a straight line.
-const STIFFNESS = 0.26;
-const FRICTION = 0.42;
+// Spring, not a lerp: the rings carry momentum and trail the pointer.
+//
+// What reads as "delay" while dragging is steady-state lag, which is
+// velocity * (1 - FRICTION) / STIFFNESS — not settle time. The first pass
+// tuned settle time and left lag at 25px on a 330px ring, about 7%, which is
+// invisible. Both constants had to come down together: raising friction to
+// kill bounce cancels the lag it was meant to allow.
+//
+// At 1200px/s the rings now sit ~124px behind, about 38% of the radius.
+const STIFFNESS = 0.09;
+const FRICTION = 0.35;
 /** Fixed step so the feel doesn't change between a 60Hz and a 120Hz display. */
 const STEP_MS = 1000 / 60;
 
