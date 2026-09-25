@@ -153,7 +153,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-bg/97 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex flex-col bg-bg/97 backdrop-blur-sm isolate">
       <header className="flex flex-shrink-0 items-center gap-3 border-b border-line px-4 py-2.5 text-xs sm:px-6">
         <span className="font-semibold text-text">no-limit hold&apos;em</span>
         <span className="text-dim">6-max · 100bb · play chips</span>

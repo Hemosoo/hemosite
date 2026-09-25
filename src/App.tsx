@@ -2,6 +2,7 @@ import "./index.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Terminal from "./components/Terminal";
 import PokerTable from "./components/PokerTable";
+import CursorRings from "./components/CursorRings";
 import NowPlaying from "./components/NowPlaying";
 import { TRACKS } from "./data";
 import type { CommandResult } from "./terminal/commands";
@@ -129,6 +130,10 @@ export default function App() {
         onClose={() => setMusicOpen(false)}
       />
 
+      <CursorRings />
+
+      {/* Above the rings, and isolated, so the felt and card faces keep their
+          own colours instead of being re-hued. */}
       {pokerOpen && <PokerTable onClose={() => setPokerOpen(false)} />}
     </div>
   );
