@@ -1,6 +1,8 @@
 export interface Role {
   year: string;
   period: string;
+  /** Org within Amazon — not the same one all three summers. */
+  team: string;
   service: string;
   bullets: string[];
   stack: string[];
@@ -9,6 +11,7 @@ export interface Role {
 export const ROLES: Role[] = [
   {
     year: "2026",
+    team: "Customer Service",
     period: "May – Aug 2026",
     service: "EntryID Platform",
     bullets: [
@@ -20,6 +23,7 @@ export const ROLES: Role[] = [
   },
   {
     year: "2025",
+    team: "Customer Service",
     period: "May – Aug 2025",
     service: "Network Health Service",
     bullets: [
@@ -31,6 +35,7 @@ export const ROLES: Role[] = [
   },
   {
     year: "2024",
+    team: "Fashion Fitness Tech",
     period: "May – Aug 2024",
     service: "Gateway & Bedrock",
     bullets: [

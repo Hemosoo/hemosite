@@ -99,13 +99,14 @@ const whoami: Command = {
       [t("Hemosoo Woo", val), t(" — full-stack developer", "text-subtle")],
       blank,
       ...wrapHl(
-        "CS senior at Penn, submatriculating into a master's in Computer and Information Science. I build backend services and the infrastructure around them. Three summers as an SDE intern at Amazon in Seattle, all on customer-service systems.",
+        "CS senior at Penn, submatriculating into a master's in Computer and Information Science. I build backend services and the infrastructure around them. Three summers as an SDE intern at Amazon in Seattle: two on customer-service systems, one on Fashion Fitness Tech.",
         {
           Penn: "text-accent",
           Amazon: "text-yellow",
           Seattle: "text-cyan",
           "backend services": "text-primary",
           "Three summers": "text-green",
+          "Fashion Fitness Tech": "text-orange",
         }
       ),
       blank,
@@ -140,7 +141,7 @@ const work: Command = {
       return {
         lines: [
           [t(role.service, val), t("  ", dim), t(role.period, dim)],
-          [t("SDE Intern · Amazon · Seattle, WA", "text-accent")],
+          [t(`SDE Intern · Amazon ${role.team} · Seattle, WA`, "text-accent")],
           blank,
           ...role.bullets.flatMap((b) => [...wrap(b, 74, "  · "), blank]),
           [t("stack  ", dim), t(role.stack.join(" · "), key)],

@@ -22,9 +22,10 @@ export default function About() {
           <p className="max-w-2xl text-lg leading-relaxed text-subtle">
             CS senior at <span className="text-accent">Penn</span>, submatriculating into a
             master&apos;s in Computer and Information Science. Three summers as an SDE intern at{" "}
-            <span className="text-yellow">Amazon</span> in <span className="text-cyan">Seattle</span>,
-            all on customer-service systems — routing configuration read at runtime by Amazon
-            Connect, a network-health pipeline built from scratch, and LLM tooling on the
+            <span className="text-yellow">Amazon</span> in <span className="text-cyan">Seattle</span>:
+            two on customer-service systems — routing configuration read at runtime by Amazon
+            Connect, and a network-health pipeline built from scratch — and one on{" "}
+            <span className="text-orange">Fashion Fitness Tech</span>, building LLM tooling for the
             Amazon.com gateway.
           </p>
           <p className="max-w-2xl leading-relaxed text-subtle">
