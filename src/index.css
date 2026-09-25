@@ -6,7 +6,7 @@
    Atom's own background is #282c34; using it as an elevated surface instead of
    the page base is what gives the accents room to read as bright.            */
 @theme {
-  --color-bg: #0b0d10;
+  --color-bg: #0d0d0d;
   --color-surface: #151920;
   --color-surface-2: #282c34;
   --color-line: #2f3440;
@@ -30,7 +30,7 @@
 /* shadcn/GodUI token contract, mapped onto the same palette so copied
    components inherit the theme without edits. */
 :root {
-  --background: #0b0d10;
+  --background: #0d0d0d;
   --foreground: #e6e9ef;
   --card: #151920;
   --card-foreground: #e6e9ef;

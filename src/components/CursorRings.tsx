@@ -10,11 +10,11 @@ const BLEND = "hue" as const;
 
 /** Ring boundaries in px from the cursor, and the colour of each band. */
 const BANDS: [number, string][] = [
-  [80, "#61afef"],
-  [160, "#c678dd"],
-  [240, "#56b6c2"],
-  [320, "#98c379"],
-  [400, "#e5c07b"],
+  [58, "#61afef"],
+  [116, "#c678dd"],
+  [174, "#56b6c2"],
+  [232, "#98c379"],
+  [290, "#e5c07b"],
 ];
 const RADIUS = BANDS[BANDS.length - 1][0];
 /** How fast the rings chase the pointer. 1 = instant. */
