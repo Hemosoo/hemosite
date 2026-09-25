@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { runCommand, COMMAND_NAMES, type Line, type CommandResult } from "../terminal/commands";
+import {
+  runCommand,
+  COMMAND_NAMES,
+  type Line,
+  type Span,
+  type CommandResult,
+} from "../terminal/commands";
 
 const PROMPT = (
   <>
@@ -18,11 +24,9 @@ interface Block {
 }
 
 interface Props {
-  /** Commands the shell handles rather than the registry. */
   onEffect: (effect: NonNullable<CommandResult["effect"]>) => void;
 }
 
-/** Shown before anyone types, so the page is readable without using the CLI. */
 const BOOT: Line[] = [
   [{ t: "Hemosoo Woo", c: "text-text" }, { t: " — full-stack developer · CS @ Penn · 3× Amazon SDE intern", c: "text-subtle" }],
   [],
@@ -32,9 +36,44 @@ const BOOT: Line[] = [
 
 const QUICK = ["whoami", "work", "projects", "contact", "resume"];
 
+/** Characters per second, and the ceiling on how long any one block may take.
+ *  Long output speeds up rather than dragging — nobody waits out a `help`. */
+const CPS = 900;
+const MAX_MS = 900;
+const MIN_MS = 140;
+
+const lineChars = (line: Line) => line.reduce((n, s) => n + s.t.length, 0);
+/** +1 per line for its newline, so blank lines still take a beat. */
+const countChars = (lines: Line[]) => lines.reduce((n, l) => n + lineChars(l) + 1, 0);
+
+/** The first `n` characters of a block, keeping each span's colour. */
+function sliceLines(lines: Line[], n: number): Line[] {
+  const out: Line[] = [];
+  let left = n;
+  for (const line of lines) {
+    if (left <= 0) break;
+    const spans: Span[] = [];
+    for (const span of line) {
+      if (left <= 0) break;
+      if (span.t.length <= left) {
+        spans.push(span);
+        left -= span.t.length;
+      } else {
+        spans.push({ ...span, t: span.t.slice(0, left) });
+        left = 0;
+      }
+    }
+    out.push(spans);
+    left -= 1;
+  }
+  return out;
+}
+
 export default function Terminal({ onEffect }: Props) {
   const reduced = useReducedMotion();
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [pending, setPending] = useState<Block | null>(null);
+  const [revealed, setRevealed] = useState(0);
   const [booted, setBooted] = useState(false);
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
@@ -42,34 +81,71 @@ export default function Terminal({ onEffect }: Props) {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
-  const nextId = useRef(0);
+  const nextId = useRef(1);
+  const pendingRef = useRef<Block | null>(null);
+  pendingRef.current = pending;
 
-  // Reveal the banner a line at a time; instant when motion is reduced.
-  useEffect(() => {
-    if (reduced) {
-      setBlocks([{ id: nextId.current++, lines: BOOT }]);
-      setBooted(true);
-      return;
-    }
-    let i = 0;
-    const timer = setInterval(() => {
-      i += 1;
-      setBlocks([{ id: 0, lines: BOOT.slice(0, i) }]);
-      if (i >= BOOT.length) {
-        clearInterval(timer);
-        nextId.current = 1;
+  /** Drop the animation and show the whole block now. */
+  const finishPending = useCallback(() => {
+    const block = pendingRef.current;
+    if (!block) return;
+    setBlocks((b) => [...b, block]);
+    setPending(null);
+    setRevealed(0);
+    setBooted(true);
+  }, []);
+
+  const emit = useCallback(
+    (block: Block, instant: boolean) => {
+      if (instant || block.lines.length === 0) {
+        setBlocks((b) => [...b, block]);
         setBooted(true);
+        return;
       }
-    }, 110);
-    return () => clearInterval(timer);
-  }, [reduced]);
+      setPending(block);
+      setRevealed(0);
+    },
+    []
+  );
 
+  // useReducedMotion resolves null -> boolean, so this effect can run twice;
+  // without the latch the banner prints itself a second time.
+  const bootOnce = useRef(false);
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end", behavior: reduced ? "auto" : "smooth" });
-  }, [blocks, reduced]);
+    if (bootOnce.current) return;
+    bootOnce.current = true;
+    emit({ id: 0, lines: BOOT }, !!reduced);
+  }, [reduced, emit]);
+
+  // Character reveal. Duration scales with length but stays inside MAX_MS.
+  useEffect(() => {
+    if (!pending) return;
+    const total = countChars(pending.lines);
+    const duration = Math.min(MAX_MS, Math.max(MIN_MS, (total / CPS) * 1000));
+    let raf = 0;
+    let start: number | null = null;
+    const step = (ts: number) => {
+      if (start === null) start = ts;
+      const n = Math.floor(((ts - start) / duration) * total);
+      if (n >= total) {
+        finishPending();
+        return;
+      }
+      setRevealed(n);
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [pending, finishPending]);
+
+  // Stick to the bottom. Never smooth mid-animation — that fights the reveal.
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
+  }, [blocks, revealed]);
 
   const submit = useCallback(
     (raw: string) => {
+      finishPending();
       const value = raw.trim();
       setInput("");
       setHistIndex(-1);
@@ -82,11 +158,14 @@ export default function Terminal({ onEffect }: Props) {
       if (result.clear) {
         setBlocks([]);
       } else {
-        setBlocks((b) => [...b, { id: nextId.current++, input: value, lines: result.lines }]);
+        // The echo is what they just typed, so it appears at once; only the
+        // machine's answer types itself out.
+        setBlocks((b) => [...b, { id: nextId.current++, input: value, lines: [] }]);
+        emit({ id: nextId.current++, lines: result.lines }, !!reduced);
       }
       if (result.effect) onEffect(result.effect);
     },
-    [onEffect]
+    [onEffect, reduced, emit, finishPending]
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -94,6 +173,7 @@ export default function Terminal({ onEffect }: Props) {
       submit(input);
       return;
     }
+    if (pendingRef.current && e.key.length === 1) finishPending();
     if (e.key === "l" && e.ctrlKey) {
       e.preventDefault();
       setBlocks([]);
@@ -135,9 +215,9 @@ export default function Terminal({ onEffect }: Props) {
     }
   };
 
-  const renderLine = (line: Line, i: number) => (
+  const renderLine = (line: Line, i: number, cursor = false) => (
     <div key={i} className="whitespace-pre-wrap break-words">
-      {line.length === 0 ? (
+      {line.length === 0 && !cursor ? (
         " "
       ) : (
         line.map((span, j) =>
@@ -158,16 +238,30 @@ export default function Terminal({ onEffect }: Props) {
           )
         )
       )}
+      {cursor && <span className="ml-px inline-block h-[1em] w-[0.55em] translate-y-[0.15em] bg-primary" />}
     </div>
   );
+
+  const renderBlock = (block: Block, lines: Line[], typing = false) => (
+    <div key={block.id} className="pb-3">
+      {block.input !== undefined && (
+        <div className="break-words">
+          {PROMPT} <span className="text-text">{block.input}</span>
+        </div>
+      )}
+      {lines.map((l, i) => renderLine(l, i, typing && i === lines.length - 1))}
+    </div>
+  );
+
+  const pendingLines = pending ? sliceLines(pending.lines, revealed) : [];
 
   return (
     <div
       className="flex min-h-0 flex-1 flex-col"
       onClick={(e) => {
-        // Don't steal the click when someone is selecting text or following a link.
         if (window.getSelection()?.toString()) return;
         if ((e.target as HTMLElement).closest("a,button")) return;
+        finishPending();
         inputRef.current?.focus();
       }}
     >
@@ -178,16 +272,8 @@ export default function Terminal({ onEffect }: Props) {
         aria-label="Terminal output"
       >
         <div className="mx-auto max-w-3xl text-[13.5px] leading-[1.7] sm:text-sm">
-          {blocks.map((block) => (
-            <div key={block.id} className="pb-3">
-              {block.input !== undefined && (
-                <div className="break-words">
-                  {PROMPT} <span className="text-text">{block.input}</span>
-                </div>
-              )}
-              {block.lines.map(renderLine)}
-            </div>
-          ))}
+          {blocks.map((b) => renderBlock(b, b.lines))}
+          {pending && renderBlock(pending, pendingLines, true)}
           <div ref={endRef} />
         </div>
       </div>
