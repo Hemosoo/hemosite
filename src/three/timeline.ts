@@ -50,8 +50,8 @@ export const CUE = {
 
   // Folding. Nothing above this point touches a pivot.
   crease: [2.15, 2.75],
-  nose1: [2.75, 3.55],
-  nose2: [3.5, 4.35],
+  /** The single nose fold; given the time the two folds used to share. */
+  nose1: [2.75, 3.9],
   /**
    * The body fold and the wing fold deliberately overlap.
    *
@@ -62,14 +62,14 @@ export const CUE = {
    * closes, so the wings stay near level and only the keel drops — peak 0.65,
    * and they still finish last, which keeps a readable wing beat.
    */
-  half: [4.3, 5.15],
-  wings: [4.45, 5.3],
+  half: [4.2, 5.05],
+  wings: [4.35, 5.2],
 
   /** Finished plane, held and turned to show itself off. */
-  hero: [5.4, 6.1],
-  launch: [6.1, 6.6],
-  flight: [6.5, 10.3],
-  reset: [10.3, 11.6],
+  hero: [5.3, 6.05],
+  launch: [6.05, 6.55],
+  flight: [6.45, 10.25],
+  reset: [10.25, 11.55],
 } as const;
 
 /** No fold value may be non-zero before this. */

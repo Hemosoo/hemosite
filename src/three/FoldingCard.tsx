@@ -17,9 +17,8 @@ import { makeFlightCurve, orientAlongPath } from "./flightPath";
  * null = run normally. Checkpoints:
  *   0.00  flat card, floating clear of the deck
  *   0.18  centre crease scored
- *   0.42  triangular nose formed
- *   0.66  nose narrowed
- *   0.84  body folded down the centre
+ *   0.45  triangular nose formed
+ *   0.70  body folded down the centre
  *   1.00  wings out — finished aeroplane
  */
 const DEBUG_FOLD_PROGRESS: number | null = null;
@@ -50,7 +49,7 @@ const WING_BACK = 1.35;
 /** Card lying face-up on the stack: its XY plane laid into world XZ. */
 const POSE_DECK: [number, number, number] = [-Math.PI / 2, 0, 0.06];
 /** Three-quarter view: both halves, the centre crease and the nose all legible. */
-const POSE_FOLD: [number, number, number] = [-0.52, 0.34, -0.08];
+const POSE_FOLD: [number, number, number] = [-0.42, 0.3, -0.06];
 /** Turned to show the finished plane off before it leaves. */
 const POSE_HERO: [number, number, number] = [-0.3, 0.86, 0.12];
 
@@ -66,7 +65,7 @@ const POSE_HERO: [number, number, number] = [-0.3, 0.86, 0.12];
  * 0.90-unit span inside [-3.35, -2.45] against a left edge of -4.24: clear of
  * the centre, where the name lives.
  */
-const CARD_SCALE = 0.44;
+const CARD_SCALE = 0.56;
 const FOLD_POS = new THREE.Vector3(-2.9, -0.5, 1.8);
 
 interface PieceProps {
@@ -135,7 +134,6 @@ interface HalfRefs {
   half: React.RefObject<THREE.Group | null>;
   wing: React.RefObject<THREE.Group | null>;
   nose1: React.RefObject<THREE.Group | null>;
-  nose2: React.RefObject<THREE.Group | null>;
 }
 
 function Half({
@@ -162,20 +160,13 @@ function Half({
       {/* Thin wedge from nose to tail: this becomes the fuselage. */}
       {piece("fuselage")}
 
-      {/* The wing carries the nose folds when it swings out, and nose1 nests
-          inside nose2 because the paper demands it: c1 ends on the card's
-          edge at (-n, H/2 - n), a fixed crease endpoint that the first fold
-          cannot move. Only the second fold can draw it inboard. Folded as
-          siblings the corner stays out at |x| = 1.25 and spikes past the
-          wing's own leading edge; nested, it tucks to 0.87 and reads as the
-          shoulder a real dart has where the nose layers end. */}
+      {/* One nose fold, nested in the wing so it travels with it. c1 is also
+          the wing's leading edge, so the folded corner tucks exactly along it
+          and never breaks the silhouette. */}
       <Pivot crease={cr.wing} refObj={refs.wing}>
         {piece("wing")}
-        <Pivot crease={cr.nose2} refObj={refs.nose2}>
-          {piece("nose2")}
-          <Pivot crease={cr.nose1} refObj={refs.nose1}>
-            {piece("nose1")}
-          </Pivot>
+        <Pivot crease={cr.nose1} refObj={refs.nose1}>
+          {piece("nose1")}
         </Pivot>
       </Pivot>
     </Pivot>
@@ -186,7 +177,6 @@ const mkRefs = (): HalfRefs => ({
   half: { current: null },
   wing: { current: null },
   nose1: { current: null },
-  nose2: { current: null },
 });
 
 export default function FoldingCard({
@@ -234,9 +224,8 @@ export default function FoldingCard({
     // Scoring only: 0.3 rad lifted the halves 0.37 above the plane, which
     // reads as a fold rather than a crease being marked. 0.12 peaks at 0.15.
     const scored = seg(t, CUE.crease[0], CUE.crease[1], 0, 0.12, sineInOut);
-    const relax = 1 - seg(t, CUE.crease[1], CUE.nose2[0], 0, 0.6, sineInOut);
+    const relax = 1 - seg(t, CUE.crease[1], CUE.half[0], 0, 0.6, sineInOut);
     const nose1 = seg(t, CUE.nose1[0], CUE.nose1[1], 0, FLAT, power2InOut);
-    const nose2 = seg(t, CUE.nose2[0], CUE.nose2[1], 0, FLAT, power2InOut);
     const half = seg(t, CUE.half[0], CUE.half[1], 0, HALF_CLOSE, power2InOut);
     const wing = seg(t, CUE.wings[0], CUE.wings[1], 0, WING_BACK, power2InOut);
 
@@ -251,7 +240,6 @@ export default function FoldingCard({
       if (refs.half.current) refs.half.current.rotation.x = d * (scored * relax + half);
       if (refs.wing.current) refs.wing.current.rotation.x = d * wing;
       if (refs.nose1.current) refs.nose1.current.rotation.x = d * nose1;
-      if (refs.nose2.current) refs.nose2.current.rotation.x = d * nose2;
     }
 
     // ── extraction: deck -> clear air -> folding position ──────────────────

@@ -33,21 +33,20 @@ export type P2 = [number, number];
  * Creases, written for the left half and mirrored by sign.
  *
  *   c1    apex -> (-n, H/2 - n)              45 deg; corner to the centre line
- *   c2    apex -> (-n, H/2 - (1+sqrt2)n)     the angled edge to the centre line
  *   wing  apex -> (-FUSELAGE_HALF, -H/2)     splits thin body from broad wing
  *
- * c1: reflecting the corner (-n, 0) about unit d = (-1,-1)/sqrt2 gives
+ * Reflecting the corner (-n, 0) about unit d = (-1,-1)/sqrt2 gives
  * 2(v·d)d - v = (-n,-n) - (-n,0) = (0,-n): exactly on the centre line.
  *
- * c2 bisects the angle between the new 45 deg edge and the centre line, so the
- * edge folds flat onto the centre. Bisecting 225 deg and 270 deg gives 247.5
- * deg, and that ray leaves the card's side at y = H/2 - (1+sqrt2)n — the
- * (1+sqrt2) falls out of cot(22.5 deg). Folding to the centre twice is what
- * produces a long sharp nose instead of a blunt 90 deg point.
+ * There was a second nose fold here, bisecting the angle to sharpen the point.
+ * It had to go. Nested inside it, the first fold gets reflected a second time
+ * and is thrown back out to the card's full width — rendering the planform as
+ * an hourglass with a nose as wide as the wings, rather than a point. One
+ * fold leaves c1 as the wing's leading edge, so the two edges meet at the apex
+ * in a clean 90 degree nose.
  */
 const APEX: P2 = [0, H / 2];
 const C1_END: P2 = [-n, H / 2 - n];
-const C2_END: P2 = [-n, H / 2 - (1 + Math.SQRT2) * n];
 const WING_END: P2 = [-FUSELAGE_HALF, -H / 2];
 
 export interface Region {
@@ -59,23 +58,21 @@ export interface Region {
 }
 
 /**
- * Four regions per half, tiling it exactly.
+ * Three regions per half, tiling it exactly.
  *
- * Nesting matters as much as the shapes: nose1 lives inside nose2, both inside
- * the wing, all inside the half. So when the wing swings out it carries the
- * folded nose layers with it, exactly as the paper would.
+ * Nesting still matters: nose1 lives inside the wing, which lives inside the
+ * half, so the folded corner travels with the wing when it swings out.
  */
 export function halfRegions(sign: number): Region[] {
   const flip = (p: P2): P2 => [sign < 0 ? p[0] : -p[0], p[1]];
   const poly = (...pts: P2[]): P2[] => pts.map(flip);
   const tag = sign < 0 ? "L" : "R";
   return [
-    { id: `nose1${tag}`, points: poly(APEX, [-n, H / 2], C1_END), lift: 0.014 },
-    { id: `nose2${tag}`, points: poly(APEX, C1_END, C2_END), lift: 0.007 },
+    { id: `nose1${tag}`, points: poly(APEX, [-n, H / 2], C1_END), lift: 0.012 },
     {
-      // The wing: apex to the tail corner, the largest piece on the card.
+      // The wing: leading edge is c1 itself, tip at the tail corner.
       id: `wing${tag}`,
-      points: poly(APEX, C2_END, [-n, -H / 2], WING_END),
+      points: poly(APEX, C1_END, [-n, -H / 2], WING_END),
       lift: 0,
     },
     { id: `fuselage${tag}`, points: poly(APEX, WING_END, [0, -H / 2]), lift: 0 },
@@ -95,7 +92,6 @@ export function creases(sign: number) {
   const a = flip(APEX);
   return {
     nose1: { point: a, angle: angleOf(a, flip(C1_END)) } as Crease,
-    nose2: { point: a, angle: angleOf(a, flip(C2_END)) } as Crease,
     /** Centre crease: vertical, so the pivot's local X runs along +Y. */
     centre: { point: [0, 0] as P2, angle: Math.PI / 2 } as Crease,
     /** Swept, from the nose to the tail — this is what makes a wing, not a strip. */
