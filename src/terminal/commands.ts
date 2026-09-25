@@ -59,6 +59,36 @@ function wrap(text: string, width = 76, indent = ""): Line[] {
   return out.map((l, i) => [t((i === 0 ? indent : hang) + l, "text-subtle")]);
 }
 
+/** Wrap, then tint the given terms wherever they land. Keeps prose readable
+ *  as prose while letting the things that matter carry colour. */
+function wrapHl(
+  text: string,
+  terms: Record<string, string>,
+  width = 76,
+  indent = ""
+): Line[] {
+  const pattern = new RegExp(
+    `(${Object.keys(terms)
+      .sort((a, b) => b.length - a.length)
+      .map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join("|")})`,
+    "g"
+  );
+  return wrap(text, width, indent).map((line) => {
+    const raw = line[0].t;
+    const spans: Span[] = [];
+    let last = 0;
+    for (const m of raw.matchAll(pattern)) {
+      const at = m.index ?? 0;
+      if (at > last) spans.push(t(raw.slice(last, at), "text-subtle"));
+      spans.push(t(m[0], terms[m[0]]));
+      last = at + m[0].length;
+    }
+    if (last < raw.length) spans.push(t(raw.slice(last), "text-subtle"));
+    return spans.length ? spans : line;
+  });
+}
+
 // ── commands ──────────────────────────────────────────────────────────────────
 
 const whoami: Command = {
@@ -68,13 +98,22 @@ const whoami: Command = {
     lines: [
       [t("Hemosoo Woo", val), t(" — full-stack developer", "text-subtle")],
       blank,
-      ...wrap(
+      ...wrapHl(
         "CS senior at Penn, submatriculating into a master's in Computer and Information Science. I build backend services and the infrastructure around them. Three summers as an SDE intern at Amazon in Seattle, all on customer-service systems.",
+        {
+          Penn: "text-accent",
+          Amazon: "text-yellow",
+          Seattle: "text-cyan",
+          "backend services": "text-primary",
+          "Three summers": "text-green",
+        }
       ),
       blank,
-      ...wrap(
-        "Outside of that: I sing acapella, play poker, and am on the journey to dunking.",
-      ),
+      ...wrapHl("Outside of that: I sing acapella, play poker, and am on the journey to dunking.", {
+        acapella: "text-green",
+        poker: "text-yellow",
+        dunking: "text-orange",
+      }),
       blank,
       [t("education  ", dim), t("University of Pennsylvania — BSE Computer Science, MSE CIS (2027)", "text-subtle")],
       [t("awards     ", dim), t("Amazon Future Engineer Scholar ", "text-subtle"), t("$40,000", num)],
@@ -129,7 +168,20 @@ const projects: Command = {
   run: () => ({
     lines: PROJECTS.flatMap((p) => [
       [link(p.slug + "/", p.repo), t("  ", dim), t(p.stack.join(" · "), key)],
-      ...wrap(p.blurb, 74, "  "),
+      ...wrapHl(
+        p.blurb,
+        {
+          "GTO": "text-yellow",
+          "CFR self-play trainer": "text-green",
+          "OpenCV": "text-cyan",
+          "MCP server": "text-green",
+          flashcards: "text-yellow",
+          quizzes: "text-yellow",
+          "no LLM": "text-orange",
+        },
+        74,
+        "  "
+      ),
       blank,
     ]).concat([[t("run ", dim), t("open holdem-bot", key), t(" to jump to a repo", dim)]]),
   }),

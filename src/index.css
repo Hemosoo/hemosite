@@ -6,14 +6,14 @@
    Atom's own background is #282c34; using it as an elevated surface instead of
    the page base is what gives the accents room to read as bright.            */
 @theme {
-  --color-bg: #0d0d0d;
+  --color-bg: #000000;
   --color-surface: #151920;
   --color-surface-2: #282c34;
   --color-line: #2f3440;
 
   --color-text: #e6e9ef;
-  --color-subtle: #abb2bf;
-  --color-dim: #5c6370;
+  --color-subtle: #c3cad8;
+  --color-dim: #6b7280;
 
   --color-primary: #61afef;
   --color-accent: #c678dd;
@@ -30,7 +30,7 @@
 /* shadcn/GodUI token contract, mapped onto the same palette so copied
    components inherit the theme without edits. */
 :root {
-  --background: #0d0d0d;
+  --background: #000000;
   --foreground: #e6e9ef;
   --card: #151920;
   --card-foreground: #e6e9ef;
@@ -272,7 +272,7 @@
    @theme inline and the registry's :root block both land later in this file,
    so anything of ours they shadow has to be restated here to win.          */
 @theme {
-  --color-subtle: #abb2bf;
+  --color-subtle: #c3cad8;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-sans: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }

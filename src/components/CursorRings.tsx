@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
 
 /**
- * `hue` rotates hue but takes saturation AND luminosity from the backdrop, so
- * a near-neutral dark background is left alone while saturated text shifts.
- * `color` also replaces saturation, which turns the flat background into a
- * visible coloured disc — correct for text, far too obvious everywhere else.
+ * `color` takes hue and saturation from this layer and luminosity from the
+ * backdrop. At luminosity zero that resolves to black no matter the hue, so a
+ * pure #000 page is immune while every lit pixel is fully recoloured —
+ * including near-white bold text, which `hue` could not move because a hue
+ * rotation is imperceptible at 92% luminance.
  */
-const BLEND = "hue" as const;
+const BLEND = "color" as const;
 
 /** Ring boundaries in px from the cursor, and the colour of each band. */
 const BANDS: [number, string][] = [
