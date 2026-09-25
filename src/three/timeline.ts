@@ -33,21 +33,36 @@ export const seg = (
 ) => mix(from, to, ease(span(t, start, end)));
 
 /**
- * Cue sheet, in seconds. Total 11.4s: cinematic rather than rushed, and the
- * reset happens while the plane is far outside the frustum.
+ * Cue sheet, in seconds.
+ *
+ * The extraction stages end before FOLD_START, and every fold is driven
+ * through `seg`, which clamps to 0 below its window — so no pivot can move
+ * while the card is still leaving the deck. That was the old bug: `crease`
+ * opened at 2.4s while `lift` ran to 2.5s, so the card creased itself on the
+ * stack.
  */
 export const CUE = {
-  rest: [0.0, 0.9],
-  lift: [0.9, 2.5],
-  crease: [2.4, 3.1],
-  nose1: [3.05, 4.0],
-  nose2: [3.9, 4.85],
-  half: [4.8, 5.65],
-  wings: [5.5, 6.4],
-  trim: [6.3, 6.9],
-  launch: [6.8, 7.4],
-  flight: [7.2, 10.5],
-  reset: [10.5, 11.4],
+  rest: [0.0, 0.25],
+  /** Straight off the stack, dead flat. */
+  lift: [0.25, 1.4],
+  /** Out into clear space, then a beat to settle. */
+  drift: [1.4, 2.05],
+
+  // Folding. Nothing above this point touches a pivot.
+  crease: [2.15, 2.75],
+  nose1: [2.75, 3.55],
+  nose2: [3.5, 4.35],
+  half: [4.3, 5.0],
+  wings: [4.95, 5.75],
+
+  /** Finished plane, held and turned to show itself off. */
+  hero: [5.75, 6.45],
+  launch: [6.45, 6.95],
+  flight: [6.85, 10.6],
+  reset: [10.6, 11.9],
 } as const;
+
+/** No fold value may be non-zero before this. */
+export const FOLD_START = CUE.crease[0];
 
 export const LOOP_SECONDS = CUE.reset[1];
