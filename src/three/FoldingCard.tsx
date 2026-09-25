@@ -54,8 +54,20 @@ const POSE_FOLD: [number, number, number] = [-0.52, 0.34, -0.08];
 /** Turned to show the finished plane off before it leaves. */
 const POSE_HERO: [number, number, number] = [-0.3, 0.86, 0.12];
 
-/** Clear airspace beside the deck, where the folding is actually visible. */
-const FOLD_POS = new THREE.Vector3(-2.35, 0.55, 2.6);
+/**
+ * Size and place of the folded card.
+ *
+ * At scale 1 and z = 2.6 the card stood 3.57 units tall in a 4.75-unit
+ * viewport — 75% of the frame, sprawling across the wordmark. The earlier
+ * tuning optimised the deck-to-card growth *ratio* and never checked absolute
+ * size against the view frustum, which is how that got through.
+ *
+ * 0.44 at z = 1.8 puts it at 30% of frame height, and x = -2.9 keeps its
+ * 0.90-unit span inside [-3.35, -2.45] against a left edge of -4.24: clear of
+ * the centre, where the name lives.
+ */
+const CARD_SCALE = 0.44;
+const FOLD_POS = new THREE.Vector3(-2.9, -0.5, 1.8);
 
 interface PieceProps {
   points: [number, number][];
@@ -252,7 +264,7 @@ export default function FoldingCard({
     const peel = Math.sin(lift * Math.PI);
 
     // Clear of the stack by well over a card width, and forward toward camera.
-    _lifted.set(deckTop.x + 0.45, deckTop.y + 1.75, deckTop.z + 1.35);
+    _lifted.set(deckTop.x + 0.3, deckTop.y + 1.25, deckTop.z + 1.1);
     _pos.copy(deckTop).lerp(_lifted, eLift);
     _pos.x -= peel * 0.3;
     _pos.z += peel * 0.55;
@@ -311,7 +323,7 @@ export default function FoldingCard({
     // camera, the apparent size change is larger than the scale factor alone.
     const grow = THREE.MathUtils.lerp(
       startScale,
-      1,
+      CARD_SCALE,
       sineInOut(span(t, CUE.lift[0], CUE.drift[1]))
     );
 

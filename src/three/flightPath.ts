@@ -13,9 +13,9 @@ export function makeFlightCurve(aspect: number): THREE.CatmullRomCurve3 {
   return new THREE.CatmullRomCurve3(
     [
       // Starts where the fold finished, so the launch is continuous.
-      new THREE.Vector3(-2.35, 0.55, 2.6),
-      new THREE.Vector3(-1.7, 1.15, 3.4),
-      new THREE.Vector3(-0.2, 1.85, 4.2),
+      new THREE.Vector3(-2.9, -0.5, 1.8),
+      new THREE.Vector3(-2.2, 0.35, 2.7),
+      new THREE.Vector3(-0.4, 1.35, 3.6),
       new THREE.Vector3(x * 0.34, 1.4, 1.2),
       new THREE.Vector3(x * 0.62, 0.2, -3.2),
       new THREE.Vector3(x * 0.95, -0.6, -9.5),
