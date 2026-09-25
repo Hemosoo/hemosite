@@ -12,9 +12,11 @@ const BLEND = "multiply" as const;
 
 /** Ring boundaries in px from the cursor, and the colour of each band. */
 const BANDS: [number, string][] = [
-  [100, "#61afef"],
-  [210, "#e5c07b"],
-  [330, "#98c379"],
+  [80, "#61afef"],
+  [165, "#e5c07b"],
+  // Near-white grey: under `multiply` this dims the wordmark a shade rather
+  // than colouring it, so the outermost band reads as a soft falloff.
+  [260, "#cbd1db"],
 ];
 const RADIUS = BANDS[BANDS.length - 1][0];
 
