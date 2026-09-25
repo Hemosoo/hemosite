@@ -203,7 +203,16 @@ const music: Command = {
   },
 };
 
+const poker: Command = {
+  name: "poker",
+  summary: "sit down at a no-limit hold'em table",
+  // Handled by the session interceptor in App; this entry exists so `help`
+  // lists it and tab-completion knows the word.
+  run: () => ({ lines: [] }),
+};
+
 export const COMMANDS: Command[] = [
+  poker,
   whoami,
   work,
   projects,

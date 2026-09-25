@@ -1,9 +1,10 @@
 import "./index.css";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Terminal from "./components/Terminal";
+import Terminal, { type TerminalApi } from "./components/Terminal";
 import NowPlaying from "./components/NowPlaying";
 import { TRACKS } from "./data";
-import type { CommandResult } from "./terminal/commands";
+import type { CommandResult, Line } from "./terminal/commands";
+import { createSession } from "./poker/session";
 
 // ─── Spotify iFrame API ───────────────────────────────────────────────────────
 
@@ -85,6 +86,38 @@ export default function App() {
     controllerRef.current?.loadUri(TRACKS[trackIndex].uri);
   }, [trackIndex]);
 
+  // ── Poker ──
+  // The session owns the table and its bot timer; the shell just routes input
+  // to it while a game is up.
+  const apiRef = useRef<TerminalApi | null>(null);
+  const sessionRef = useRef<ReturnType<typeof createSession> | null>(null);
+  const [atTable, setAtTable] = useState(false);
+
+  const onReady = useCallback((api: TerminalApi) => {
+    apiRef.current = api;
+  }, []);
+
+  const intercept = useCallback((input: string): CommandResult | null => {
+    const word = input.trim().toLowerCase().split(/\s+/)[0];
+
+    if (!sessionRef.current && (word === "poker" || word === "play")) {
+      const print = (lines: Line[]) => apiRef.current?.print(lines);
+      const session = createSession(print, () => {
+        sessionRef.current?.stop();
+        sessionRef.current = null;
+        setAtTable(false);
+      });
+      sessionRef.current = session;
+      setAtTable(true);
+      return session.start();
+    }
+
+    if (sessionRef.current) return sessionRef.current.intercept(input);
+    return null;
+  }, []);
+
+  useEffect(() => () => sessionRef.current?.stop(), []);
+
   const onEffect = useCallback((effect: NonNullable<CommandResult["effect"]>) => {
     if (effect.kind === "open") {
       window.open(effect.href, effect.href.startsWith("mailto:") ? "_self" : "_blank", "noopener");
@@ -112,7 +145,12 @@ export default function App() {
         </button>
       </header>
 
-      <Terminal onEffect={onEffect} />
+      <Terminal
+        onEffect={onEffect}
+        intercept={intercept}
+        onReady={onReady}
+        prompt={atTable ? "table" : undefined}
+      />
 
       <NowPlaying
         open={musicOpen}

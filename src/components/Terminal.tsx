@@ -8,23 +8,40 @@ import {
   type CommandResult,
 } from "../terminal/commands";
 
-const PROMPT = (
-  <>
-    <span className="text-green">hemosoo</span>
-    <span className="text-dim">@</span>
-    <span className="text-cyan">penn</span>
-    <span className="text-dim">:~$</span>
-  </>
-);
+const Prompt = ({ label }: { label?: string }) =>
+  label ? (
+    <>
+      <span className="text-yellow">{label}</span>
+      <span className="text-dim">$</span>
+    </>
+  ) : (
+    <>
+      <span className="text-green">hemosoo</span>
+      <span className="text-dim">@</span>
+      <span className="text-cyan">penn</span>
+      <span className="text-dim">:~$</span>
+    </>
+  );
 
 interface Block {
   id: number;
   input?: string;
+  prompt?: string;
   lines: Line[];
+}
+
+export interface TerminalApi {
+  /** Push output that nobody typed — bot actions arriving on a timer. */
+  print: (lines: Line[]) => void;
 }
 
 interface Props {
   onEffect: (effect: NonNullable<CommandResult["effect"]>) => void;
+  /** Claim input before the registry sees it. Returning null declines. */
+  intercept?: (input: string) => CommandResult | null;
+  /** Prompt label, so a mode can own the line. */
+  prompt?: string;
+  onReady?: (api: TerminalApi) => void;
 }
 
 const BOOT: Line[] = [
@@ -69,7 +86,7 @@ function sliceLines(lines: Line[], n: number): Line[] {
   return out;
 }
 
-export default function Terminal({ onEffect }: Props) {
+export default function Terminal({ onEffect, intercept, prompt, onReady }: Props) {
   const reduced = useReducedMotion();
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [pending, setPending] = useState<Block | null>(null);
@@ -107,6 +124,15 @@ export default function Terminal({ onEffect }: Props) {
     },
     []
   );
+
+  const printRef = useRef<((lines: Line[]) => void) | null>(null);
+  printRef.current = (lines: Line[]) => {
+    finishPending();
+    emit({ id: nextId.current++, lines }, !!reduced);
+  };
+  useEffect(() => {
+    onReady?.({ print: (lines) => printRef.current?.(lines) });
+  }, [onReady]);
 
   // useReducedMotion resolves null -> boolean, so this effect can run twice;
   // without the latch the banner prints itself a second time.
@@ -150,22 +176,22 @@ export default function Terminal({ onEffect }: Props) {
       setInput("");
       setHistIndex(-1);
       if (!value) {
-        setBlocks((b) => [...b, { id: nextId.current++, input: "", lines: [] }]);
+        setBlocks((b) => [...b, { id: nextId.current++, input: "", prompt, lines: [] }]);
         return;
       }
       setHistory((h) => (h[h.length - 1] === value ? h : [...h, value]));
-      const result = runCommand(value);
+      const result = intercept?.(value) ?? runCommand(value);
       if (result.clear) {
         setBlocks([]);
       } else {
         // The echo is what they just typed, so it appears at once; only the
         // machine's answer types itself out.
-        setBlocks((b) => [...b, { id: nextId.current++, input: value, lines: [] }]);
+        setBlocks((b) => [...b, { id: nextId.current++, input: value, prompt, lines: [] }]);
         emit({ id: nextId.current++, lines: result.lines }, !!reduced);
       }
       if (result.effect) onEffect(result.effect);
     },
-    [onEffect, reduced, emit, finishPending]
+    [onEffect, reduced, emit, finishPending, intercept, prompt]
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -246,7 +272,7 @@ export default function Terminal({ onEffect }: Props) {
     <div key={block.id} className="pb-3">
       {block.input !== undefined && (
         <div className="break-words">
-          {PROMPT} <span className="text-text">{block.input}</span>
+          <Prompt label={block.prompt} /> <span className="text-text">{block.input}</span>
         </div>
       )}
       {lines.map((l, i) => renderLine(l, i, typing && i === lines.length - 1))}
@@ -278,7 +304,7 @@ export default function Terminal({ onEffect }: Props) {
           {/* The live prompt sits in the stream rather than in a fixed bar, so
               it walks down the page behind each command the way a shell does. */}
           <label className="flex items-center gap-2">
-            <span className="flex-shrink-0">{PROMPT}</span>
+            <span className="flex-shrink-0"><Prompt label={prompt} /></span>
             <span className="sr-only">Enter a command</span>
             <input
               ref={inputRef}
