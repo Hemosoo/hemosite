@@ -20,8 +20,9 @@ const RADIUS = BANDS[BANDS.length - 1][0];
 
 // What reads as "delay" while dragging is steady-state lag, which is
 // velocity * (1 - FRICTION) / STIFFNESS — not settle time after a step.
-const STIFFNESS = 0.09;
-const FRICTION = 0.35;
+// At 1200px/s the bands sit ~195px behind, about 59% of the radius.
+const STIFFNESS = 0.065;
+const FRICTION = 0.30;
 /** Fixed step so the feel is the same on a 60Hz and a 120Hz display. */
 const STEP_MS = 1000 / 60;
 

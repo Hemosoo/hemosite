@@ -29,9 +29,10 @@ export default function Hero() {
     >
       <motion.h1
         style={reduced ? undefined : { opacity, scale, y }}
-        className="select-none px-6 text-center text-[clamp(2.75rem,12vw,10rem)] font-bold leading-[0.92] tracking-tight text-white"
+        className="select-none px-6 text-center text-[clamp(3.25rem,15vw,11rem)] font-bold leading-[0.85] tracking-tight text-white"
       >
-        Hemosoo Woo
+        <span className="block">Hemosoo</span>
+        <span className="block">Woo</span>
       </motion.h1>
 
       <motion.div
