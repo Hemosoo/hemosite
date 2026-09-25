@@ -1,5 +1,13 @@
 import { useEffect, useRef } from "react";
 
+/**
+ * `hue` rotates hue but takes saturation AND luminosity from the backdrop, so
+ * a near-neutral dark background is left alone while saturated text shifts.
+ * `color` also replaces saturation, which turns the flat background into a
+ * visible coloured disc — correct for text, far too obvious everywhere else.
+ */
+const BLEND = "hue" as const;
+
 /** Ring boundaries in px from the cursor, and the colour of each band. */
 const BANDS: [number, string][] = [
   [80, "#61afef"],
@@ -20,14 +28,7 @@ const gradient = () => {
   return `radial-gradient(circle at center, ${stops.join(", ")}, transparent ${RADIUS}px)`;
 };
 
-/**
- * Concentric colour bands that follow the cursor.
- *
- * `mix-blend-mode: color` takes hue and saturation from this layer but
- * luminosity from whatever is underneath — so the near-black page stays black
- * and only lit pixels (the text) take the colour. No backdrop change, which is
- * why this beats painting a translucent circle.
- */
+/** Concentric colour bands that follow the cursor, shifting text hue. */
 export default function CursorRings() {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -79,7 +80,7 @@ export default function CursorRings() {
         width: RADIUS * 2,
         height: RADIUS * 2,
         backgroundImage: gradient(),
-        mixBlendMode: "color",
+        mixBlendMode: BLEND,
       }}
     />
   );
