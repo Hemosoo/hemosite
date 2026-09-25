@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 /**
  * `color` takes hue and saturation from this layer and luminosity from the
- * backdrop. At luminosity zero that resolves to black no matter the hue, so a
+ * backdrop. At luminosity zero that resolves to black whatever the hue, so a
  * pure #000 page is immune while every lit pixel is fully recoloured —
  * including near-white bold text, which `hue` could not move because a hue
  * rotation is imperceptible at 92% luminance.
@@ -11,15 +11,18 @@ const BLEND = "color" as const;
 
 /** Ring boundaries in px from the cursor, and the colour of each band. */
 const BANDS: [number, string][] = [
-  [58, "#61afef"],
-  [116, "#c678dd"],
-  [174, "#56b6c2"],
-  [232, "#98c379"],
-  [290, "#e5c07b"],
+  [100, "#61afef"],
+  [210, "#c678dd"],
+  [330, "#98c379"],
 ];
 const RADIUS = BANDS[BANDS.length - 1][0];
-/** How fast the rings chase the pointer. 1 = instant. */
-const EASE = 0.18;
+
+// Spring, not a lerp: the rings carry momentum, overshoot slightly on a fast
+// drag and settle back, instead of easing in a straight line.
+const STIFFNESS = 0.26;
+const FRICTION = 0.42;
+/** Fixed step so the feel doesn't change between a 60Hz and a 120Hz display. */
+const STEP_MS = 1000 / 60;
 
 const gradient = () => {
   const stops = BANDS.map(([edge, color], i) => {
@@ -29,7 +32,7 @@ const gradient = () => {
   return `radial-gradient(circle at center, ${stops.join(", ")}, transparent ${RADIUS}px)`;
 };
 
-/** Concentric colour bands that follow the cursor, shifting text hue. */
+/** Concentric colour bands that trail the cursor, recolouring text. */
 export default function CursorRings() {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -40,11 +43,14 @@ export default function CursorRings() {
     const el = ref.current;
     if (!el) return;
 
+    const snap = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const target = { x: innerWidth / 2, y: innerHeight / 2 };
     const at = { ...target };
+    const vel = { x: 0, y: 0 };
     let raf = 0;
+    let last = 0;
+    let carry = 0;
     let visible = false;
-    const snap = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const onMove = (e: PointerEvent) => {
       target.x = e.clientX;
@@ -53,13 +59,32 @@ export default function CursorRings() {
         visible = true;
         at.x = target.x;
         at.y = target.y;
+        vel.x = 0;
+        vel.y = 0;
         el.style.opacity = "1";
       }
     };
 
-    const tick = () => {
-      at.x += (target.x - at.x) * (snap ? 1 : EASE);
-      at.y += (target.y - at.y) * (snap ? 1 : EASE);
+    const tick = (ts: number) => {
+      if (!last) last = ts;
+      // Cap the catch-up so a backgrounded tab doesn't fling the rings.
+      carry += Math.min(ts - last, 100);
+      last = ts;
+
+      if (snap) {
+        at.x = target.x;
+        at.y = target.y;
+        carry = 0;
+      } else {
+        while (carry >= STEP_MS) {
+          vel.x = vel.x * FRICTION + (target.x - at.x) * STIFFNESS;
+          vel.y = vel.y * FRICTION + (target.y - at.y) * STIFFNESS;
+          at.x += vel.x;
+          at.y += vel.y;
+          carry -= STEP_MS;
+        }
+      }
+
       el.style.transform = `translate3d(${at.x - RADIUS}px, ${at.y - RADIUS}px, 0)`;
       raf = requestAnimationFrame(tick);
     };
