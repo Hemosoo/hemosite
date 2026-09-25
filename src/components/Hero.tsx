@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { useCursorBands, bandGradient } from "../hooks/useCursorBands";
+import PaperPlanes from "./PaperPlanes";
 
 /** Full-height wordmark that fades out as the shell below scrolls up. The
  *  cursor bands are painted into the text itself, so nothing else is
@@ -25,6 +26,8 @@ export default function Hero() {
       ref={ref}
       className="relative flex h-[100svh] items-center justify-center overflow-hidden bg-bg"
     >
+      <PaperPlanes />
+
       <motion.h1
         ref={nameRef}
         style={{
@@ -35,7 +38,7 @@ export default function Hero() {
           color: "transparent",
           WebkitTextFillColor: "transparent",
         }}
-        className="select-none px-6 text-center text-[clamp(3.25rem,15vw,11rem)] font-bold leading-[0.85] tracking-tight"
+        className="relative z-10 select-none px-6 text-center text-[clamp(3.25rem,15vw,11rem)] font-bold leading-[0.85] tracking-tight"
       >
         <span className="block">Hemosoo</span>
         <span className="block">Woo</span>

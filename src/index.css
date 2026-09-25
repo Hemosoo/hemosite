@@ -123,6 +123,34 @@
   }
 }
 
+/* ── Hero flights ────────────────────────────────────────────────────────────
+   Travel, bob and cross-fade are separate animations sharing one duration and
+   delay per flight, which is what keeps the fold happening at the same point
+   in the journey every lap. Transform and opacity only, so they stay off the
+   main thread. */
+@keyframes flight-ltr {
+  from { transform: translateX(-22vw); }
+  to   { transform: translateX(122vw); }
+}
+@keyframes flight-rtl {
+  from { transform: translateX(122vw); }
+  to   { transform: translateX(-22vw); }
+}
+@keyframes flight-bob {
+  0%   { transform: translateY(0) rotate(-5deg); }
+  50%  { transform: translateY(-16px) rotate(4deg); }
+  100% { transform: translateY(0) rotate(-5deg); }
+}
+/* The card holds, then hands over to the plane a third of the way across. */
+@keyframes flight-card {
+  0%, 26%  { opacity: 1; }
+  44%, 100% { opacity: 0; }
+}
+@keyframes flight-plane {
+  0%, 26%  { opacity: 0; }
+  44%, 100% { opacity: 1; }
+}
+
 /* Only set by the custom cursor component, and only when a fine pointer is
    present, so touch and keyboard users keep the native behaviour. The
    element+class selector outranks Tailwind's cursor utilities without
