@@ -23,7 +23,8 @@
   --color-red: #e06c75;
   --color-cyan: #56b6c2;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* shadcn/GodUI token contract, mapped onto the same palette so copied
@@ -268,7 +269,8 @@
    so anything of ours they shadow has to be restated here to win.          */
 @theme {
   --color-subtle: #abb2bf;
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :root {
