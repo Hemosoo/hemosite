@@ -92,6 +92,10 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-text);
+    /* One notch up from regular. Everything without an explicit weight
+       inherits this, and heavier text carries more colour for the cursor
+       rings to shift. */
+    font-weight: 500;
     -webkit-font-smoothing: antialiased;
   }
   a {
