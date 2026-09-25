@@ -19,9 +19,9 @@ const FACES: Face[] = [
   },
   {
     pip: "♥",
-    rank: "27",
-    title: "BSE + MSE, Penn",
-    lines: ["Computer Science", "Computer & Information Science"],
+    rank: "Penn",
+    title: "BSE + MSE",
+    lines: ["Computer Science", "Class of 2027"],
     tint: "text-red",
   },
 ];
@@ -48,7 +48,7 @@ function Card({ face, flip }: { face: Face; flip: MotionValue<number> | number }
       >
         <div className={`text-lg font-bold leading-none ${face.tint}`}>{face.pip}</div>
         <div className="text-center">
-          <div className="text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-none">{face.rank}</div>
+          <div className="text-[clamp(1.6rem,4.2vw,2.75rem)] font-bold leading-none tracking-tight">{face.rank}</div>
           <div className="mt-2 text-[11px] font-semibold leading-tight sm:text-xs">{face.title}</div>
           {face.lines.map((l) => (
             <div key={l} className="mt-0.5 text-[10px] leading-tight text-[#5b616b] sm:text-[11px]">
