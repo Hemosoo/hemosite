@@ -53,7 +53,8 @@ const POSE_DECK: [number, number, number] = [-Math.PI / 2, 0, 0.06];
 /** Three-quarter view: both halves, the centre crease and the nose all legible. */
 const POSE_FOLD: [number, number, number] = [-0.42, 0.3, -0.06];
 /** Turned to show the finished plane off before it leaves. */
-const POSE_HERO: [number, number, number] = [-0.3, 0.86, 0.12];
+/** Kept close to POSE_FOLD: at a 0.16s hero the old 32-degree yaw flicked. */
+const POSE_HERO: [number, number, number] = [-0.33, 0.66, 0.1];
 
 /**
  * Size and place of the folded card.

@@ -49,9 +49,9 @@ export const CUE = {
   drift: [1.23, 1.88],
 
   // Folding. Nothing above this point touches a pivot.
-  crease: [1.98, 2.58],
+  crease: [1.98, 2.36],
   /** The single nose fold; given the time the two folds used to share. */
-  nose1: [2.58, 3.73],
+  nose1: [2.36, 3.16],
   /**
    * The body fold and the wing fold deliberately overlap.
    *
@@ -62,25 +62,26 @@ export const CUE = {
    * closes, so the wings stay near level and only the keel drops — peak 0.65,
    * and they still finish last, which keeps a readable wing beat.
    */
-  half: [4.03, 4.88],
-  wings: [4.18, 5.03],
+  half: [3.46, 4.31],
+  wings: [3.61, 4.46],
 
   /**
-   * Finished plane. 0.25s, down from 0.75s — long enough to register, short
-   * enough that it never looks parked.
+   * Finished plane. 0.75s -> 0.25s -> 0.16s. Long enough to register the
+   * shape, short enough that it never reads as a pause; the hover keeps it
+   * alive and takeoff picks the motion straight up.
    */
-  hero: [5.03, 5.28],
+  hero: [4.46, 4.62],
   /**
    * Takeoff. Not a pose blend: physics starts here with almost no speed and
    * ramps speed, steering and orientation rate in over 0.8s, so there is no
    * frame where anything switches on.
    */
-  takeoff: [5.28, 6.08],
+  takeoff: [4.62, 5.42],
   /** Chasing the cursor. Length comes from FLIGHT_CONFIG. */
-  flight: [6.08, 13.08],
+  flight: [5.42, 12.42],
   /** Heading off-frame, then fading once it is mostly gone. */
-  exit: [13.08, 15.08],
-  reset: [15.08, 15.45],
+  exit: [12.42, 14.42],
+  reset: [14.42, 14.79],
 } as const;
 
 /** No fold value may be non-zero before this. */
