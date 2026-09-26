@@ -9,7 +9,7 @@ import {
   polygonGeometry,
   type Crease,
 } from "./cardModel";
-import { CUE, LOOP_SECONDS, seg, span, power2InOut, power3Out, sineInOut } from "./timeline";
+import { CUE, LOOP_SECONDS, seg, span, power2InOut, power2Out, sineInOut } from "./timeline";
 import { makeFlightCurve, orientAlongPath } from "./flightPath";
 
 /**
@@ -294,8 +294,11 @@ export default function FoldingCard({
     const flight = span(t, CUE.flight[0], CUE.flight[1]);
 
     if (flight > 0) {
-      // Ease in, cruise, ease out; a constant rate reads as a slide.
-      const u = THREE.MathUtils.clamp(power3Out(flight) * 0.62 + flight * 0.38, 0, 1);
+      // Mostly steady with a soft launch. The old blend leaned on power3Out
+      // at 0.62, which put the plane 38% down the curve in the first 20% of
+      // the window — it left like a dart from a blowgun. This reaches 13% in
+      // that span instead, so the flight reads as gliding rather than fired.
+      const u = THREE.MathUtils.clamp(power2Out(flight) * 0.35 + flight * 0.65, 0, 1);
       curve.getPointAt(u, _pos);
       orientAlongPath(_quat, curve, u);
       // Blend out of the hero pose across the launch, so nothing snaps.
@@ -310,7 +313,7 @@ export default function FoldingCard({
 
     // Fade out and back in entirely off-camera. Everything above is a pure
     // function of t, so there is no state to restore at the loop point.
-    const exit = span(t, CUE.flight[1] - 0.5, CUE.flight[1]);
+    const exit = span(t, CUE.flight[1] - 0.4, CUE.flight[1]);
     const enter = span(t, CUE.reset[1] - 0.4, CUE.reset[1]);
     const vis = DEBUG_FOLD_PROGRESS == null ? 1 - exit + enter : 1;
 

@@ -42,16 +42,16 @@ export const seg = (
  * stack.
  */
 export const CUE = {
-  rest: [0.0, 0.25],
+  rest: [0.0, 0.15],
   /** Straight off the stack, dead flat. */
-  lift: [0.25, 1.4],
+  lift: [0.15, 1.3],
   /** Out into clear space, then a beat to settle. */
-  drift: [1.4, 2.05],
+  drift: [1.3, 1.95],
 
   // Folding. Nothing above this point touches a pivot.
-  crease: [2.15, 2.75],
+  crease: [2.05, 2.65],
   /** The single nose fold; given the time the two folds used to share. */
-  nose1: [2.75, 3.9],
+  nose1: [2.65, 3.8],
   /**
    * The body fold and the wing fold deliberately overlap.
    *
@@ -62,14 +62,16 @@ export const CUE = {
    * closes, so the wings stay near level and only the keel drops — peak 0.65,
    * and they still finish last, which keeps a readable wing beat.
    */
-  half: [4.2, 5.05],
-  wings: [4.35, 5.2],
+  half: [4.1, 4.95],
+  wings: [4.25, 5.1],
 
   /** Finished plane, held and turned to show itself off. */
-  hero: [5.3, 6.05],
-  launch: [6.05, 6.55],
-  flight: [6.45, 10.25],
-  reset: [10.25, 11.55],
+  hero: [5.2, 5.95],
+  launch: [5.95, 6.45],
+  /** 5.25s across the frame, up from 3.8s. */
+  flight: [6.35, 11.6],
+  /** Dead time at the loop point, down from 1.3s. */
+  reset: [11.6, 12.15],
 } as const;
 
 /** No fold value may be non-zero before this. */
