@@ -1,45 +1,18 @@
 import * as THREE from "three";
 
-/**
- * A curved route through depth, not a sideways slide.
- *
- * Control points climb away from the deck, swing toward the camera, cross the
- * frame and then recede — so the plane changes scale as well as position,
- * which is what sells the space as 3D.
- */
-export function makeFlightCurve(aspect: number): THREE.CatmullRomCurve3 {
-  // Wider viewports get a longer lateral sweep; taller ones lean on depth.
-  const x = THREE.MathUtils.clamp(9 * aspect, 7, 16);
-  return new THREE.CatmullRomCurve3(
-    [
-      // Starts where the fold finished, so the launch is continuous.
-      new THREE.Vector3(-2.9, -0.5, 1.8),
-      new THREE.Vector3(-2.2, 0.35, 2.7),
-      new THREE.Vector3(-0.4, 1.35, 3.6),
-      new THREE.Vector3(x * 0.34, 1.4, 1.2),
-      new THREE.Vector3(x * 0.62, 0.2, -3.2),
-      new THREE.Vector3(x * 0.95, -0.6, -9.5),
-    ],
-    false,
-    "catmullrom",
-    0.5
-  );
-}
-
+/** The nose. */
 const FORWARD = new THREE.Vector3(0, 1, 0);
 /**
  * The model's up is -Z, not +Z.
  *
- * Folding swings both halves the same way, and the fuselage keel ends up
+ * Folding swings both halves the same way and the fuselage keel ends up
  * hanging toward +Z — so +Z is the plane's belly. Rolling +Z to meet world up
- * flew it inverted, showing the card backs and the unlit underside.
+ * flies it inverted, showing the card backs and the unlit underside.
  */
 const MODEL_UP = new THREE.Vector3(0, 0, -1);
 const WORLD_UP = new THREE.Vector3(0, 1, 0);
 
-const _tangent = new THREE.Vector3();
-const _ahead = new THREE.Vector3();
-const _turn = new THREE.Vector3();
+const _heading = new THREE.Vector3();
 const _right = new THREE.Vector3();
 const _up = new THREE.Vector3();
 const _desiredUp = new THREE.Vector3();
@@ -47,44 +20,31 @@ const _base = new THREE.Quaternion();
 const _roll = new THREE.Quaternion();
 
 /**
- * Point the plane along the curve and bank it into its turns.
+ * Orientation from a heading plus a roll.
  *
- * Three steps:
- *  1. The shortest rotation taking the model's nose (+Y) onto the tangent.
- *     That fixes heading and pitch but leaves roll undefined — a free spin
- *     about the tangent that would otherwise drift arbitrarily.
- *  2. Pin roll by measuring the angle between the plane's current up and world
- *     up projected perpendicular to the tangent, then undoing it.
- *  3. Bank into the turn. The turn vector is the change in tangent over a
- *     small step ahead; its component along the plane's right axis is the
- *     lateral acceleration, and banking is proportional to it, as it is for a
- *     real aircraft where lift tilts to supply centripetal force.
+ * `setFromUnitVectors` gives the shortest rotation taking the nose onto the
+ * heading, which fixes heading and pitch but leaves roll undefined — a free
+ * spin about the heading that would otherwise drift arbitrarily. So step two
+ * measures the angle between the model's up and world up projected
+ * perpendicular to the heading and cancels it, leaving `bank` as the only roll
+ * in play. That is what lets banking be a deliberate, bounded quantity rather
+ * than whatever the quaternion happened to produce.
  */
-export function orientAlongPath(
+export function orientFromDirection(
   out: THREE.Quaternion,
-  curve: THREE.CatmullRomCurve3,
-  t: number,
-  bankStrength = 2.6,
-  maxBank = 0.72
+  forward: THREE.Vector3,
+  bank = 0
 ) {
-  curve.getTangentAt(THREE.MathUtils.clamp(t, 0, 1), _tangent).normalize();
-  curve.getTangentAt(THREE.MathUtils.clamp(t + 0.02, 0, 1), _ahead).normalize();
+  _heading.copy(forward).normalize();
+  _base.setFromUnitVectors(FORWARD, _heading);
 
-  _base.setFromUnitVectors(FORWARD, _tangent);
-
-  // Roll correction: where "up" currently points vs where it should.
   _up.copy(MODEL_UP).applyQuaternion(_base);
-  _desiredUp.copy(WORLD_UP).addScaledVector(_tangent, -WORLD_UP.dot(_tangent));
+  _desiredUp.copy(WORLD_UP).addScaledVector(_heading, -WORLD_UP.dot(_heading));
   if (_desiredUp.lengthSq() < 1e-6) _desiredUp.copy(MODEL_UP);
   _desiredUp.normalize();
-  _right.crossVectors(_tangent, _up).normalize();
+  _right.crossVectors(_heading, _up).normalize();
   const twist = Math.atan2(_desiredUp.dot(_right), _desiredUp.dot(_up));
 
-  _turn.subVectors(_ahead, _tangent);
-  const lateral = _turn.dot(_right);
-  const bank = THREE.MathUtils.clamp(lateral * bankStrength, -maxBank, maxBank);
-
-  _roll.setFromAxisAngle(_tangent, -twist + bank);
-  out.copy(_roll).multiply(_base);
-  return out;
+  _roll.setFromAxisAngle(_heading, -twist + bank);
+  return out.copy(_roll).multiply(_base);
 }

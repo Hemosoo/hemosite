@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { Canvas, useThree } from "@react-three/fiber";
 import Deck from "./Deck";
@@ -12,11 +12,10 @@ import { makeFaceTexture, makeBackTexture } from "./textures";
  * layout: a narrow viewport pulls back and raises the camera so the deck stays
  * in frame and the flight still crosses interesting space.
  */
-function Rig({ onAspect }: { onAspect: (a: number) => void }) {
+function Rig() {
   const { camera, size } = useThree();
   useEffect(() => {
     const aspect = size.width / Math.max(1, size.height);
-    onAspect(aspect);
     const cam = camera as THREE.PerspectiveCamera;
     const narrow = THREE.MathUtils.clamp((1.1 - aspect) / 0.7, 0, 1);
     cam.position.set(
@@ -27,7 +26,7 @@ function Rig({ onAspect }: { onAspect: (a: number) => void }) {
     cam.fov = THREE.MathUtils.lerp(38, 52, narrow);
     cam.lookAt(0, -0.2, 0);
     cam.updateProjectionMatrix();
-  }, [camera, size, onAspect]);
+  }, [camera, size]);
   return null;
 }
 
@@ -36,7 +35,6 @@ const DECK_SCALE = 0.3;
 const ORIGIN = new THREE.Vector3(0, 0, 0);
 
 function Scene({ shadows, quality }: { shadows: boolean; quality: number }) {
-  const [aspect, setAspect] = useState(1.6);
   const face = useMemo(() => makeFaceTexture(quality), [quality]);
   const back = useMemo(() => makeBackTexture(quality), [quality]);
 
@@ -64,18 +62,12 @@ function Scene({ shadows, quality }: { shadows: boolean; quality: number }) {
 
   return (
     <>
-      <Rig onAspect={setAspect} />
+      <Rig />
       <Lighting shadows={shadows} />
       <group position={deckPos} scale={DECK_SCALE}>
         <Deck position={ORIGIN} back={back} />
       </group>
-      <FoldingCard
-        face={face}
-        back={back}
-        aspect={aspect}
-        deckTop={deckTop}
-        startScale={DECK_SCALE}
-      />
+      <FoldingCard face={face} back={back} deckTop={deckTop} startScale={DECK_SCALE} />
       {/* Catches the deck's shadow; invisible against the black otherwise. */}
       {shadows && (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.95, 0]} receiveShadow>

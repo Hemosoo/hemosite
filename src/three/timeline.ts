@@ -65,13 +65,22 @@ export const CUE = {
   half: [4.03, 4.88],
   wings: [4.18, 5.03],
 
-  /** Finished plane, held and turned to show itself off. */
-  hero: [5.13, 5.88],
-  launch: [5.88, 6.38],
-  /** 5.25s across the frame, up from 3.8s. */
-  flight: [6.28, 11.6],
-  /** Dead time at the loop point: 1.30s -> 0.55s -> 0.30s. */
-  reset: [11.6, 11.9],
+  /**
+   * Finished plane. 0.25s, down from 0.75s — long enough to register, short
+   * enough that it never looks parked.
+   */
+  hero: [5.03, 5.28],
+  /**
+   * Takeoff. Not a pose blend: physics starts here with almost no speed and
+   * ramps speed, steering and orientation rate in over 0.8s, so there is no
+   * frame where anything switches on.
+   */
+  takeoff: [5.28, 6.08],
+  /** Chasing the cursor. Length comes from FLIGHT_CONFIG. */
+  flight: [6.08, 13.08],
+  /** Heading off-frame, then fading once it is mostly gone. */
+  exit: [13.08, 15.08],
+  reset: [15.08, 15.45],
 } as const;
 
 /** No fold value may be non-zero before this. */
