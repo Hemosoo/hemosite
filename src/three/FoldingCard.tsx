@@ -75,7 +75,16 @@ interface PieceProps {
   back: THREE.Texture;
 }
 
-/** One flat region, rendered front and back so the card reads as printed paper. */
+/**
+ * One flat region, printed on both sides.
+ *
+ * The reverse is the SAME geometry drawn with side: BackSide — not a copy
+ * turned around. `rotation={[0, Math.PI, 0]}` maps (x,y,z) to (-x,y,-z), which
+ * mirrors a piece onto the opposite half of the card: a left-half region
+ * spanning x in [-1.25, 0] reappears at [0, 1.25]. That gave every region a
+ * phantom duplicate across the centreline, which is what made the folded card
+ * look like overlapping debris.
+ */
 function Piece({ points, lift, face, back }: PieceProps) {
   const geo = useMemo(() => polygonGeometry(points, lift), [points, lift]);
   const geoBack = useMemo(() => polygonGeometry(points, lift - 0.004), [points, lift]);
@@ -84,8 +93,8 @@ function Piece({ points, lift, face, back }: PieceProps) {
       <mesh geometry={geo} castShadow receiveShadow>
         <meshStandardMaterial map={face} roughness={0.92} metalness={0} side={THREE.FrontSide} />
       </mesh>
-      <mesh geometry={geoBack} rotation={[0, Math.PI, 0]} castShadow receiveShadow>
-        <meshStandardMaterial map={back} roughness={0.95} metalness={0} side={THREE.FrontSide} />
+      <mesh geometry={geoBack} castShadow receiveShadow>
+        <meshStandardMaterial map={back} roughness={0.95} metalness={0} side={THREE.BackSide} />
       </mesh>
     </>
   );
