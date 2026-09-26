@@ -314,7 +314,9 @@ export default function FoldingCard({
     // Fade out and back in entirely off-camera. Everything above is a pure
     // function of t, so there is no state to restore at the loop point.
     const exit = span(t, CUE.flight[1] - 0.4, CUE.flight[1]);
-    const enter = span(t, CUE.reset[1] - 0.4, CUE.reset[1]);
+    // Must not start before the exit fade has finished, or the card pops
+    // back at half scale while the plane is still leaving.
+    const enter = span(t, CUE.reset[1] - 0.22, CUE.reset[1]);
     const vis = DEBUG_FOLD_PROGRESS == null ? 1 - exit + enter : 1;
 
     // The card starts at the deck's scale and grows into the foreground as it

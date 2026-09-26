@@ -27,6 +27,14 @@ export function makeFlightCurve(aspect: number): THREE.CatmullRomCurve3 {
 }
 
 const FORWARD = new THREE.Vector3(0, 1, 0);
+/**
+ * The model's up is -Z, not +Z.
+ *
+ * Folding swings both halves the same way, and the fuselage keel ends up
+ * hanging toward +Z — so +Z is the plane's belly. Rolling +Z to meet world up
+ * flew it inverted, showing the card backs and the unlit underside.
+ */
+const MODEL_UP = new THREE.Vector3(0, 0, -1);
 const WORLD_UP = new THREE.Vector3(0, 1, 0);
 
 const _tangent = new THREE.Vector3();
@@ -65,9 +73,9 @@ export function orientAlongPath(
   _base.setFromUnitVectors(FORWARD, _tangent);
 
   // Roll correction: where "up" currently points vs where it should.
-  _up.set(0, 0, 1).applyQuaternion(_base);
+  _up.copy(MODEL_UP).applyQuaternion(_base);
   _desiredUp.copy(WORLD_UP).addScaledVector(_tangent, -WORLD_UP.dot(_tangent));
-  if (_desiredUp.lengthSq() < 1e-6) _desiredUp.set(0, 0, 1);
+  if (_desiredUp.lengthSq() < 1e-6) _desiredUp.copy(MODEL_UP);
   _desiredUp.normalize();
   _right.crossVectors(_tangent, _up).normalize();
   const twist = Math.atan2(_desiredUp.dot(_right), _desiredUp.dot(_up));

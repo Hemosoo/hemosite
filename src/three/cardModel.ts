@@ -68,7 +68,10 @@ export function halfRegions(sign: number): Region[] {
   const poly = (...pts: P2[]): P2[] => pts.map(flip);
   const tag = sign < 0 ? "L" : "R";
   return [
-    { id: `nose1${tag}`, points: poly(APEX, [-n, H / 2], C1_END), lift: 0.012 },
+    // The lift only has to break exact coplanarity; the folds stop short of
+    // 180 degrees, which does the real separating. At 0.012 the step was
+    // visible as a crease across the flat card before any folding happened.
+    { id: `nose1${tag}`, points: poly(APEX, [-n, H / 2], C1_END), lift: 0.0015 },
     {
       // The wing: leading edge is c1 itself, tip at the tail corner.
       id: `wing${tag}`,
@@ -123,11 +126,24 @@ export function childOffset(crease: Crease): { pos: [number, number, number]; ro
  * also stop slightly short of 180 for the same reason.
  */
 export function polygonGeometry(points: P2[], lift = 0): THREE.BufferGeometry {
+  // Mirroring the left half onto the right negates x, which REVERSES the
+  // polygon's winding. Three decides front vs back from winding, so the right
+  // half rendered its back texture where the left showed the ace — the card
+  // came out half face, half back. Normalise to counter-clockwise first.
+  let ring = points;
+  let twiceArea = 0;
+  for (let i = 0; i < ring.length; i++) {
+    const [x1, y1] = ring[i];
+    const [x2, y2] = ring[(i + 1) % ring.length];
+    twiceArea += x1 * y2 - x2 * y1;
+  }
+  if (twiceArea < 0) ring = [...ring].reverse();
+
   const pos: number[] = [];
   const uv: number[] = [];
   const nrm: number[] = [];
-  for (let i = 1; i < points.length - 1; i++) {
-    for (const p of [points[0], points[i], points[i + 1]]) {
+  for (let i = 1; i < ring.length - 1; i++) {
+    for (const p of [ring[0], ring[i], ring[i + 1]]) {
       pos.push(p[0], p[1], lift);
       uv.push((p[0] + W / 2) / W, (p[1] + H / 2) / H);
       nrm.push(0, 0, 1);
