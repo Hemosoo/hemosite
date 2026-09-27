@@ -201,6 +201,15 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
   const [reveal, setReveal] = useState<{ index: number; spec: RevealSpec } | null>(null);
   const [focus, setFocus] = useState(0);
   const [nudge, setNudge] = useState(0);
+  /**
+   * Held back until the card lands, so the tint is part of the impact.
+   *
+   * It has to gate the whole set, not just the arriving card: a river that
+   * completes a flush lights the four cards already on the board, and if that
+   * happened as the reveal began it would give the card away before it got
+   * there. Until impact the table shows the hand as it stood without it.
+   */
+  const [tintReleased, setTintReleased] = useState(true);
   const boardFx = useAnimationControls();
   const lastBoard = useRef(0);
 
@@ -216,9 +225,12 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
     setReveal({ index: n - 1, spec });
     setFocus(spec.dim);
     setHeld(true);
+    setTintReleased(false);
 
     const impactMs = spec.totalMs * spec.impactAt;
     const timers: number[] = [];
+    // Lands on the same frame as the card, the shake and the last locked piece.
+    timers.push(window.setTimeout(() => setTintReleased(true), impactMs));
     if (spec.shake.px > 0) {
       timers.push(
         window.setTimeout(() => {
@@ -238,6 +250,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
         setReveal(null);
         setFocus(0);
         setHeld(false);
+        setTintReleased(true);
       }, spec.totalMs)
     );
     return () => timers.forEach(clearTimeout);
@@ -255,11 +268,20 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
   );
 
   // Recomputed only when the cards actually change, not every render.
-  const lit = useMemo(
+  const litNow = useMemo(
     () => highlightSet(table),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [table.board, table.players, table.revealed, table.result]
   );
+  // The hand as it stood before the card being revealed: what stays lit while
+  // it is still in the air. Cards already tinted keep their tint, so nothing
+  // flickers off mid-reveal.
+  const litBefore = useMemo(
+    () => (reveal ? highlightSet({ ...table, board: table.board.slice(0, reveal.index) }) : litNow),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [reveal, litNow, table.board, table.players, table.revealed, table.result]
+  );
+  const lit = reveal && !tintReleased ? litBefore : litNow;
 
   const started = table.street !== "idle";
   const busted = table.players.filter((p) => !p.out).length < 2;
