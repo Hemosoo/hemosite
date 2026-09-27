@@ -15,7 +15,7 @@ const SUIT_NAME: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
 type CardSize = "sm" | "you" | "md";
 const CARD_SIZE: Record<CardSize, string> = {
   sm: "h-[5.5rem] w-[3.93rem]",
-  you: "h-[8.5rem] w-[6.07rem]",
+  you: "h-[11.5rem] w-[8.21rem]",
   md: "h-40 w-[7.15rem]",
 };
 /** Board slots are reserved at this width whether or not a card is in them. */
@@ -30,7 +30,7 @@ const fmt = (n: number) => n.toLocaleString("en-US");
 /** Seat 0 sits at the bottom; the rest run clockwise around the ellipse. */
 function seatPos(i: number, n: number) {
   const angle = Math.PI / 2 + (i / n) * Math.PI * 2;
-  return { x: 50 + 42 * Math.cos(angle), y: 50 + 39 * Math.sin(angle) };
+  return { x: 50 + 42 * Math.cos(angle), y: 50 + 34 * Math.sin(angle) };
 }
 
 /**
@@ -87,7 +87,7 @@ function Seat({
             />
           ))
         ) : (
-          <div className={player.isHuman ? "h-[8.5rem]" : "h-[5.5rem]"} />
+          <div className={player.isHuman ? "h-[11.5rem]" : "h-[5.5rem]"} />
         )}
       </div>
 
@@ -267,7 +267,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
         <div className="absolute left-1/2 top-1/2 h-[72%] w-[88%] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-primary/15 bg-[radial-gradient(ellipse_at_center,#131a24_0%,#0d131b_70%)] shadow-[inset_0_0_80px_rgba(97,175,239,0.06)]" />
 
         {/* Board + pot */}
-        <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3">
+        <div className="absolute left-1/2 top-[44%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3">
           {/* Five slots, reserved from the start.
               The board used to be a flex row that grew as cards arrived, so
               every new card re-centred the row and shoved the previous ones
@@ -282,9 +282,9 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
             {[0, 1, 2, 3, 4].map((i) => {
               const c = table.board[i];
               return (
-                <div key={i} className={`${BOARD_SLOT} shrink-0`}>
+                <div key={i} className={`${BOARD_SLOT} relative shrink-0`}>
                   {/* A slot with nothing in it still shows where a card goes. */}
-                  <div className="absolute inset-y-0 w-[7.15rem] rounded-xl border border-white/5" />
+                  <div className="absolute inset-0 rounded-xl border border-white/5" />
                   <AnimatePresence initial={false}>
                     {c && (
                       <BoardCard
@@ -312,19 +312,32 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               </span>
             )}
           </motion.div>
-          {pot > 0 && (
-            <div className="rounded-full border border-yellow/30 bg-yellow/10 px-5 py-1.5 text-lg font-semibold tabular-nums text-yellow">
-              pot {fmt(pot)}
-            </div>
-          )}
+          {/* Held even when empty: this row is below the board, and the
+              column is centred on its own height, so letting it collapse
+              slid every board card up the moment the first bet went in. */}
+          <div className="flex h-[2.4rem] items-center">
+            {pot > 0 && (
+              <div className="rounded-full border border-yellow/30 bg-yellow/10 px-5 py-1.5 text-lg font-semibold tabular-nums text-yellow">
+                pot {fmt(pot)}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Seats */}
+        {/* Seat 0 is anchored to the bottom edge rather than to the ellipse.
+            Its cards are much larger than the bots', so a percentage centre
+            line made the whole stack's height depend on the card size — grow
+            the cards and the seat pushed through the bottom of the frame. */}
         {table.players.map((p, i) => (
           <div
             key={p.id}
-            className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${positions[i].x}%`, top: `${positions[i].y}%` }}
+            className={`absolute -translate-x-1/2 ${i === 0 ? "" : "-translate-y-1/2"}`}
+            style={
+              i === 0
+                ? { left: "50%", bottom: 0 }
+                : { left: `${positions[i].x}%`, top: `${positions[i].y}%` }
+            }
           >
             <Seat player={p} table={table} isTurn={table.toAct === p.id && !table.result} reduced={reduced} />
           </div>
@@ -349,7 +362,13 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
 
       {/* Controls */}
       <div className="flex-shrink-0 border-t border-line bg-surface/50 px-4 py-4 sm:px-6">
-        <div className="mx-auto flex max-w-4xl flex-col gap-4">
+        {/* Reserved height.
+            The four states are very different sizes — the raise slider plus
+            action row is ~148px, a lone deal button ~60px, "thinking" ~56px —
+            so the footer grew and shrank every time the turn changed, pushing
+            the felt up and down with it. Holding the tallest state's height
+            and centring inside keeps the table still. */}
+        <div className="mx-auto flex min-h-[9.25rem] max-w-4xl flex-col justify-center gap-4">
           {busted ? (
             <div className="flex items-center justify-between text-sm">
               <span className="text-subtle">
@@ -372,34 +391,36 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
             </button>
           ) : myTurn ? (
             <>
-              {legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo && (
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min={legal.minRaiseTo}
-                    max={legal.maxRaiseTo}
-                    step={table.bigBlind / 2}
-                    value={raiseTo}
-                    onChange={(e) => setRaiseTo(Number(e.target.value))}
-                    aria-label="Raise amount"
-                    className="h-2 flex-1 cursor-pointer accent-primary"
-                  />
-                  <span className="w-28 text-right text-xl font-semibold tabular-nums text-primary">
-                    {fmt(raiseTo)}
-                  </span>
-                  <div className="hidden gap-1 sm:flex">
-                    {([["½", 0.5], ["¾", 0.75], ["pot", 1]] as const).map(([label, f]) => (
-                      <button
-                        key={label}
-                        onClick={() => quick(f)}
-                        className="rounded border border-line px-3 py-1.5 text-sm text-subtle hover:border-primary/60 hover:text-primary"
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className="flex min-h-[2.75rem] items-center gap-3">
+                {legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo && (
+                  <>
+                    <input
+                      type="range"
+                      min={legal.minRaiseTo}
+                      max={legal.maxRaiseTo}
+                      step={table.bigBlind / 2}
+                      value={raiseTo}
+                      onChange={(e) => setRaiseTo(Number(e.target.value))}
+                      aria-label="Raise amount"
+                      className="h-2 flex-1 cursor-pointer accent-primary"
+                    />
+                    <span className="w-28 text-right text-xl font-semibold tabular-nums text-primary">
+                      {fmt(raiseTo)}
+                    </span>
+                    <div className="hidden gap-1 sm:flex">
+                      {([["½", 0.5], ["¾", 0.75], ["pot", 1]] as const).map(([label, f]) => (
+                        <button
+                          key={label}
+                          onClick={() => quick(f)}
+                          className="rounded border border-line px-3 py-1.5 text-sm text-subtle hover:border-primary/60 hover:text-primary"
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
 
               <div className="flex gap-2">
                 {legal.canFold && (
