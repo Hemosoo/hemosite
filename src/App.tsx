@@ -1,5 +1,6 @@
 import "./index.css";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import Terminal from "./components/Terminal";
 import PokerTable from "./components/PokerTable";
 import Hero from "./components/Hero";
@@ -112,7 +113,7 @@ export default function App() {
     <div className="min-h-[100svh] bg-bg font-mono text-subtle">
       <Hero />
       <CardHand />
-      <About />
+      <About onPoker={() => setPokerOpen(true)} />
 
       <header className="sticky top-0 z-20 flex items-center gap-4 border-y border-line bg-bg/90 px-4 py-3 text-xs backdrop-blur sm:px-8 sm:text-[13px]">
         <span className="text-dim">hemosoo.dev</span>
@@ -138,7 +139,10 @@ export default function App() {
         onClose={() => setMusicOpen(false)}
       />
 
-      {pokerOpen && <PokerTable onClose={() => setPokerOpen(false)} />}
+      {/* AnimatePresence so closing plays out instead of cutting. */}
+      <AnimatePresence>
+        {pokerOpen && <PokerTable key="poker" onClose={() => setPokerOpen(false)} />}
+      </AnimatePresence>
 
       <Cursor />
     </div>

@@ -17,6 +17,9 @@ const HAND_END_MS = 2600;
 export function usePoker(seats = 6, stack = 10000, bigBlind = 100) {
   const [table, setTable] = useState<Table>(() => createTable(seats, stack, bigBlind));
   const [autoDeal, setAutoDeal] = useState(true);
+  /** Set while a reveal plays: freezes bots and dealing so the animation
+   *  cannot race the engine into a duplicate street. */
+  const [held, setHeld] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const deal = useCallback(() => {
@@ -41,6 +44,7 @@ export function usePoker(seats = 6, stack = 10000, bigBlind = 100) {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
 
+    if (held) return;
     if (table.street === "idle") return;
 
     if (table.result) {
@@ -65,7 +69,7 @@ export function usePoker(seats = 6, stack = 10000, bigBlind = 100) {
       if (timer.current) clearTimeout(timer.current);
       timer.current = null;
     };
-  }, [table, autoDeal]);
+  }, [table, autoDeal, held]);
 
   useEffect(
     () => () => {
@@ -75,7 +79,7 @@ export function usePoker(seats = 6, stack = 10000, bigBlind = 100) {
   );
 
   const legal = legalActions(table);
-  const myTurn = !table.result && !!table.players[table.toAct]?.isHuman;
+  const myTurn = !held && !table.result && !!table.players[table.toAct]?.isHuman;
 
   return {
     table,
@@ -84,6 +88,8 @@ export function usePoker(seats = 6, stack = 10000, bigBlind = 100) {
     pot: potSize(table),
     autoDeal,
     setAutoDeal,
+    held,
+    setHeld,
     deal,
     act,
     reset,

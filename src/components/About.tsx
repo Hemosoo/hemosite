@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { SKILLS, LINKS } from "../data";
+import PokerTell from "./PokerTell";
 
 const reveal = (reduced: boolean | null, delay = 0) => ({
   initial: reduced ? {} : { opacity: 0, y: 20 },
@@ -8,7 +9,7 @@ const reveal = (reduced: boolean | null, delay = 0) => ({
   transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
-export default function About() {
+export default function About({ onPoker }: { onPoker: () => void }) {
   const reduced = useReducedMotion();
 
   return (
@@ -30,7 +31,7 @@ export default function About() {
           </p>
           <p className="max-w-2xl leading-relaxed text-subtle">
             Outside of that I sing <span className="text-green">acapella</span>, play{" "}
-            <span className="text-yellow">poker</span>, and am on the journey to{" "}
+            <PokerTell onOpen={onPoker} />, and am on the journey to{" "}
             <span className="text-orange">dunking</span>. Amazon Future Engineer scholar.
           </p>
         </motion.div>

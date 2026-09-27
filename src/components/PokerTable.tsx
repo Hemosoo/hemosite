@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { RANK_CHARS, SUIT_CHARS, SUIT_IS_RED, type Card } from "../poker/cards";
 import type { Player, Table } from "../poker/engine";
 import { usePoker } from "../poker/usePoker";
+import BoardCard from "./BoardCard";
+import { pickReveal, type RevealSpec } from "../poker/reveals";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
@@ -113,7 +115,57 @@ function Seat({
 
 export default function PokerTable({ onClose }: { onClose: () => void }) {
   const reduced = useReducedMotion();
-  const { table, legal, myTurn, pot, autoDeal, setAutoDeal, deal, act, reset } = usePoker(6);
+  const { table, legal, myTurn, pot, autoDeal, setAutoDeal, held, setHeld, deal, act, reset } =
+    usePoker(6);
+  /** No input reaches the engine while a reveal is playing. */
+  const locked = held;
+
+  // ── community card reveals ─────────────────────────────────────────────
+  // The engine has already decided the card; this only chooses how it lands.
+  const [reveal, setReveal] = useState<{ index: number; spec: RevealSpec } | null>(null);
+  const [focus, setFocus] = useState(0);
+  const [nudge, setNudge] = useState(0);
+  const boardFx = useAnimationControls();
+  const lastBoard = useRef(0);
+
+  useEffect(() => {
+    const n = table.board.length;
+    const prev = lastBoard.current;
+    lastBoard.current = n;
+    // 4 = turn, 5 = river. The flop (0 -> 3) and a new hand (5 -> 0) are not
+    // special, and a re-render with no change must not retrigger anything.
+    if (n === prev || (n !== 4 && n !== 5)) return;
+
+    const spec = pickReveal(n === 4 ? "turn" : "river", !!reduced);
+    setReveal({ index: n - 1, spec });
+    setFocus(spec.dim);
+    setHeld(true);
+
+    const impactMs = spec.totalMs * spec.impactAt;
+    const timers: number[] = [];
+    if (spec.shake.px > 0) {
+      timers.push(
+        window.setTimeout(() => {
+          // Table kick, and the neighbours shoved outward for a beat.
+          boardFx.start({
+            x: [0, -spec.shake.px, spec.shake.px * 0.7, -spec.shake.px * 0.35, 0],
+            y: [0, spec.shake.px * 0.5, -spec.shake.px * 0.28, 0, 0],
+            transition: { duration: spec.shake.ms / 1000, ease: "easeOut" },
+          });
+          setNudge(spec.nudgePx);
+          timers.push(window.setTimeout(() => setNudge(0), spec.shake.ms));
+        }, impactMs)
+      );
+    }
+    timers.push(
+      window.setTimeout(() => {
+        setReveal(null);
+        setFocus(0);
+        setHeld(false);
+      }, spec.totalMs)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [table.board.length, reduced, setHeld, boardFx]);
   const [raiseTo, setRaiseTo] = useState(0);
 
   useEffect(() => {
@@ -134,7 +186,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") return onClose();
-      if (!myTurn) return;
+      if (!myTurn || locked) return;
       const k = e.key.toLowerCase();
       if (k === "f" && legal.canFold) act({ type: "fold" });
       else if (k === "c") {
@@ -145,7 +197,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [myTurn, legal, act, raiseTo, onClose]);
+  }, [myTurn, locked, legal, act, raiseTo, onClose]);
 
   const quick = (frac: number) => {
     const target = Math.round(table.currentBet + pot * frac);
@@ -153,7 +205,15 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-bg/97 backdrop-blur-sm isolate">
+    <motion.div
+      // The page doesn't switch to the table, it opens onto it: the backdrop
+      // deepens while the felt rises from slightly behind and below.
+      initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 26 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 14 }}
+      transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed inset-0 z-50 flex flex-col bg-bg/97 backdrop-blur-sm isolate"
+    >
       <header className="flex flex-shrink-0 items-center gap-3 border-b border-line px-4 py-3 text-sm sm:px-6">
         <span className="font-semibold text-text">no-limit hold&apos;em</span>
         <span className="text-dim">6-max · 100bb · play chips</span>
@@ -179,29 +239,40 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
         </button>
       </header>
 
-      <div className="relative min-h-0 flex-1">
+      <motion.div
+        className="relative min-h-0 flex-1"
+        animate={{ filter: focus ? `brightness(${1 - focus * 0.55})` : "brightness(1)" }}
+        transition={{ duration: 0.26 }}
+      >
         {/* Felt */}
         <div className="absolute left-1/2 top-1/2 h-[72%] w-[88%] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-primary/15 bg-[radial-gradient(ellipse_at_center,#16202b_0%,#0f161d_70%)] shadow-[inset_0_0_80px_rgba(97,175,239,0.06)]" />
 
         {/* Board + pot */}
         <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3">
-          <div className="flex gap-2">
+          <motion.div
+            className="flex gap-2"
+            animate={boardFx}
+            style={{ filter: focus ? `brightness(${1 / (1 - focus * 0.55)})` : undefined }}
+          >
             <AnimatePresence initial={false}>
               {table.board.map((c, i) => (
-                <motion.div
+                <BoardCard
                   key={`${c.r}-${c.s}`}
-                  initial={reduced ? false : { opacity: 0, y: -12, rotateY: 90 }}
-                  animate={{ opacity: 1, y: 0, rotateY: 0 }}
-                  transition={{ duration: 0.28, delay: reduced ? 0 : i * 0.06 }}
-                >
-                  <PlayingCard card={c} />
-                </motion.div>
+                  card={c}
+                  index={i}
+                  reduced={reduced}
+                  spec={reveal?.index === i ? reveal.spec : undefined}
+                  // Neighbours get shoved away from the card that just landed.
+                  nudge={reveal && reveal.index !== i ? (i < reveal.index ? -nudge : nudge) : 0}
+                  dim={reveal && reveal.index !== i ? focus : 0}
+                  renderCard={(card, hidden) => <PlayingCard card={card} hidden={hidden} />}
+                />
               ))}
             </AnimatePresence>
             {!started && (
               <span className="text-base text-dim">press deal to start</span>
             )}
-          </div>
+          </motion.div>
           {pot > 0 && (
             <div className="rounded-full border border-yellow/30 bg-yellow/10 px-5 py-1.5 text-lg font-semibold tabular-nums text-yellow">
               pot {fmt(pot)}
@@ -235,7 +306,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* Controls */}
       <div className="flex-shrink-0 border-t border-line bg-surface/50 px-4 py-4 sm:px-6">
@@ -255,6 +326,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
           ) : !started || (table.result && !autoDeal) ? (
             <button
               onClick={deal}
+              disabled={locked}
               className="mx-auto rounded-lg bg-primary px-10 py-4 text-lg font-bold text-[#0b0d10] transition-transform hover:scale-[1.02]"
             >
               deal {table.handNo > 0 ? "next hand" : ""}
@@ -334,6 +406,6 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
