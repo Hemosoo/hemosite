@@ -6,6 +6,20 @@ import type { Rank, Suit } from "./poker/cardTheme";
 
 /** Engine suit indices are 0=spades 1=hearts 2=diamonds 3=clubs. */
 const SUIT_NAME: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
+
+/**
+ * Card sizes, all at exactly 2.5:3.5 so the SVG never letterboxes in its box.
+ * `you` is deliberately larger than the bots — they are the cards the player
+ * actually reads, and the bottom seat has the room for them.
+ */
+type CardSize = "sm" | "you" | "md";
+const CARD_SIZE: Record<CardSize, string> = {
+  sm: "h-[5.5rem] w-[3.93rem]",
+  you: "h-[8.5rem] w-[6.07rem]",
+  md: "h-40 w-[7.15rem]",
+};
+/** Board slots are reserved at this width whether or not a card is in them. */
+const BOARD_SLOT = "h-40 w-[7.15rem]";
 import type { Player, Table } from "../poker/engine";
 import { usePoker } from "../poker/usePoker";
 import BoardCard from "./BoardCard";
@@ -33,10 +47,9 @@ function PlayingCard({
 }: {
   card?: Card;
   hidden?: boolean;
-  size?: "sm" | "md";
+  size?: CardSize;
 }) {
-  // 2.5:3.5 kept exactly, so the SVG never letterboxes inside its box.
-  const dims = size === "sm" ? "h-[5.5rem] w-[3.93rem]" : "h-40 w-[7.15rem]";
+  const dims = CARD_SIZE[size];
   return (
     <PokerCard
       className={`${dims} block drop-shadow-[0_6px_14px_rgba(0,0,0,0.55)]`}
@@ -66,10 +79,15 @@ function Seat({
       <div className="flex gap-2">
         {player.hole.length > 0 && !player.out ? (
           player.hole.map((c, i) => (
-            <PlayingCard key={i} card={show ? c : undefined} hidden={!show} size="sm" />
+            <PlayingCard
+              key={i}
+              card={show ? c : undefined}
+              hidden={!show}
+              size={player.isHuman ? "you" : "sm"}
+            />
           ))
         ) : (
-          <div className="h-[5.5rem]" />
+          <div className={player.isHuman ? "h-[8.5rem]" : "h-[5.5rem]"} />
         )}
       </div>
 
@@ -250,28 +268,48 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
 
         {/* Board + pot */}
         <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3">
+          {/* Five slots, reserved from the start.
+              The board used to be a flex row that grew as cards arrived, so
+              every new card re-centred the row and shoved the previous ones
+              sideways — worst exactly when the turn lands and the eye is on
+              the board. Fixed slots mean a card only ever animates within
+              its own position. */}
           <motion.div
-            className="flex gap-2"
+            className="relative flex gap-2"
             animate={boardFx}
             style={{ filter: focus ? `brightness(${1 / (1 - focus * 0.55)})` : undefined }}
           >
-            <AnimatePresence initial={false}>
-              {table.board.map((c, i) => (
-                <BoardCard
-                  key={`${c.r}-${c.s}`}
-                  card={c}
-                  index={i}
-                  reduced={reduced}
-                  spec={reveal?.index === i ? reveal.spec : undefined}
-                  // Neighbours get shoved away from the card that just landed.
-                  nudge={reveal && reveal.index !== i ? (i < reveal.index ? -nudge : nudge) : 0}
-                  dim={reveal && reveal.index !== i ? focus : 0}
-                  renderCard={(card, hidden) => <PlayingCard card={card} hidden={hidden} />}
-                />
-              ))}
-            </AnimatePresence>
+            {[0, 1, 2, 3, 4].map((i) => {
+              const c = table.board[i];
+              return (
+                <div key={i} className={`${BOARD_SLOT} shrink-0`}>
+                  {/* A slot with nothing in it still shows where a card goes. */}
+                  <div className="absolute inset-y-0 w-[7.15rem] rounded-xl border border-white/5" />
+                  <AnimatePresence initial={false}>
+                    {c && (
+                      <BoardCard
+                        key={`${c.r}-${c.s}`}
+                        card={c}
+                        index={i}
+                        reduced={reduced}
+                        spec={reveal?.index === i ? reveal.spec : undefined}
+                        nudge={
+                          reveal && reveal.index !== i ? (i < reveal.index ? -nudge : nudge) : 0
+                        }
+                        dim={reveal && reveal.index !== i ? focus : 0}
+                        renderCard={(card, hidden) => (
+                          <PlayingCard card={card} hidden={hidden} />
+                        )}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
             {!started && (
-              <span className="text-base text-dim">press deal to start</span>
+              <span className="absolute inset-0 grid place-items-center text-base text-dim">
+                press deal to start
+              </span>
             )}
           </motion.div>
           {pot > 0 && (
