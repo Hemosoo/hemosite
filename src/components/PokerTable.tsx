@@ -2,7 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import type { Card } from "../poker/cards";
 import { toFace } from "../poker/cardFace";
+import { cardKey, highlightSet } from "../poker/highlight";
+import { INK } from "./poker/cardTheme";
+import { cardShadow } from "./poker/cardLayout";
 import PokerCard from "./poker/PokerCard";
+
+/** Cards carrying the hand wear the deck's violet, the ace of spades' colour. */
+const TINT = INK.violet;
 
 /**
  * Card sizes are heights only — the SVG carries a 2.5:3.5 viewBox, so the
@@ -51,19 +57,25 @@ function PlayingCard({
   card,
   hidden,
   size = "md",
+  tint,
 }: {
   card?: Card;
   hidden?: boolean;
   size?: CardSize;
+  tint?: string;
 }) {
   const dims = CARD_SIZE[size];
   const face = card ? toFace(card) : undefined;
+  // A face-down card gives nothing away, tint included.
+  const lit = !hidden && !!card ? tint : undefined;
   return (
     <PokerCard
-      className={`${dims} block drop-shadow-[0_6px_14px_rgba(0,0,0,0.55)]`}
+      className={`${dims} block`}
+      style={{ filter: cardShadow(lit) }}
       faceUp={!hidden && !!card}
       rank={face?.rank}
       suit={face?.suit}
+      tint={lit}
     />
   );
 }
@@ -74,11 +86,14 @@ function Seat({
   isTurn,
   reduced,
   badgeSide,
+  lit,
 }: {
   player: Player;
   table: Table;
   isTurn: boolean;
   reduced: boolean | null;
+  /** Keys of the cards carrying the hand. */
+  lit: Set<string>;
   /** Which side of the name plate the bet sits on: the one facing the pot. */
   badgeSide: "left" | "right";
 }) {
@@ -147,6 +162,7 @@ function Seat({
               card={show ? c : undefined}
               hidden={!show}
               size={player.isHuman ? "you" : "sm"}
+              tint={lit.has(cardKey(c)) ? TINT : undefined}
             />
           ))
         ) : (
@@ -236,6 +252,13 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
   const positions = useMemo(
     () => table.players.map((_, i) => seatPos(i, seats)),
     [table.players, seats]
+  );
+
+  // Recomputed only when the cards actually change, not every render.
+  const lit = useMemo(
+    () => highlightSet(table),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [table.board, table.players, table.revealed, table.result]
   );
 
   const started = table.street !== "idle";
@@ -352,8 +375,13 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                           reveal && reveal.index !== i ? (i < reveal.index ? -nudge : nudge) : 0
                         }
                         dim={reveal && reveal.index !== i ? focus : 0}
+                        tint={lit.has(cardKey(c)) ? TINT : undefined}
                         renderCard={(card, hidden) => (
-                          <PlayingCard card={card} hidden={hidden} />
+                          <PlayingCard
+                            card={card}
+                            hidden={hidden}
+                            tint={card && lit.has(cardKey(card)) ? TINT : undefined}
+                          />
                         )}
                       />
                     )}
@@ -369,13 +397,39 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
           </motion.div>
           {/* Held even when empty: this row is below the board, and the
               column is centred on its own height, so letting it collapse
-              slid every board card up the moment the first bet went in. */}
-          <div className="flex h-9 items-center">
-            {pot > 0 && (
-              <div className="rounded-full border border-yellow/30 bg-yellow/10 px-5 py-1.5 text-lg font-semibold tabular-nums text-yellow">
-                pot {fmt(pot)}
-              </div>
-            )}
+              slid every board card up the moment the first bet went in.
+
+              The result lands here too, once the pot has been awarded and this
+              row is free. It used to sit at the bottom of the frame, which is
+              where the player's own seat is anchored, so the two overlapped.
+              Both are positioned out of flow, so a two-line result from a real
+              side pot still cannot move the board. */}
+          <div className="relative flex h-9 items-center justify-center">
+            <AnimatePresence mode="wait">
+              {table.result ? (
+                <motion.div
+                  key="result"
+                  initial={reduced ? { opacity: 0 } : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute whitespace-nowrap rounded-full border border-green/40 bg-green/10 px-5 py-1.5 text-center text-base text-green"
+                >
+                  {table.result.map((r) => (
+                    <div key={r}>{r}</div>
+                  ))}
+                </motion.div>
+              ) : pot > 0 ? (
+                <motion.div
+                  key="pot"
+                  initial={reduced ? false : { opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute whitespace-nowrap rounded-full border border-yellow/30 bg-yellow/10 px-5 py-1.5 text-lg font-semibold tabular-nums text-yellow"
+                >
+                  pot {fmt(pot)}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -406,27 +460,13 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               table={table}
               isTurn={table.toAct === p.id && !table.result}
               reduced={reduced}
+              lit={lit}
               badgeSide={positions[i].x > 50 ? "left" : "right"}
             />
           </div>
           );
         })}
 
-        {/* Result banner */}
-        <AnimatePresence>
-          {table.result && (
-            <motion.div
-              initial={reduced ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg border border-green/30 bg-green/10 px-5 py-2.5 text-center text-sm text-green"
-            >
-              {table.result.map((r) => (
-                <div key={r}>{r}</div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
 
       {/* Controls.

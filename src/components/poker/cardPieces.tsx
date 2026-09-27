@@ -12,11 +12,20 @@ import type { Rank, Suit } from "./cardTheme";
 import { aceLayout, type PipPlacement } from "./cardLayout";
 import SuitIcon from "./SuitIcon";
 
-/** The blank stock: fill plus edge. The edge goes violet under the hero ace. */
-export function CardBody({ heroAce }: { heroAce?: boolean }) {
+/**
+ * The blank stock: fill, an optional tint wash, then the edge.
+ *
+ * The hero ace has always worn the deck's violet edge. `tint` generalises it:
+ * any card carrying the hand gets the same treatment, so the ace is no longer
+ * the only card on the table with a colour of its own.
+ */
+export function CardBody({ heroAce, tint }: { heroAce?: boolean; tint?: string }) {
   return (
     <>
       <rect x="0" y="0" width={CARD_W} height={CARD_H} rx={CARD_R} fill={INK.face} />
+      {tint && (
+        <rect x="0" y="0" width={CARD_W} height={CARD_H} rx={CARD_R} fill={tint} opacity="0.13" />
+      )}
       <rect
         x="1.5"
         y="1.5"
@@ -24,9 +33,9 @@ export function CardBody({ heroAce }: { heroAce?: boolean }) {
         height={CARD_H - 3}
         rx={CARD_R - 1}
         fill="none"
-        stroke={heroAce ? INK.violet : INK.faceEdge}
-        strokeWidth="2.5"
-        opacity={heroAce ? 0.85 : 1}
+        stroke={tint ?? (heroAce ? INK.violet : INK.faceEdge)}
+        strokeWidth={tint ? "3.5" : "2.5"}
+        opacity={tint ? 1 : heroAce ? 0.85 : 1}
       />
     </>
   );

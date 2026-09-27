@@ -13,6 +13,7 @@
 import { useEffect, useId, useMemo, useRef } from "react";
 import { CARD_H, CARD_R, CARD_W, isFace, type Rank, type Suit } from "./cardTheme";
 import { AceGradient, CardBody } from "./cardPieces";
+import { cardShadow } from "./cardLayout";
 import { FaceGradient } from "./FaceCard";
 import { cardParts } from "./cardParts";
 import {
@@ -29,10 +30,13 @@ export default function AssemblyReveal({
   rank,
   suit,
   spec,
+  tint,
 }: {
   rank: Rank;
   suit: Suit;
   spec: AssemblySpec;
+  /** Carried so a card that completes a hand assembles already lit. */
+  tint?: string;
 }) {
   const uid = useId().replace(/:/g, "");
   const { parts, heroAce } = useMemo(
@@ -94,11 +98,10 @@ export default function AssemblyReveal({
     <div className="pointer-events-none absolute inset-0" style={{ zIndex: 30 }}>
       <svg
         viewBox={`0 0 ${CARD_W} ${CARD_H}`}
-        // The same drop shadow the finished board card carries, so the
-        // handover back to PokerCard at the end of the reveal is invisible.
-        className="h-full w-full drop-shadow-[0_6px_14px_rgba(0,0,0,0.55)]"
-        // Pieces spend most of the reveal well outside the card's own box.
-        style={{ overflow: "visible" }}
+        className="h-full w-full"
+        // The same filter the finished board card carries, so the handover
+        // back to PokerCard at the end of the reveal is invisible.
+        style={{ overflow: "visible", filter: cardShadow(tint) }}
         aria-hidden
       >
         <defs>
@@ -122,7 +125,7 @@ export default function AssemblyReveal({
 
         <g ref={frameRef}>
           <g ref={bodyRef} opacity={0}>
-            <CardBody heroAce={heroAce} />
+            <CardBody heroAce={heroAce} tint={tint} />
           </g>
           {parts.map((p, i) => (
             <g

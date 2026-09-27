@@ -1,6 +1,9 @@
 import { makeDeck, shuffle, type Card } from "./cards";
 import { scoreBest, compareScores, describeScore, type Score } from "./evaluate";
 
+/** Grouped, the way the pot pill and the stacks show it. */
+const chips = (n: number) => n.toLocaleString("en-US");
+
 export type Street = "idle" | "preflop" | "flop" | "turn" | "river" | "showdown";
 
 export interface Player {
@@ -372,18 +375,36 @@ const potTotal = (t: Table) => t.players.reduce((n, p) => n + p.totalCommitted, 
 
 /** Split the money into a main pot plus one side pot per all-in level. */
 export function buildPots(players: Player[]): Pot[] {
-  const levels = [...new Set(players.filter((p) => p.totalCommitted > 0).map((p) => p.totalCommitted))].sort(
-    (a, b) => a - b
-  );
+  // Side pots split only where a player who is STILL IN the hand is capped.
+  // A folded player's chips are dead money: they belong to whichever pot their
+  // contribution falls inside, not to a pot of their own. Taking levels from
+  // everyone made one pot per distinct fold point, so an ordinary hand where
+  // the blinds folded and two players saw a showdown built three pots and
+  // announced three winners for what was really one.
+  const live = players.filter((p) => !p.folded && p.totalCommitted > 0);
+  const levels = [...new Set(live.map((p) => p.totalCommitted))].sort((a, b) => a - b);
+
   const pots: Pot[] = [];
   let prev = 0;
   for (const level of levels) {
     let amount = 0;
     for (const p of players) amount += Math.min(Math.max(p.totalCommitted - prev, 0), level - prev);
-    const eligible = players.filter((p) => !p.folded && p.totalCommitted >= level).map((p) => p.id);
+    const eligible = live.filter((p) => p.totalCommitted >= level).map((p) => p.id);
     if (amount > 0 && eligible.length) pots.push({ amount, eligible });
-    else if (amount > 0 && pots.length) pots[pots.length - 1].amount += amount;
     prev = level;
+  }
+
+  // A fold can leave chips above the highest live level. returnUncalled hands
+  // back the genuinely uncalled part; whatever is left is dead money and rides
+  // with the last pot, so chips are never dropped on the floor here.
+  let dead = 0;
+  for (const p of players) dead += Math.max(p.totalCommitted - prev, 0);
+  if (dead > 0) {
+    if (pots.length) pots[pots.length - 1].amount += dead;
+    else {
+      const eligible = players.filter((p) => !p.folded).map((p) => p.id);
+      if (eligible.length) pots.push({ amount: dead, eligible });
+    }
   }
   return pots;
 }
@@ -443,7 +464,9 @@ function award(t: Table, pots: Pot[], reveal: boolean): Table {
     const names = ordered.map((id) => s.players[id].name).join(" and ");
     const how = reveal && eligible.length > 1 ? ` with ${describeScore(scores.get(ordered[0])!)}` : "";
     const soloHuman = ordered.length === 1 && s.players[ordered[0]].isHuman;
-    lines.push(`${names} win${ordered.length > 1 || soloHuman ? "" : "s"} ${pot.amount}${how}`);
+    lines.push(
+      `${names} win${ordered.length > 1 || soloHuman ? "" : "s"} ${chips(pot.amount)}${how}`
+    );
   }
 
   for (const p of s.players) {

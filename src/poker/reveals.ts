@@ -126,7 +126,7 @@ function dismantleAssembly(street: BigStreet, seed: number): AssemblySpec {
   return {
     kind: "assembly",
     id: "dismantle-assembly",
-    totalMs: river ? 2150 : 1900,
+    totalMs: river ? 2650 : 2300,
     // The last piece locks here, at the same frame the stock hits the felt.
     impactAt: river ? 0.935 : 0.93,
     dim: river ? 0.4 : 0.32,

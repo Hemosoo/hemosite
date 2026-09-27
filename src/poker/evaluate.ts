@@ -75,29 +75,66 @@ const COMBOS_7_5: number[][] = (() => {
   return out;
 })();
 
+function combosOf(n: number): number[][] {
+  const out: number[][] = [];
+  for (let a = 0; a < n; a++)
+    for (let b = a + 1; b < n; b++)
+      for (let c = b + 1; c < n; c++)
+        for (let d = c + 1; d < n; d++)
+          for (let e = d + 1; e < n; e++) out.push([a, b, c, d, e]);
+  return out;
+}
+
 /** Best five-card score from any 5-7 cards. */
 export function scoreBest(cards: Card[]): Score {
   if (cards.length < 5) return [-1];
   if (cards.length === 5) return score5(cards);
   let best: Score | null = null;
-  const combos =
-    cards.length === 7
-      ? COMBOS_7_5
-      : (() => {
-          const out: number[][] = [];
-          const n = cards.length;
-          for (let a = 0; a < n; a++)
-            for (let b = a + 1; b < n; b++)
-              for (let c = b + 1; c < n; c++)
-                for (let d = c + 1; d < n; d++)
-                  for (let e = d + 1; e < n; e++) out.push([a, b, c, d, e]);
-          return out;
-        })();
+  const combos = cards.length === 7 ? COMBOS_7_5 : combosOf(cards.length);
   for (const combo of combos) {
     const s = score5(combo.map((i) => cards[i]));
     if (!best || compareScores(s, best) > 0) best = s;
   }
   return best!;
+}
+
+/** Best five-card hand from any 5-7 cards, with the cards it used. */
+export function bestFive(cards: Card[]): { score: Score; five: Card[] } {
+  if (cards.length < 5) return { score: [-1], five: [] };
+  if (cards.length === 5) return { score: score5(cards), five: [...cards] };
+  let best: Score | null = null;
+  let bestCombo: number[] = [];
+  const combos = cards.length === 7 ? COMBOS_7_5 : combosOf(cards.length);
+  for (const combo of combos) {
+    const s = score5(combo.map((i) => cards[i]));
+    if (!best || compareScores(s, best) > 0) {
+      best = s;
+      bestCombo = combo;
+    }
+  }
+  return { score: best!, five: bestCombo.map((i) => cards[i]) };
+}
+
+/**
+ * The cards that actually make the hand, kickers excluded.
+ *
+ * A pair of sevens is two cards, not five: highlighting the three kickers
+ * alongside them would say nothing. Straights, flushes and full houses use
+ * all five, so those return the lot.
+ */
+export function coreCards(five: Card[], score: Score): Card[] {
+  switch (score[0]) {
+    case 0:
+      return []; // high card: nothing is made
+    case 1: // pair
+    case 3: // trips
+    case 7: // quads
+      return five.filter((c) => c.r === score[1]);
+    case 2: // two pair
+      return five.filter((c) => c.r === score[1] || c.r === score[2]);
+    default: // straight, flush, full house, straight flush
+      return five;
+  }
 }
 
 export const describeScore = (s: Score) => CATEGORY_NAMES[s[0]] ?? "nothing";

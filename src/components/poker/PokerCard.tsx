@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 import { CARD_H, CARD_W, isFace, type Rank, type Suit } from "./cardTheme";
 import { AceGradient, AceInner, AceSuit, CardBody, CornerRank, CornerSuit, Pip } from "./cardPieces";
 import { CORNER_BR, CORNER_TL, FACE_PLACE, pipPlacements } from "./cardLayout";
@@ -32,6 +32,9 @@ export interface PokerCardProps {
   suit?: Suit;
   faceUp?: boolean;
   className?: string;
+  style?: CSSProperties;
+  /** Set when this card is part of a made hand; washes and edges it. */
+  tint?: string;
   /** Accessible name; falls back to "Ace of spades" style text. */
   label?: string;
 }
@@ -41,6 +44,8 @@ export default function PokerCard({
   suit,
   faceUp = true,
   className,
+  style,
+  tint,
   label,
 }: PokerCardProps) {
   const uid = useId().replace(/:/g, "");
@@ -52,6 +57,7 @@ export default function PokerCard({
     <svg
       viewBox={`0 0 ${CARD_W} ${CARD_H}`}
       className={className}
+      style={style}
       role="img"
       aria-label={label ?? (showFace ? `${rank} of ${suit}` : "face-down card")}
       // preserveAspectRatio default keeps the 2.5:3.5 proportion at any size.
@@ -65,7 +71,7 @@ export default function PokerCard({
               <AceGradient gid={gid} />
             </defs>
           )}
-          <CardBody heroAce={heroAce} />
+          <CardBody heroAce={heroAce} tint={tint} />
 
           {/* Corner indices, the second rotated through the centre. */}
           <g transform={CORNER_TL}>

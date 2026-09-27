@@ -15,6 +15,8 @@ interface Props {
   nudge: number;
   /** Dimmed while attention is on the revealing card. */
   dim: number;
+  /** Set when this card is carrying the hand. */
+  tint?: string;
   renderCard: (card: Card | undefined, hidden: boolean) => React.ReactNode;
 }
 
@@ -32,6 +34,7 @@ export default function BoardCard({
   spec,
   nudge,
   dim,
+  tint,
   renderCard,
 }: Props) {
   // A reveal ends by dropping `spec`, which swaps this component from the
@@ -46,7 +49,7 @@ export default function BoardCard({
     const { rank, suit } = toFace(card);
     // The card is already decided; the reveal only describes how it arrives.
     // The slot keeps its resting outline underneath, so nothing reflows.
-    return <AssemblyReveal rank={rank} suit={suit} spec={spec} />;
+    return <AssemblyReveal rank={rank} suit={suit} spec={spec} tint={tint} />;
   }
 
   if (spec) {

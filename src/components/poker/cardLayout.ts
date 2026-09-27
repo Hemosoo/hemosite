@@ -49,3 +49,13 @@ export function aceLayout(suit: Suit) {
 
 /** Where PokerCard places the 100 x 132 face-art box inside the card. */
 export const FACE_PLACE = { x: (CARD_W - 100 * 1.52) / 2, y: 74, scale: 1.52 };
+
+/**
+ * The card's cast shadow, plus a glow when it is tinted. Built here so the
+ * assembly reveal and the finished card carry exactly the same filter and the
+ * handover between them stays invisible.
+ */
+export function cardShadow(tint?: string) {
+  const base = "drop-shadow(0 6px 14px rgba(0,0,0,0.55))";
+  return tint ? `${base} drop-shadow(0 0 9px ${tint}99)` : base;
+}
