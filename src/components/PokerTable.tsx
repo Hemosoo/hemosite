@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
-import { RANK_CHARS, type Card } from "../poker/cards";
+import type { Card } from "../poker/cards";
+import { toFace } from "../poker/cardFace";
 import PokerCard from "./poker/PokerCard";
-import type { Rank, Suit } from "./poker/cardTheme";
-
-/** Engine suit indices are 0=spades 1=hearts 2=diamonds 3=clubs. */
-const SUIT_NAME: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
 
 /**
  * Card sizes are heights only — the SVG carries a 2.5:3.5 viewBox, so the
@@ -60,12 +57,13 @@ function PlayingCard({
   size?: CardSize;
 }) {
   const dims = CARD_SIZE[size];
+  const face = card ? toFace(card) : undefined;
   return (
     <PokerCard
       className={`${dims} block drop-shadow-[0_6px_14px_rgba(0,0,0,0.55)]`}
       faceUp={!hidden && !!card}
-      rank={card ? (RANK_CHARS[card.r].trim() as Rank) : undefined}
-      suit={card ? SUIT_NAME[card.s] : undefined}
+      rank={face?.rank}
+      suit={face?.suit}
     />
   );
 }

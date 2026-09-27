@@ -6,20 +6,31 @@
  * only describes how the already-dealt one arrives. That separation is what
  * keeps a visual change from becoming a game-state bug.
  *
- * Adding one of the planned reveals later means writing another builder and
- * putting it in REVEAL_ANIMATIONS; nothing else changes.
+ * Two reveals exist. Slam hangs the card above the board and drives it down.
+ * Assembly takes the card apart and flies its own pips, rank glyphs and face
+ * art around the table before snapping them back together on impact. They
+ * share the fields the table itself reads — length, impact moment, how far
+ * the room dims, the shake — so PokerTable does not care which one is running.
  */
 
 export type BigStreet = "turn" | "river";
 
-export interface RevealSpec {
+interface RevealBase {
   id: string;
-  /** Whole reveal, ms. Kept inside ~1.2-2.0s so it stays fun on repeat. */
+  /** Whole reveal, ms. Kept inside ~1.2-2.2s so it stays fun on repeat. */
   totalMs: number;
   /** Fraction of totalMs at which the card lands. Drives shake and particles. */
   impactAt: number;
   /** How far the rest of the UI dims while attention moves to the card. */
   dim: number;
+  /** Table reaction at impact. */
+  shake: { px: number; ms: number };
+  /** Neighbouring board cards shove outward by this much, briefly. */
+  nudgePx: number;
+}
+
+export interface SlamSpec extends RevealBase {
+  kind: "slam";
   /** Outer transform: suspended above the board, then slammed down. */
   outer: {
     times: number[];
@@ -30,11 +41,25 @@ export interface RevealSpec {
   };
   /** Inner 3D flip. 180 = face down, 0 = face up. */
   flip: { times: number[]; rotateY: number[] };
-  /** Table reaction at impact. */
-  shake: { px: number; ms: number };
-  /** Neighbouring board cards shove outward by this much, briefly. */
-  nudgePx: number;
 }
+
+export interface AssemblySpec extends RevealBase {
+  kind: "assembly";
+  /** Intensity dial: how far pieces travel, how hard the card lands. */
+  reach: number;
+  /** Fixed per reveal, so one playing never re-choreographs mid-flight. */
+  seed: number;
+  /** +1 clockwise, -1 counter-clockwise. */
+  spinDir: 1 | -1;
+  /**
+   * When each wave enters and when locking begins, as fractions of totalMs.
+   * Suit first, rank second, the rest last: the point is that you can guess
+   * the card before it finishes arriving.
+   */
+  phase: { suitEnter: number; rankEnter: number; restEnter: number; lockFrom: number };
+}
+
+export type RevealSpec = SlamSpec | AssemblySpec;
 
 /**
  * Impact Smash — card hangs above the board, turns over, then slams down.
@@ -43,11 +68,13 @@ export interface RevealSpec {
  * bigger card, a harder landing. One builder, two intensities, so the two
  * streets can diverge without the code doing so.
  */
-function impactSmash(street: BigStreet): RevealSpec {
+function impactSmash(street: BigStreet, seed: number): SlamSpec {
+  void seed;
   const river = street === "river";
   const k = river ? 1.22 : 1; // one intensity dial
 
   return {
+    kind: "slam",
     id: "impact-smash",
     totalMs: river ? 1850 : 1520,
     impactAt: 0.72,
@@ -81,10 +108,46 @@ function impactSmash(street: BigStreet): RevealSpec {
   };
 }
 
+/**
+ * Dismantle / Assembly — the card arrives as its own parts.
+ *
+ * Its pips, corner indices and face art fly in from around the table on
+ * separate curved paths, hinting the suit before the rank and the rank before
+ * the whole card, then converge and lock as the stock hits the felt. The
+ * river version reaches further, lingers slightly longer and lands harder.
+ *
+ * Everything below is timing and intensity only. What the pieces are comes
+ * from the card's own design, read out of the shared layout data.
+ */
+function dismantleAssembly(street: BigStreet, seed: number): AssemblySpec {
+  const river = street === "river";
+  const k = river ? 1.22 : 1;
+
+  return {
+    kind: "assembly",
+    id: "dismantle-assembly",
+    totalMs: river ? 2150 : 1900,
+    // The last piece locks here, at the same frame the stock hits the felt.
+    impactAt: river ? 0.935 : 0.93,
+    dim: river ? 0.4 : 0.32,
+
+    reach: k,
+    seed,
+    spinDir: seed % 2 === 0 ? 1 : -1,
+    phase: river
+      ? { suitEnter: 0.13, rankEnter: 0.3, restEnter: 0.37, lockFrom: 0.81 }
+      : { suitEnter: 0.11, rankEnter: 0.28, restEnter: 0.34, lockFrom: 0.8 },
+
+    shake: { px: river ? 9.5 : 7, ms: river ? 330 : 270 },
+    nudgePx: river ? 9.5 : 7,
+  };
+}
+
 /** A gentle slide and flip, for prefers-reduced-motion. */
-function calmReveal(street: BigStreet): RevealSpec {
+function calmReveal(street: BigStreet): SlamSpec {
   void street;
   return {
+    kind: "slam",
     id: "calm",
     totalMs: 520,
     impactAt: 1,
@@ -102,18 +165,21 @@ function calmReveal(street: BigStreet): RevealSpec {
   };
 }
 
-/** Everything the picker may choose from. Three more are planned. */
-export const REVEAL_ANIMATIONS: Array<(s: BigStreet) => RevealSpec> = [
+/** Everything the picker may choose from. */
+export const REVEAL_ANIMATIONS: Array<(s: BigStreet, seed: number) => RevealSpec> = [
   impactSmash,
-  // cinematicSlow,
-  // cardThrow,
-  // glitchResolve,
+  dismantleAssembly,
 ];
 
+/**
+ * Chooses once, at the moment the street turns, and the choice is then fixed
+ * for that whole reveal — nothing re-rolls mid-animation.
+ */
 export function pickReveal(street: BigStreet, reduced: boolean): RevealSpec {
   if (reduced) return calmReveal(street);
+  const seed = (Math.random() * 0xffffffff) >>> 0;
   const build = REVEAL_ANIMATIONS[Math.floor(Math.random() * REVEAL_ANIMATIONS.length)];
-  return build(street);
+  return build(street, seed);
 }
 
 /**
