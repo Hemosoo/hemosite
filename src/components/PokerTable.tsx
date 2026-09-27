@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
-import { RANK_CHARS, SUIT_CHARS, SUIT_IS_RED, type Card } from "../poker/cards";
+import { RANK_CHARS, type Card } from "../poker/cards";
+import PokerCard from "./poker/PokerCard";
+import type { Rank, Suit } from "./poker/cardTheme";
+
+/** Engine suit indices are 0=spades 1=hearts 2=diamonds 3=clubs. */
+const SUIT_NAME: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
 import type { Player, Table } from "../poker/engine";
 import { usePoker } from "../poker/usePoker";
 import BoardCard from "./BoardCard";
@@ -14,6 +19,13 @@ function seatPos(i: number, n: number) {
   return { x: 50 + 42 * Math.cos(angle), y: 50 + 39 * Math.sin(angle) };
 }
 
+/**
+ * The table's card slot.
+ *
+ * Sizing and layout stay here; the artwork is now PokerCard, so the same
+ * element scales cleanly whether it is a 64px hole card or a turn card blown
+ * up to several times that mid-reveal.
+ */
 function PlayingCard({
   card,
   hidden,
@@ -23,26 +35,14 @@ function PlayingCard({
   hidden?: boolean;
   size?: "sm" | "md";
 }) {
-  const dims = size === "sm" ? "h-16 w-12 text-lg" : "h-28 w-20 text-3xl";
-  if (hidden || !card) {
-    return (
-      <div
-        className={`${dims} flex items-center justify-center rounded-md border border-primary/25 bg-[repeating-linear-gradient(45deg,#1b2430_0_6px,#131a23_6px_12px)]`}
-        aria-hidden
-      />
-    );
-  }
-  const red = SUIT_IS_RED[card.s];
+  const dims = size === "sm" ? "h-16 w-[2.9rem]" : "h-28 w-20";
   return (
-    <div
-      className={`${dims} flex flex-col items-center justify-center rounded-md border border-line bg-[#f2f4f8] font-bold leading-none ${
-        red ? "text-[#d4383f]" : "text-[#11151b]"
-      }`}
-      aria-label={`${RANK_CHARS[card.r].trim()}${SUIT_CHARS[card.s]}`}
-    >
-      <span>{RANK_CHARS[card.r].trim()}</span>
-      <span className={size === "sm" ? "text-base" : "text-2xl"}>{SUIT_CHARS[card.s]}</span>
-    </div>
+    <PokerCard
+      className={`${dims} block drop-shadow-[0_6px_14px_rgba(0,0,0,0.55)]`}
+      faceUp={!hidden && !!card}
+      rank={card ? (RANK_CHARS[card.r].trim() as Rank) : undefined}
+      suit={card ? SUIT_NAME[card.s] : undefined}
+    />
   );
 }
 
