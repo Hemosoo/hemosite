@@ -15,11 +15,16 @@ export const CARD_H = 350;
 export const CARD_R = 22;
 
 export const INK = {
-  /** Face stock: near-black slate, a touch lighter than the table. */
-  face: "#20242c",
-  faceEdge: "#2c3240",
-  /** Back stock is a shade deeper, so a face-down card reads as different. */
-  back: "#1b1f27",
+  /**
+   * Face stock. Was #20242c on a #16202b felt — 1.06:1, so the cards read as
+   * holes in the table rather than objects on it. The felt is now held dark
+   * and only the stock lifts, which is what actually buys separation: 1.76:1.
+   * The suit colours still clear 3:1 against it, red the tightest at 3.11.
+   */
+  face: "#3a4354",
+  faceEdge: "#56627a",
+  /** Back stock stays a shade deeper, so face-down still reads as different. */
+  back: "#2c3442",
   backLine: "#8fa3bd",
   backAccent: "#98c379",
   /** Face-card line art fades toward this. */

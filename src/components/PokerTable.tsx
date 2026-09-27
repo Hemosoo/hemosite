@@ -35,7 +35,8 @@ function PlayingCard({
   hidden?: boolean;
   size?: "sm" | "md";
 }) {
-  const dims = size === "sm" ? "h-16 w-[2.9rem]" : "h-28 w-20";
+  // 2.5:3.5 kept exactly, so the SVG never letterboxes inside its box.
+  const dims = size === "sm" ? "h-[5.5rem] w-[3.93rem]" : "h-40 w-[7.15rem]";
   return (
     <PokerCard
       className={`${dims} block drop-shadow-[0_6px_14px_rgba(0,0,0,0.55)]`}
@@ -68,7 +69,7 @@ function Seat({
             <PlayingCard key={i} card={show ? c : undefined} hidden={!show} size="sm" />
           ))
         ) : (
-          <div className="h-16" />
+          <div className="h-[5.5rem]" />
         )}
       </div>
 
@@ -212,7 +213,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 14 }}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-50 flex flex-col bg-bg/97 backdrop-blur-sm isolate"
+      className="fixed inset-0 z-50 flex flex-col bg-[#11151c]/97 backdrop-blur-sm isolate"
     >
       <header className="flex flex-shrink-0 items-center gap-3 border-b border-line px-4 py-3 text-sm sm:px-6">
         <span className="font-semibold text-text">no-limit hold&apos;em</span>
@@ -245,7 +246,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
         transition={{ duration: 0.26 }}
       >
         {/* Felt */}
-        <div className="absolute left-1/2 top-1/2 h-[72%] w-[88%] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-primary/15 bg-[radial-gradient(ellipse_at_center,#16202b_0%,#0f161d_70%)] shadow-[inset_0_0_80px_rgba(97,175,239,0.06)]" />
+        <div className="absolute left-1/2 top-1/2 h-[72%] w-[88%] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-primary/15 bg-[radial-gradient(ellipse_at_center,#131a24_0%,#0d131b_70%)] shadow-[inset_0_0_80px_rgba(97,175,239,0.06)]" />
 
         {/* Board + pot */}
         <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3">
