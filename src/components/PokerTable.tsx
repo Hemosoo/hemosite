@@ -360,73 +360,76 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
         </AnimatePresence>
       </motion.div>
 
-      {/* Controls */}
-      <div className="flex-shrink-0 border-t border-line bg-surface/50 px-4 py-4 sm:px-6">
-        {/* Reserved height.
-            The four states are very different sizes — the raise slider plus
-            action row is ~148px, a lone deal button ~60px, "thinking" ~56px —
-            so the footer grew and shrank every time the turn changed, pushing
-            the felt up and down with it. Holding the tallest state's height
-            and centring inside keeps the table still. */}
-        <div className="mx-auto flex min-h-[9.25rem] max-w-4xl flex-col justify-center gap-4">
-          {busted ? (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-subtle">
-                {you.out ? "you busted." : "you took every chip."}
-              </span>
-              <button
-                onClick={reset}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-[#0b0d10]"
-              >
-                new table
-              </button>
-            </div>
-          ) : !started || (table.result && !autoDeal) ? (
-            <button
-              onClick={deal}
-              disabled={locked}
-              className="mx-auto rounded-lg bg-primary px-10 py-4 text-lg font-bold text-[#0b0d10] transition-transform hover:scale-[1.02]"
-            >
-              deal {table.handNo > 0 ? "next hand" : ""}
-            </button>
-          ) : myTurn ? (
-            <>
-              <div className="flex min-h-[2.75rem] items-center gap-3">
-                {legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo && (
-                  <>
-                    <input
-                      type="range"
-                      min={legal.minRaiseTo}
-                      max={legal.maxRaiseTo}
-                      step={table.bigBlind / 2}
-                      value={raiseTo}
-                      onChange={(e) => setRaiseTo(Number(e.target.value))}
-                      aria-label="Raise amount"
-                      className="h-2 flex-1 cursor-pointer accent-primary"
-                    />
-                    <span className="w-28 text-right text-xl font-semibold tabular-nums text-primary">
-                      {fmt(raiseTo)}
-                    </span>
-                    <div className="hidden gap-1 sm:flex">
-                      {([["½", 0.5], ["¾", 0.75], ["pot", 1]] as const).map(([label, f]) => (
-                        <button
-                          key={label}
-                          onClick={() => quick(f)}
-                          className="rounded border border-line px-3 py-1.5 text-sm text-subtle hover:border-primary/60 hover:text-primary"
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
+      {/* Controls.
 
-              <div className="flex gap-2">
+          Two fixed bands, not a centred stack. Reserving the footer's height
+          kept the felt still but not the buttons: the turn state is ~122px
+          and "thinking" is ~56px, so centring each one inside the reserved
+          box put them at different heights and the controls slid every time
+          the turn changed. Every state now renders into the same action band,
+          with the raise band held above it. */}
+      <div className="flex-shrink-0 border-t border-line bg-surface/50 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-4xl flex-col gap-4">
+          {/* Raise band. Empty unless there is something to size. */}
+          <div className="flex h-11 items-center gap-3">
+            {myTurn && legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo && (
+              <>
+                <input
+                  type="range"
+                  min={legal.minRaiseTo}
+                  max={legal.maxRaiseTo}
+                  step={table.bigBlind / 2}
+                  value={raiseTo}
+                  onChange={(e) => setRaiseTo(Number(e.target.value))}
+                  aria-label="Raise amount"
+                  className="h-2 flex-1 cursor-pointer accent-primary"
+                />
+                <span className="w-28 text-right text-xl font-semibold tabular-nums text-primary">
+                  {fmt(raiseTo)}
+                </span>
+                <div className="hidden gap-1 sm:flex">
+                  {([["½", 0.5], ["¾", 0.75], ["pot", 1]] as const).map(([label, f]) => (
+                    <button
+                      key={label}
+                      onClick={() => quick(f)}
+                      className="rounded border border-line px-3 py-1.5 text-sm text-subtle hover:border-primary/60 hover:text-primary"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Action band. Fixed height, so a button never moves. */}
+          <div className="flex h-[3.875rem] items-stretch gap-2">
+            {busted ? (
+              <>
+                <span className="flex flex-1 items-center text-sm text-subtle">
+                  {you.out ? "you busted." : "you took every chip."}
+                </span>
+                <button
+                  onClick={reset}
+                  className="rounded-lg bg-primary px-6 text-base font-bold text-[#0b0d10]"
+                >
+                  new table
+                </button>
+              </>
+            ) : !started || (table.result && !autoDeal) ? (
+              <button
+                onClick={deal}
+                disabled={locked}
+                className="mx-auto rounded-lg bg-primary px-10 text-lg font-bold text-[#0b0d10] transition-transform hover:scale-[1.02]"
+              >
+                deal {table.handNo > 0 ? "next hand" : ""}
+              </button>
+            ) : myTurn ? (
+              <>
                 {legal.canFold && (
                   <button
                     onClick={() => act({ type: "fold" })}
-                    className="flex-1 rounded-lg border border-red/40 py-4 text-lg font-semibold text-red transition-colors hover:bg-red/10"
+                    className="flex-1 rounded-lg border border-red/40 text-lg font-semibold text-red transition-colors hover:bg-red/10"
                   >
                     fold <span className="text-dim">f</span>
                   </button>
@@ -434,7 +437,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                 {legal.canCheck ? (
                   <button
                     onClick={() => act({ type: "check" })}
-                    className="flex-1 rounded-lg border border-line py-4 text-lg font-semibold text-text transition-colors hover:border-primary/60"
+                    className="flex-1 rounded-lg border border-line text-lg font-semibold text-text transition-colors hover:border-primary/60"
                   >
                     check <span className="text-dim">c</span>
                   </button>
@@ -442,7 +445,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                   legal.canCall && (
                     <button
                       onClick={() => act({ type: "call" })}
-                      className="flex-1 rounded-lg border border-line py-4 text-lg font-semibold text-text transition-colors hover:border-primary/60"
+                      className="flex-1 rounded-lg border border-line text-lg font-semibold text-text transition-colors hover:border-primary/60"
                     >
                       call {fmt(legal.callAmount)} <span className="text-dim">c</span>
                     </button>
@@ -451,21 +454,22 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                 {legal.canRaise && (
                   <button
                     onClick={() => act({ type: "raise", to: raiseTo })}
-                    className="flex-1 rounded-lg bg-primary py-4 text-lg font-bold text-[#0b0d10] transition-transform hover:scale-[1.02]"
+                    className="flex-1 rounded-lg bg-primary text-lg font-bold text-[#0b0d10] transition-transform hover:scale-[1.02]"
                   >
                     {table.currentBet === 0 ? "bet" : "raise"} {fmt(raiseTo)}{" "}
                     <span className="opacity-50">r</span>
                   </button>
                 )}
+              </>
+            ) : (
+              <div className="flex flex-1 items-center justify-center text-base text-dim">
+                {table.result ? "…" : `${table.players[table.toAct]?.name ?? ""} is thinking`}
               </div>
-            </>
-          ) : (
-            <div className="py-4 text-center text-base text-dim">
-              {table.result ? "…" : `${table.players[table.toAct]?.name ?? ""} is thinking`}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
+
     </motion.div>
   );
 }
