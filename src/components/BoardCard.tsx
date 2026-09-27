@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import type { Card } from "../poker/cards";
 import { dealSpec, type RevealSpec } from "../poker/reveals";
@@ -31,6 +32,14 @@ export default function BoardCard({
   dim,
   renderCard,
 }: Props) {
+  // A reveal ends by dropping `spec`, which swaps this component from the
+  // reveal tree to the deal tree below. React remounts on that swap, so the
+  // deal branch ran its entry animation and the turn slid in a second time,
+  // after it had already landed. Once a card has been revealed it is already
+  // where it belongs, so the deal branch must not animate it in.
+  const revealed = useRef(false);
+  if (spec) revealed.current = true;
+
   if (spec) {
     return (
       <div className="relative" style={{ perspective: 1500 }}>
@@ -99,9 +108,11 @@ export default function BoardCard({
   return (
     <motion.div
       initial={
-        reduced
-          ? { opacity: 0 }
-          : { opacity: 0, x: d.fromX, y: d.fromY, rotate: d.spin, scale: 1.08 }
+        revealed.current
+          ? false
+          : reduced
+            ? { opacity: 0 }
+            : { opacity: 0, x: d.fromX, y: d.fromY, rotate: d.spin, scale: 1.08 }
       }
       animate={{
         opacity: dim ? 1 - dim : 1,

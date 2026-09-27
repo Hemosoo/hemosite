@@ -10,7 +10,26 @@ import {
 } from "./engine";
 import { botAction } from "./bots";
 
-const BOT_DELAY_MS = 650;
+/**
+ * Bot pacing.
+ *
+ * 650ms flat read as the table playing itself: by the time you noticed a bet
+ * chip the next player had already covered it. A bot now takes a real beat to
+ * act, and holds afterwards whenever chips actually moved, so the number has
+ * time to land before the action passes on.
+ */
+const BOT_THINK_MS = 1050;
+const BOT_CHIPS_MS = 750;
+/** A little scatter, so six bots don't act on a metronome. */
+const BOT_JITTER_MS = 320;
+
+function botDelay(t: Table) {
+  const last = t.log[t.log.length - 1] ?? "";
+  const chipsMoved = /\b(bets|calls|raises to|posts)\b/.test(last);
+  return (
+    BOT_THINK_MS + (chipsMoved ? BOT_CHIPS_MS : 0) + Math.random() * BOT_JITTER_MS
+  );
+}
 /** Pause on a finished hand so the showdown is readable before the next deal. */
 const HAND_END_MS = 2600;
 
@@ -63,7 +82,7 @@ export function usePoker(seats = 6, stack = 10000, bigBlind = 100) {
         if (!cur || cur.isHuman || t.result) return t;
         return applyAction(t, botAction(t));
       });
-    }, BOT_DELAY_MS);
+    }, botDelay(table));
 
     return () => {
       if (timer.current) clearTimeout(timer.current);

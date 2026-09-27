@@ -8,18 +8,28 @@ import type { Rank, Suit } from "./poker/cardTheme";
 const SUIT_NAME: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
 
 /**
- * Card sizes, all at exactly 2.5:3.5 so the SVG never letterboxes in its box.
- * `you` is deliberately larger than the bots — they are the cards the player
- * actually reads, and the bottom seat has the room for them.
+ * Card sizes are heights only — the SVG carries a 2.5:3.5 viewBox, so the
+ * width follows on its own and a card can never letterbox.
+ *
+ * They scale with viewport height. Fixed rem sizes fitted at 900px tall and
+ * collided everywhere else: at 720 the player's cards ran 93px over the pot.
+ * `you` is deliberately larger than the bots — those are the cards the
+ * player actually reads.
  */
 type CardSize = "sm" | "you" | "md";
 const CARD_SIZE: Record<CardSize, string> = {
-  sm: "h-[5.5rem] w-[3.93rem]",
-  you: "h-[11.5rem] w-[8.21rem]",
-  md: "h-40 w-[7.15rem]",
+  sm: "h-[var(--card-bot)] w-auto",
+  you: "h-[var(--card-you)] w-auto",
+  md: "h-[var(--card-board)] w-auto",
 };
-/** Board slots are reserved at this width whether or not a card is in them. */
-const BOARD_SLOT = "h-40 w-[7.15rem]";
+/** Board slots are reserved whether or not a card is in them. */
+const BOARD_SLOT = "h-[var(--card-board)] aspect-[5/7]";
+/**
+ * The name plate under the cards, plus the gap above it: a seat is exactly its
+ * card height plus this. The board hangs off that, so the pot stays clear of
+ * the player's cards at every window height.
+ */
+const PLATE_H = "4.375rem";
 import type { Player, Table } from "../poker/engine";
 import { usePoker } from "../poker/usePoker";
 import BoardCard from "./BoardCard";
@@ -30,7 +40,7 @@ const fmt = (n: number) => n.toLocaleString("en-US");
 /** Seat 0 sits at the bottom; the rest run clockwise around the ellipse. */
 function seatPos(i: number, n: number) {
   const angle = Math.PI / 2 + (i / n) * Math.PI * 2;
-  return { x: 50 + 42 * Math.cos(angle), y: 50 + 34 * Math.sin(angle) };
+  return { x: 50 + 42 * Math.cos(angle), y: 50 + 36 * Math.sin(angle) };
 }
 
 /**
@@ -65,14 +75,69 @@ function Seat({
   table,
   isTurn,
   reduced,
+  badgeSide,
 }: {
   player: Player;
   table: Table;
   isTurn: boolean;
   reduced: boolean | null;
+  /** Which side of the name plate the bet sits on: the one facing the pot. */
+  badgeSide: "left" | "right";
 }) {
   const show = player.isHuman || (table.revealed && !player.folded && player.hole.length > 0);
   const dimmed = player.folded || player.out;
+
+  // Dealer button, all-in flag and the chips this player has pushed out. The
+  // bet was a text-xs pill, which is unreadable at the far seats — it is the
+  // one number you have to track, so it is now the loudest thing on the seat
+  // and pops when it changes.
+  const badges = (
+    <>
+      {player.id === table.button && (
+        <span className="grid h-6 w-6 place-items-center rounded-full bg-yellow text-xs font-bold text-[#0b0d10]">
+          D
+        </span>
+      )}
+      {player.allIn && !player.folded && (
+        <span className="inline-flex items-center rounded-full border border-orange/50 bg-orange/20 px-2.5 py-1 text-sm font-bold text-orange">
+          all in
+        </span>
+      )}
+      {player.committed > 0 && !player.allIn && (
+        <motion.span
+          key={player.committed}
+          initial={reduced ? false : { scale: 0.55, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 520, damping: 22 }}
+          className="inline-flex items-center rounded-full border border-cyan/50 bg-cyan/20 px-2.5 py-1 text-sm font-bold tabular-nums text-cyan"
+        >
+          {fmt(player.committed)}
+        </motion.span>
+      )}
+    </>
+  );
+
+  const plate = (
+    <div
+      className={`relative min-w-[132px] rounded-xl border px-4 py-2 text-center transition-colors ${
+        isTurn ? "border-primary bg-primary/10" : "border-line bg-surface/90"
+      }`}
+    >
+      {isTurn && !reduced && (
+        <motion.span
+          className="absolute inset-0 rounded-lg ring-1 ring-primary"
+          animate={{ opacity: [0.25, 1, 0.25] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+      <div className={`text-sm font-semibold ${player.isHuman ? "text-green" : "text-subtle"}`}>
+        {player.name}
+      </div>
+      <div className="text-lg tabular-nums text-text">
+        {player.out ? "—" : fmt(player.chips)}
+      </div>
+    </div>
+  );
 
   return (
     <div className={`flex flex-col items-center gap-1 ${dimmed ? "opacity-40" : ""}`}>
@@ -87,46 +152,24 @@ function Seat({
             />
           ))
         ) : (
-          <div className={player.isHuman ? "h-[11.5rem]" : "h-[5.5rem]"} />
+          <div className={player.isHuman ? "h-[var(--card-you)]" : "h-[var(--card-bot)]"} />
         )}
       </div>
 
-      <div
-        className={`relative min-w-[132px] rounded-xl border px-4 py-2.5 text-center transition-colors ${
-          isTurn ? "border-primary bg-primary/10" : "border-line bg-surface/90"
-        }`}
-      >
-        {isTurn && !reduced && (
-          <motion.span
-            className="absolute inset-0 rounded-lg ring-1 ring-primary"
-            animate={{ opacity: [0.25, 1, 0.25] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-          />
-        )}
-        <div className={`text-sm font-semibold ${player.isHuman ? "text-green" : "text-subtle"}`}>
-          {player.name}
+      {/* Badges sit beside the plate, on the side facing the pot, and out of
+          flow. As a row underneath they cost every seat 32px of height: at the
+          bottom that pushed your cards up over the pot, and at the top it put
+          the bet chip down on the board. Beside the plate they cost nothing
+          and land where a real bet would — between the player and the pot. */}
+      <div className="relative">
+        {plate}
+        <div
+          className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1.5 ${
+            badgeSide === "right" ? "left-full ml-2" : "right-full mr-2"
+          }`}
+        >
+          {badges}
         </div>
-        <div className="text-lg tabular-nums text-text">
-          {player.out ? "—" : fmt(player.chips)}
-        </div>
-      </div>
-
-      <div className="flex h-7 items-center gap-1.5">
-        {player.id === table.button && (
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-yellow text-xs font-bold text-[#0b0d10]">
-            D
-          </span>
-        )}
-        {player.allIn && !player.folded && (
-          <span className="rounded bg-orange/20 px-2 py-0.5 text-xs font-semibold text-orange">
-            all in
-          </span>
-        )}
-        {player.committed > 0 && !player.allIn && (
-          <span className="rounded bg-cyan/15 px-2 py-0.5 text-xs font-semibold tabular-nums text-cyan">
-            {fmt(player.committed)}
-          </span>
-        )}
       </div>
     </div>
   );
@@ -232,6 +275,17 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
       exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 14 }}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
       className="fixed inset-0 z-50 flex flex-col bg-[#11151c]/97 backdrop-blur-sm isolate"
+      style={
+        {
+          // The felt is the viewport less the fixed header and footer. Sizing
+          // from that keeps the whole stack -- top seat, board, pot, your seat
+          // -- inside it at every window height, which plain vh did not.
+          "--felt": "calc(100vh - 12.5rem)",
+          "--card-you": "clamp(4.5rem, calc(var(--felt) * 0.215), 10rem)",
+          "--card-board": "clamp(4.5rem, calc(var(--felt) * 0.215), 10rem)",
+          "--card-bot": "clamp(3rem, calc(var(--felt) * 0.15), 6rem)",
+        } as React.CSSProperties
+      }
     >
       <header className="flex flex-shrink-0 items-center gap-3 border-b border-line px-4 py-3 text-sm sm:px-6">
         <span className="font-semibold text-text">no-limit hold&apos;em</span>
@@ -267,7 +321,10 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
         <div className="absolute left-1/2 top-1/2 h-[72%] w-[88%] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-primary/15 bg-[radial-gradient(ellipse_at_center,#131a24_0%,#0d131b_70%)] shadow-[inset_0_0_80px_rgba(97,175,239,0.06)]" />
 
         {/* Board + pot */}
-        <div className="absolute left-1/2 top-[44%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3">
+        <div
+          className="absolute left-1/2 flex -translate-x-1/2 flex-col items-center gap-2"
+          style={{ bottom: `calc(var(--card-you) + ${PLATE_H} + 0.75rem)` }}
+        >
           {/* Five slots, reserved from the start.
               The board used to be a flex row that grew as cards arrived, so
               every new card re-centred the row and shoved the previous ones
@@ -315,7 +372,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
           {/* Held even when empty: this row is below the board, and the
               column is centred on its own height, so letting it collapse
               slid every board card up the moment the first bet went in. */}
-          <div className="flex h-[2.4rem] items-center">
+          <div className="flex h-9 items-center">
             {pot > 0 && (
               <div className="rounded-full border border-yellow/30 bg-yellow/10 px-5 py-1.5 text-lg font-semibold tabular-nums text-yellow">
                 pot {fmt(pot)}
@@ -325,23 +382,37 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Seats */}
-        {/* Seat 0 is anchored to the bottom edge rather than to the ellipse.
-            Its cards are much larger than the bots', so a percentage centre
-            line made the whole stack's height depend on the card size — grow
-            the cards and the seat pushed through the bottom of the frame. */}
-        {table.players.map((p, i) => (
+        {/* The two centre seats are anchored to the frame's edges instead of
+            to the ellipse. A percentage centre line makes a seat's footprint
+            depend on its card size, so the bottom seat pushed through the
+            floor as its cards grew, and the top seat drifted down onto the
+            board as the window got shorter. The four side seats have room to
+            spare and stay on the ellipse. */}
+        {table.players.map((p, i) => {
+          const atBottom = i === 0;
+          const atTop = Math.abs(positions[i].x - 50) < 1 && positions[i].y < 50;
+          return (
           <div
             key={p.id}
-            className={`absolute -translate-x-1/2 ${i === 0 ? "" : "-translate-y-1/2"}`}
+            className={`absolute -translate-x-1/2 ${atBottom || atTop ? "" : "-translate-y-1/2"}`}
             style={
-              i === 0
+              atBottom
                 ? { left: "50%", bottom: 0 }
-                : { left: `${positions[i].x}%`, top: `${positions[i].y}%` }
+                : atTop
+                  ? { left: "50%", top: 0 }
+                  : { left: `${positions[i].x}%`, top: `${positions[i].y}%` }
             }
           >
-            <Seat player={p} table={table} isTurn={table.toAct === p.id && !table.result} reduced={reduced} />
+            <Seat
+              player={p}
+              table={table}
+              isTurn={table.toAct === p.id && !table.result}
+              reduced={reduced}
+              badgeSide={positions[i].x > 50 ? "left" : "right"}
+            />
           </div>
-        ))}
+          );
+        })}
 
         {/* Result banner */}
         <AnimatePresence>
