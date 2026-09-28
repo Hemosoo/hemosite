@@ -51,16 +51,32 @@ const ACTION =
   "text-[13px] font-semibold tracking-[0.12em] transition-colors";
 const ACTION_NEUTRAL = "border-line text-subtle hover:border-white/25 hover:text-text";
 const ACTION_PRIMARY = "border-primary/55 bg-primary/[0.08] text-primary hover:bg-primary/[0.16]";
+/** Folding is the quietest action on the table, and reads that way. */
+const ACTION_FOLD = "border-red/25 text-red/85 hover:border-red/50 hover:text-red hover:bg-red/[0.06]";
+/**
+ * Widths, in the order the actions matter. Deliberately not equal: three
+ * identical rectangles are the tell of a component set rather than a designed
+ * control strip.
+ */
+const W_FOLD = "flex-[0.82]";
+const W_NEUTRAL = "flex-[1]";
+const W_PRIMARY = "flex-[1.3]";
 
 /** A keyboard hint: present, never competing with the label. */
 const Key = ({ children }: { children: React.ReactNode }) => (
   <span className="text-[11px] font-normal text-dim">[{children}]</span>
 );
 
-/** Seat 0 sits at the bottom; the rest run clockwise around the ellipse. */
+/**
+ * Seat 0 sits at the bottom; the rest run clockwise around the ellipse.
+ *
+ * The radii track the felt's, a shade inside it horizontally and level with
+ * it vertically, so the seats read as places at a table rather than as UI
+ * distributed around a canvas. Shrinking one without the other breaks that.
+ */
 function seatPos(i: number, n: number) {
   const angle = Math.PI / 2 + (i / n) * Math.PI * 2;
-  return { x: 50 + 42 * Math.cos(angle), y: 50 + 36 * Math.sin(angle) };
+  return { x: 50 + 38 * Math.cos(angle), y: 50 + 33 * Math.sin(angle) };
 }
 
 /**
@@ -168,7 +184,7 @@ function Seat({
             <div className={`h-px w-full ${isTurn ? "bg-primary" : "bg-primary/45"}`} />
             <div className="flex items-baseline justify-between gap-4 pt-1.5">
               <span className="text-[10px] font-semibold tracking-[0.22em] text-primary">YOU</span>
-              <span className="text-[17px] leading-none tabular-nums text-text">{stack}</span>
+              <span className="text-[17px] font-medium leading-none tabular-nums text-text">{stack}</span>
             </div>
           </div>
         ) : (
@@ -178,17 +194,19 @@ function Seat({
             <div className={`h-px w-7 ${isTurn ? "bg-primary" : "bg-transparent"}`} />
             <div
               className={`pt-1.5 text-[12px] leading-none tracking-[0.1em] ${
-                isTurn ? "text-primary" : "text-dim"
+                isTurn ? "text-primary" : "text-subtle/70"
               }`}
             >
               {player.name}
             </div>
-            <div className="pt-1.5 text-[16px] leading-none tabular-nums text-subtle">{stack}</div>
+            <div className="pt-2 text-[17px] font-medium leading-none tabular-nums text-text">
+              {stack}
+            </div>
           </div>
         )}
 
         <div
-          className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-2 ${
+          className={`absolute bottom-0 flex items-center gap-2 ${
             badgeSide === "right" ? "left-full ml-3" : "right-full mr-3"
           }`}
         >
@@ -373,7 +391,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
         {/* Felt */}
         <div
           aria-hidden
-          className="absolute left-1/2 top-1/2 h-[72%] w-[88%] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-white/[0.045]"
+          className="absolute left-1/2 top-1/2 h-[65%] w-[79%] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-white/[0.045]"
           // A few percent of luminance across the whole surface, no more. The
           // blue inset glow it used to carry read as a lit edge on a div.
           style={{
@@ -544,7 +562,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                     <button
                       key={label}
                       onClick={() => quick(f)}
-                      className="min-w-[3.25rem] border-b border-line px-2 pb-1.5 pt-1 text-[14px] font-semibold tracking-[0.08em] text-subtle transition-colors hover:border-primary hover:text-primary"
+                      className="min-w-[3.25rem] border-b border-line/45 px-2 pb-1.5 pt-1 text-[14px] font-semibold tracking-[0.08em] text-subtle/80 transition-colors hover:border-primary hover:text-primary"
                     >
                       {label}
                     </button>
@@ -555,7 +573,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Action band. Fixed height, so a button never moves. */}
-          <div className="flex h-11 items-stretch gap-2">
+          <div className="flex h-10 items-stretch gap-2">
             {busted ? (
               <>
                 <span className="flex flex-1 items-center text-[13px] text-dim">
@@ -578,7 +596,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                 {legal.canFold && (
                   <button
                     onClick={() => act({ type: "fold" })}
-                    className={`${ACTION} flex-1 border-red/35 text-red hover:border-red/60 hover:bg-red/[0.07]`}
+                    className={`${ACTION} ${W_FOLD} ${ACTION_FOLD}`}
                   >
                     FOLD <Key>F</Key>
                   </button>
@@ -586,7 +604,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                 {legal.canCheck ? (
                   <button
                     onClick={() => act({ type: "check" })}
-                    className={`${ACTION} ${ACTION_NEUTRAL} flex-1`}
+                    className={`${ACTION} ${ACTION_NEUTRAL} ${W_NEUTRAL}`}
                   >
                     CHECK <Key>C</Key>
                   </button>
@@ -594,7 +612,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                   legal.canCall && (
                     <button
                       onClick={() => act({ type: "call" })}
-                      className={`${ACTION} ${ACTION_NEUTRAL} flex-1`}
+                      className={`${ACTION} ${ACTION_NEUTRAL} ${W_NEUTRAL}`}
                     >
                       CALL <span className="tabular-nums">{fmt(legal.callAmount)}</span> <Key>C</Key>
                     </button>
@@ -603,7 +621,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                 {legal.canRaise && (
                   <button
                     onClick={() => act({ type: "raise", to: raiseTo })}
-                    className={`${ACTION} ${ACTION_PRIMARY} flex-1`}
+                    className={`${ACTION} ${ACTION_PRIMARY} ${W_PRIMARY}`}
                   >
                     {table.currentBet === 0 ? "BET" : "RAISE"}{" "}
                     <span className="tabular-nums">{fmt(raiseTo)}</span> <Key>R</Key>
