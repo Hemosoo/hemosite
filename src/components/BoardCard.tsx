@@ -18,6 +18,13 @@ interface Props {
   dim: number;
   /** Set when this card is carrying the hand. */
   tint?: string;
+  /**
+   * The card is already where it belongs and must appear without animating.
+   * Set for the flop once its own reveal has put the cards down: these mount
+   * for the first time at that point, and would otherwise slide in again
+   * behind a reveal that has just finished.
+   */
+  settled?: boolean;
   renderCard: (card: Card | undefined, hidden: boolean) => React.ReactNode;
 }
 
@@ -36,6 +43,7 @@ export default function BoardCard({
   nudge,
   dim,
   tint,
+  settled,
   renderCard,
 }: Props) {
   // A reveal ends by dropping `spec`, which swaps this component from the
@@ -124,7 +132,7 @@ export default function BoardCard({
   return (
     <motion.div
       initial={
-        revealed.current
+        revealed.current || settled
           ? false
           : reduced
             ? { opacity: 0 }

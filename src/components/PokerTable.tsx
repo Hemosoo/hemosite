@@ -38,6 +38,8 @@ import type { Player, Table } from "../poker/engine";
 import { usePoker } from "../poker/usePoker";
 import BoardCard from "./BoardCard";
 import { pickReveal, type RevealSpec } from "../poker/reveals";
+import { pickFlop, type FlopSpec } from "../poker/flopReveals";
+import FlopReveal from "./poker/FlopReveal";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
@@ -227,6 +229,15 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
   // ── community card reveals ─────────────────────────────────────────────
   // The engine has already decided the card; this only chooses how it lands.
   const [reveal, setReveal] = useState<{ index: number; spec: RevealSpec } | null>(null);
+  /**
+   * The flop has its own reveal system. Three cards at once is a different
+   * event from one card arriving, and gets its own shorter, coordinated
+   * choreography rather than the single-card reveal run three times.
+   */
+  const [flop, setFlop] = useState<FlopSpec | null>(null);
+  /** True once a flop reveal has placed the cards, until the next hand. */
+  const [flopSettled, setFlopSettled] = useState(false);
+  const boardRowRef = useRef<HTMLDivElement>(null);
   const [focus, setFocus] = useState(0);
   const [nudge, setNudge] = useState(0);
   /**
@@ -245,9 +256,25 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
     const n = table.board.length;
     const prev = lastBoard.current;
     lastBoard.current = n;
-    // 4 = turn, 5 = river. The flop (0 -> 3) and a new hand (5 -> 0) are not
-    // special, and a re-render with no change must not retrigger anything.
-    if (n === prev || (n !== 4 && n !== 5)) return;
+    // A re-render with no change must not retrigger anything.
+    if (n === prev) return;
+    if (n === 0) setFlopSettled(false); // a new hand
+
+    // 0 -> 3 is the flop, and has its own system.
+    if (n === 3 && prev === 0) {
+      const fs = pickFlop(!!reduced);
+      setFlop(fs);
+      setHeld(true);
+      const done = window.setTimeout(() => {
+        setFlop(null);
+        setFlopSettled(true);
+        setHeld(false);
+      }, fs.totalMs);
+      return () => window.clearTimeout(done);
+    }
+
+    // 4 = turn, 5 = river. A new hand (5 -> 0) is not special.
+    if (n !== 4 && n !== 5) return;
 
     const spec = pickReveal(n === 4 ? "turn" : "river", !!reduced);
     setReveal({ index: n - 1, spec });
@@ -424,6 +451,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               the board. Fixed slots mean a card only ever animates within
               its own position. */}
           <motion.div
+            ref={boardRowRef}
             className="relative flex gap-2"
             animate={boardFx}
             style={{ filter: focus ? `brightness(${1 / (1 - focus * 0.55)})` : undefined }}
@@ -433,7 +461,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               return (
                 <div key={i} className={`${BOARD_SLOT} relative shrink-0`}>
                   <AnimatePresence initial={false}>
-                    {c && (
+                    {c && !(flop && i < 3) && (
                       <BoardCard
                         key={`${c.r}-${c.s}`}
                         card={c}
@@ -445,6 +473,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                         }
                         dim={reveal && reveal.index !== i ? focus : 0}
                         tint={lit.has(cardKey(c)) ? TINT : undefined}
+                        settled={i < 3 && flopSettled}
                         renderCard={(card, hidden) => (
                           <PlayingCard
                             card={card}
@@ -458,6 +487,20 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                 </div>
               );
             })}
+            {flop && table.board.length >= 3 && (
+              <FlopReveal
+                cards={table.board.slice(0, 3)}
+                spec={flop}
+                rowRef={boardRowRef}
+                renderCard={(card, hidden) => (
+                  <PlayingCard
+                    card={card}
+                    hidden={hidden}
+                    tint={card && lit.has(cardKey(card)) ? TINT : undefined}
+                  />
+                )}
+              />
+            )}
             {!started && (
               <span className="absolute inset-0 grid place-items-center text-[12px] tracking-[0.14em] text-dim">
                 press deal to start
