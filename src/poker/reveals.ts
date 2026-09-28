@@ -99,8 +99,8 @@ function impactSmash(street: BigStreet, seed: number): SlamSpec {
   return {
     kind: "slam",
     id: "impact-smash",
-    totalMs: river ? 1850 : 1520,
-    impactAt: 0.72,
+    totalMs: river ? 1500 : 1250,
+    impactAt: 0.7,
     dim: river ? 0.42 : 0.34,
 
     /**
@@ -116,15 +116,24 @@ function impactSmash(street: BigStreet, seed: number): SlamSpec {
      * pose, was the one that broke first.
      */
     outer: {
+      // The suspended stretch used to run 942ms on the turn and 1147ms on
+      // the river before the card even started falling, which is a long time
+      // to look at a card that is not doing anything. Most of that was the
+      // card sitting face down: 456ms of it, before the flip even began.
+      //
+      // The hang is now 700ms and 840ms, and the face-down hold is a third of
+      // what it was. The fall is deliberately left at its old length — the
+      // keyframes were rebalanced rather than simply pulled in, because
+      // compressing the whole curve made the drop itself slower, not faster.
       //    focus      suspended        pre-drop    IMPACT   rebound  settled
-      times: [0, 0.16, 0.42, 0.62, 0.68, 0.74, 0.82, 1],
+      times: [0, 0.12, 0.36, 0.56, 0.63, 0.7, 0.78, 1],
       scale: [
-        hero, hero * 0.94, hero * 0.88, hero * 0.85, hero * 0.74,
+        hero, hero * 0.95, hero * 0.9, hero * 0.86, hero * 0.74,
         // Squashes on contact for a frame or two, then recovers.
         0.94, 1.04, 1,
       ],
       y: [
-        lift, lift * 0.95, lift * 0.89, lift * 0.86, lift * 0.56,
+        lift, lift * 0.96, lift * 0.9, lift * 0.86, lift * 0.56,
         // Overshoots past the resting line, then comes back to it.
         8, -4, 0,
       ],
@@ -134,7 +143,7 @@ function impactSmash(street: BigStreet, seed: number): SlamSpec {
 
     flip: {
       // Held face down through the suspense, turned over just before the drop.
-      times: [0, 0.3, 0.44, 0.6, 1],
+      times: [0, 0.12, 0.33, 0.54, 1],
       rotateY: [180, 180, 96, 0, 0],
     },
 
