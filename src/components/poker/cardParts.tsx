@@ -37,6 +37,13 @@ export interface CardPart {
    * pieces settle first and the centre of the card completes last.
    */
   centrality: number;
+  /**
+   * Stroke-only line art. A pip is a filled shape that survives being flown
+   * small; a court figure is a 2.1-unit line, and at a deep pass it thins to
+   * well under a pixel and disappears. Delicate pieces are kept near the
+   * camera so the artwork is actually watchable on its way in.
+   */
+  delicate?: boolean;
   /** Drawn in absolute card coordinates, exactly as PokerCard draws it. */
   node: ReactNode;
 }
@@ -126,6 +133,7 @@ function faceParts(rank: "J" | "Q" | "K", gid: string): CardPart[] {
       pivot,
       wave: 2 as Wave,
       centrality: 1 - dist(pivot),
+      delicate: true,
       // Transform and stroke on one <g>, which is what PokerCard ends up with
       // once its placement wrapper and FaceCard's stroke wrapper are composed.
       node: (

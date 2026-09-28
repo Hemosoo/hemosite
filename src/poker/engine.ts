@@ -420,6 +420,14 @@ function showdown(t: Table): Table {
 function award(t: Table, pots: Pot[], reveal: boolean): Table {
   const s = t;
   const lines: string[] = [];
+  /** What each pot paid out, before pots with the same winner are merged. */
+  const claims: Array<{
+    key: string;
+    names: string;
+    amount: number;
+    how: string;
+    plural: boolean;
+  }> = [];
   const scores = new Map<number, Score>();
   if (reveal) {
     for (const p of s.players) {
@@ -464,9 +472,32 @@ function award(t: Table, pots: Pot[], reveal: boolean): Table {
     const names = ordered.map((id) => s.players[id].name).join(" and ");
     const how = reveal && eligible.length > 1 ? ` with ${describeScore(scores.get(ordered[0])!)}` : "";
     const soloHuman = ordered.length === 1 && s.players[ordered[0]].isHuman;
-    lines.push(
-      `${names} win${ordered.length > 1 || soloHuman ? "" : "s"} ${chips(pot.amount)}${how}`
-    );
+    claims.push({
+      key: ordered.join(","),
+      names,
+      amount: pot.amount,
+      how,
+      plural: ordered.length > 1 || soloHuman,
+    });
+  }
+
+  // One line per winner, not per pot. Side pots are an accounting detail; a
+  // player who takes the main pot and the side pot won one amount, and
+  // announcing it twice reads as a bug even when the arithmetic is right.
+  // Pots that genuinely go to different players still get a line each.
+  const merged = new Map<string, (typeof claims)[number]>();
+  for (const c of claims) {
+    const prev = merged.get(c.key);
+    if (!prev) merged.set(c.key, { ...c });
+    else {
+      prev.amount += c.amount;
+      // A lone-eligible side pot carries no hand description; the contested
+      // one does, and it is the same hand.
+      if (!prev.how) prev.how = c.how;
+    }
+  }
+  for (const c of merged.values()) {
+    lines.push(`${c.names} win${c.plural ? "" : "s"} ${chips(c.amount)}${c.how}`);
   }
 
   for (const p of s.players) {

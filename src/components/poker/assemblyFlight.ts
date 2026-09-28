@@ -98,7 +98,12 @@ export function planFlights(parts: CardPart[], spec: AssemblySpec): Flight[] {
   const lockAt = new Array<number>(parts.length);
   order.forEach((partIndex, rank) => {
     const u = parts.length > 1 ? rank / (parts.length - 1) : 1;
-    lockAt[partIndex] = phase.lockFrom + (spec.impactAt - phase.lockFrom) * easeOutCubic(u);
+    // Mostly even, with a little of the old outward-first acceleration left
+    // in. On easeOutCubic alone the last-ordered pieces crammed together: a
+    // court card's five art groups all seated inside 37ms, so its figure
+    // appeared in one frame at the very end instead of being drawn in.
+    const spread = 0.65 * u + 0.35 * easeOutCubic(u);
+    lockAt[partIndex] = phase.lockFrom + (spec.impactAt - phase.lockFrom) * spread;
   });
 
   return parts.map((part, i) => {
@@ -145,8 +150,10 @@ export function planFlights(parts: CardPart[], spec: AssemblySpec): Flight[] {
       // moment the card becomes guessable, so it passes close to the camera
       // and reads from across the table; the suit hints stay legible; the
       // rest split between near passes and deep ones so the field has volume.
-      peak:
-        part.wave === 1
+      peak: part.delicate
+        ? // Line art never runs deep; below 1 its stroke falls under a pixel.
+          1.3 + rnd() * 0.55
+        : part.wave === 1
           ? 2.4 + rnd() * 0.9
           : part.wave === 0
             ? 1.5 + rnd() * 0.7
