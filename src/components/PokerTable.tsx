@@ -257,8 +257,20 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
 
     const impactMs = spec.totalMs * spec.impactAt;
     const timers: number[] = [];
-    // Lands on the same frame as the card, the shake and the last locked piece.
-    timers.push(window.setTimeout(() => setTintReleased(true), impactMs));
+    /*
+      The tint finishes as the card lands, rather than starting there.
+
+      Released on impact it was a second event: the card completed, and then
+      over the following 90ms it changed colour — which is what reads as the
+      card redrawing itself once it is already finished. Starting the fade a
+      fade's length earlier means the last piece seats, the table shakes and
+      the card is lit all as one moment. It gives nothing away: 90ms before
+      impact the card is all but assembled, or in the slam's case already
+      face up and most of the way down.
+    */
+    timers.push(
+      window.setTimeout(() => setTintReleased(true), Math.max(0, impactMs - TINT_FADE_MS))
+    );
     if (spec.shake.px > 0) {
       timers.push(
         window.setTimeout(() => {
