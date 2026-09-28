@@ -92,6 +92,9 @@ function impactSmash(street: BigStreet, seed: number): SlamSpec {
   void seed;
   const river = street === "river";
   const k = river ? 1.22 : 1; // one intensity dial
+  /** How large the card hangs before it falls, and how far above the slot. */
+  const hero = river ? 2.5 : 2.15;
+  const lift = river ? -60 : -52;
 
   return {
     kind: "slam",
@@ -100,16 +103,28 @@ function impactSmash(street: BigStreet, seed: number): SlamSpec {
     impactAt: 0.72,
     dim: river ? 0.42 : 0.34,
 
+    /**
+     * The hero pose.
+     *
+     * It used to hang at 1.55 and slide down from 110px up — big, but not so
+     * big that the drop meant much. It now comes in at better than twice the
+     * card's size, which is where the drama is: the gap between what is
+     * hanging there and the ordinary card left on the felt.
+     *
+     * The lift came down as the scale went up. A card this size at the old
+     * height ran off the top of the frame, and the river, already the taller
+     * pose, was the one that broke first.
+     */
     outer: {
       //    focus      suspended        pre-drop    IMPACT   rebound  settled
       times: [0, 0.16, 0.42, 0.62, 0.68, 0.74, 0.82, 1],
       scale: [
-        1.55 * k, 1.42 * k, 1.36 * k, 1.34 * k, 1.3 * k,
+        hero, hero * 0.94, hero * 0.88, hero * 0.85, hero * 0.74,
         // Squashes on contact for a frame or two, then recovers.
         0.94, 1.04, 1,
       ],
       y: [
-        -110 * k, -96 * k, -88 * k, -84 * k, -58 * k,
+        lift, lift * 0.95, lift * 0.89, lift * 0.86, lift * 0.56,
         // Overshoots past the resting line, then comes back to it.
         8, -4, 0,
       ],
