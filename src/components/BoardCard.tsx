@@ -4,6 +4,7 @@ import type { Card } from "../poker/cards";
 import { dealSpec, type RevealSpec } from "../poker/reveals";
 import { toFace } from "../poker/cardFace";
 import AssemblyReveal from "./poker/AssemblyReveal";
+import CrystallizeReveal from "./poker/CrystallizeReveal";
 
 interface Props {
   card: Card;
@@ -45,11 +46,14 @@ export default function BoardCard({
   const revealed = useRef(false);
   if (spec) revealed.current = true;
 
+  // The card is already decided; a reveal only describes how it arrives.
   if (spec?.kind === "assembly") {
     const { rank, suit } = toFace(card);
-    // The card is already decided; the reveal only describes how it arrives.
-    // The slot keeps its resting outline underneath, so nothing reflows.
     return <AssemblyReveal rank={rank} suit={suit} spec={spec} tint={tint} />;
+  }
+  if (spec?.kind === "crystallize") {
+    const { rank, suit } = toFace(card);
+    return <CrystallizeReveal rank={rank} suit={suit} spec={spec} tint={tint} />;
   }
 
   if (spec) {

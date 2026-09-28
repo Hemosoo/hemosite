@@ -6,11 +6,13 @@
  * only describes how the already-dealt one arrives. That separation is what
  * keeps a visual change from becoming a game-state bug.
  *
- * Two reveals exist. Slam hangs the card above the board and drives it down.
- * Assembly takes the card apart and flies its own pips, rank glyphs and face
- * art around the table before snapping them back together on impact. They
- * share the fields the table itself reads — length, impact moment, how far
- * the room dims, the shake — so PokerTable does not care which one is running.
+ * Three reveals exist. Slam hangs the card above the board and drives it
+ * down. Assembly takes the card apart and flies its own pips, rank glyphs and
+ * face art around the table before snapping them back together on impact.
+ * Crystallize starts from nothing and builds the card out of shards of
+ * itself. They share the fields the table itself reads — length, impact
+ * moment, how far the room dims, the shake — so PokerTable does not care
+ * which one is running.
  */
 
 export type BigStreet = "turn" | "river";
@@ -59,7 +61,25 @@ export interface AssemblySpec extends RevealBase {
   phase: { suitEnter: number; rankEnter: number; restEnter: number; lockFrom: number };
 }
 
-export type RevealSpec = SlamSpec | AssemblySpec;
+export interface CrystallizeSpec extends RevealBase {
+  kind: "crystallize";
+  /** Intensity dial: how far shards travel, how hard it completes. */
+  reach: number;
+  /** Fixed per reveal, so one playing never re-cuts the card mid-flight. */
+  seed: number;
+  phase: {
+    /** Fractions of totalMs at which the first and last shard seat. */
+    firstLock: number;
+    lastLock: number;
+    /** Below 1: arrivals bunch up towards the end. */
+    curve: number;
+    /** How long a shard is in the air, as a fraction of totalMs. */
+    flightMin: number;
+    flightSpan: number;
+  };
+}
+
+export type RevealSpec = SlamSpec | AssemblySpec | CrystallizeSpec;
 
 /**
  * Impact Smash — card hangs above the board, turns over, then slams down.
@@ -143,6 +163,45 @@ function dismantleAssembly(street: BigStreet, seed: number): AssemblySpec {
   };
 }
 
+/**
+ * Crystallize — the card is built, not delivered.
+ *
+ * The slot is empty, then shards of the real card fly in from every direction
+ * and seat permanently, a few at first and then in a cascade, until the card
+ * exists. It is deliberately not the assembly reveal: nothing separates and
+ * returns, and no element is ever shown on its own. The suit and rank become
+ * readable only because the pieces carrying them have arrived.
+ *
+ * The river runs the same shape with more travel and a harder finish.
+ */
+function crystallize(street: BigStreet, seed: number): CrystallizeSpec {
+  const river = street === "river";
+
+  return {
+    kind: "crystallize",
+    id: "crystallize",
+    totalMs: river ? 1850 : 1700,
+    // The last shard seats here, and the pulse runs from it to the end.
+    impactAt: river ? 0.88 : 0.87,
+    dim: river ? 0.34 : 0.28,
+
+    reach: river ? 1.13 : 1,
+    seed,
+    phase: {
+      firstLock: river ? 0.25 : 0.24,
+      lastLock: river ? 0.88 : 0.87,
+      // Under 1, so the gaps shrink all the way to the cascade at the end.
+      curve: river ? 0.58 : 0.62,
+      flightMin: 0.16,
+      flightSpan: 0.1,
+    },
+
+    // Lighter than the slam on purpose: this is a lock, not a landing.
+    shake: { px: river ? 5 : 4, ms: river ? 230 : 200 },
+    nudgePx: river ? 4.5 : 3.5,
+  };
+}
+
 /** A gentle slide and flip, for prefers-reduced-motion. */
 function calmReveal(street: BigStreet): SlamSpec {
   void street;
@@ -169,6 +228,7 @@ function calmReveal(street: BigStreet): SlamSpec {
 export const REVEAL_ANIMATIONS: Array<(s: BigStreet, seed: number) => RevealSpec> = [
   impactSmash,
   dismantleAssembly,
+  crystallize,
 ];
 
 /**

@@ -50,8 +50,6 @@ export default function PokerCard({
 }: PokerCardProps) {
   const uid = useId().replace(/:/g, "");
   const showFace = faceUp && rank && suit;
-  const heroAce = !!showFace && rank === "A" && suit === "spades";
-  const gid = `ace-${uid}`;
 
   return (
     <svg
@@ -62,41 +60,64 @@ export default function PokerCard({
       aria-label={label ?? (showFace ? `${rank} of ${suit}` : "face-down card")}
       // preserveAspectRatio default keeps the 2.5:3.5 proportion at any size.
     >
-      {!showFace ? (
-        <CardBack />
-      ) : (
+      {!showFace ? <CardBack /> : <CardFace rank={rank} suit={suit} tint={tint} uid={uid} />}
+    </svg>
+  );
+}
+
+/**
+ * The face, without the <svg> around it.
+ *
+ * Split out so a reveal can define the card once in a <defs> and reference it
+ * from many places. The crystallize reveal draws the same face through two
+ * dozen clip paths; that only produces the real card because every one of
+ * them points at this, rather than at a redrawn approximation of it.
+ */
+export function CardFace({
+  rank,
+  suit,
+  tint,
+  uid,
+}: {
+  rank: Rank;
+  suit: Suit;
+  tint?: string;
+  /** Unique per document: gradients are referenced by id. */
+  uid: string;
+}) {
+  const heroAce = rank === "A" && suit === "spades";
+  const gid = `ace-${uid}`;
+  return (
+    <>
+      {heroAce && (
+        <defs>
+          <AceGradient gid={gid} />
+        </defs>
+      )}
+      <CardBody tint={tint} />
+
+      {/* Corner indices, the second rotated through the centre. */}
+      <g transform={CORNER_TL}>
+        <Corner rank={rank} suit={suit} />
+      </g>
+      <g transform={CORNER_BR}>
+        <Corner rank={rank} suit={suit} />
+      </g>
+
+      {rank === "A" && (
         <>
-          {heroAce && (
-            <defs>
-              <AceGradient gid={gid} />
-            </defs>
-          )}
-          <CardBody tint={tint} />
-
-          {/* Corner indices, the second rotated through the centre. */}
-          <g transform={CORNER_TL}>
-            <Corner rank={rank} suit={suit} />
-          </g>
-          <g transform={CORNER_BR}>
-            <Corner rank={rank} suit={suit} />
-          </g>
-
-          {rank === "A" && (
-            <>
-              <AceSuit suit={suit} gid={gid} />
-              <AceInner suit={suit} />
-            </>
-          )}
-          {isFace(rank) && (
-            <g transform={`translate(${FACE_PLACE.x} ${FACE_PLACE.y}) scale(${FACE_PLACE.scale})`}>
-              <FaceCard rank={rank as "J" | "Q" | "K"} suit={suit} id={uid} />
-            </g>
-          )}
-          {!isFace(rank) &&
-            rank !== "A" &&
-            pipPlacements(rank).map((p, i) => <Pip key={i} suit={suit} p={p} />)}
+          <AceSuit suit={suit} gid={gid} />
+          <AceInner suit={suit} />
         </>
       )}
-    </svg>
+      {isFace(rank) && (
+        <g transform={`translate(${FACE_PLACE.x} ${FACE_PLACE.y}) scale(${FACE_PLACE.scale})`}>
+          <FaceCard rank={rank as "J" | "Q" | "K"} suit={suit} id={uid} />
+        </g>
+      )}
+      {!isFace(rank) &&
+        rank !== "A" &&
+        pipPlacements(rank).map((p, i) => <Pip key={i} suit={suit} p={p} />)}
+    </>
   );
 }
