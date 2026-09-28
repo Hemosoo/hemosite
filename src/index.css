@@ -333,3 +333,46 @@
   --sidebar-border: #2f3440;
   --sidebar-ring: #61afef;
 }
+
+/*
+ * The raise slider.
+ *
+ * The native control is a fat rounded track with a big round thumb, which is
+ * the single most dashboard-looking element on the poker table. This makes it
+ * an instrument: a hairline track and a small squared thumb.
+ */
+.poker-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.poker-slider::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--color-line);
+}
+.poker-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 9px;
+  height: 14px;
+  margin-top: -6px;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+.poker-slider:hover::-webkit-slider-thumb,
+.poker-slider:focus-visible::-webkit-slider-thumb {
+  background: #8cc6f6;
+}
+.poker-slider::-moz-range-track {
+  height: 2px;
+  background: var(--color-line);
+}
+.poker-slider::-moz-range-thumb {
+  width: 9px;
+  height: 14px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+.poker-slider:focus-visible {
+  outline: none;
+}

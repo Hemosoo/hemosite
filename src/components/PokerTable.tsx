@@ -28,17 +28,34 @@ const CARD_SIZE: Record<CardSize, string> = {
 /** Board slots are reserved whether or not a card is in them. */
 const BOARD_SLOT = "h-[var(--card-board)] aspect-[5/7]";
 /**
- * The name plate under the cards, plus the gap above it: a seat is exactly its
- * card height plus this. The board hangs off that, so the pot stays clear of
- * the player's cards at every window height.
+ * The player's name block under the cards, plus the gap above it: a seat is
+ * exactly its card height plus this. The board hangs off that, so the pot
+ * stays clear of the player's cards at every window height. It shrank when
+ * the plate became type on the table instead of a bordered box.
  */
-const PLATE_H = "4.375rem";
+const PLATE_H = "2.5rem";
 import type { Player, Table } from "../poker/engine";
 import { usePoker } from "../poker/usePoker";
 import BoardCard from "./BoardCard";
 import { pickReveal, type RevealSpec } from "../poker/reveals";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
+
+/**
+ * Controls share one look: a 5px radius, a hairline border, uppercase label.
+ * Nothing here is a filled call-to-action — the primary action is marked by
+ * colour and a low-opacity wash, not by being the brightest object on screen.
+ */
+const ACTION =
+  "inline-flex items-center justify-center gap-2 rounded-[5px] border " +
+  "text-[13px] font-semibold tracking-[0.12em] transition-colors";
+const ACTION_NEUTRAL = "border-line text-subtle hover:border-white/25 hover:text-text";
+const ACTION_PRIMARY = "border-primary/55 bg-primary/[0.08] text-primary hover:bg-primary/[0.16]";
+
+/** A keyboard hint: present, never competing with the label. */
+const Key = ({ children }: { children: React.ReactNode }) => (
+  <span className="text-[11px] font-normal text-dim">[{children}]</span>
+);
 
 /** Seat 0 sits at the bottom; the rest run clockwise around the ellipse. */
 function seatPos(i: number, n: number) {
@@ -80,80 +97,54 @@ function PlayingCard({
   );
 }
 
+/**
+ * A seat: cards, then the player written straight onto the table.
+ *
+ * No plate, no pill. The hierarchy is typography — a small muted name over a
+ * brighter stack — and the active player is marked with a hairline and a
+ * colour shift rather than another container. Bets sit out of flow beside the
+ * name, on the side facing the pot, as plain figures with a chip dot.
+ */
 function Seat({
   player,
   table,
   isTurn,
-  reduced,
   badgeSide,
   lit,
 }: {
   player: Player;
   table: Table;
   isTurn: boolean;
-  reduced: boolean | null;
   /** Keys of the cards carrying the hand. */
   lit: Set<string>;
-  /** Which side of the name plate the bet sits on: the one facing the pot. */
+  /** Which side of the name the bet sits on: the one facing the pot. */
   badgeSide: "left" | "right";
 }) {
   const show = player.isHuman || (table.revealed && !player.folded && player.hole.length > 0);
   const dimmed = player.folded || player.out;
+  const stack = player.out ? "\u2014" : fmt(player.chips);
 
-  // Dealer button, all-in flag and the chips this player has pushed out. The
-  // bet was a text-xs pill, which is unreadable at the far seats — it is the
-  // one number you have to track, so it is now the loudest thing on the seat
-  // and pops when it changes.
-  const badges = (
+  const marks = (
     <>
       {player.id === table.button && (
-        <span className="grid h-6 w-6 place-items-center rounded-full bg-yellow text-xs font-bold text-[#0b0d10]">
+        <span className="grid h-[18px] w-[18px] place-items-center rounded-full border border-yellow/60 text-[10px] font-semibold text-yellow">
           D
         </span>
       )}
       {player.allIn && !player.folded && (
-        <span className="inline-flex items-center rounded-full border border-orange/50 bg-orange/20 px-2.5 py-1 text-sm font-bold text-orange">
-          all in
-        </span>
+        <span className="text-[11px] font-semibold tracking-[0.12em] text-orange">ALL IN</span>
       )}
       {player.committed > 0 && !player.allIn && (
-        <motion.span
-          key={player.committed}
-          initial={reduced ? false : { scale: 0.55, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 520, damping: 22 }}
-          className="inline-flex items-center rounded-full border border-cyan/50 bg-cyan/20 px-2.5 py-1 text-sm font-bold tabular-nums text-cyan"
-        >
+        <span className="flex items-center gap-1.5 text-[13px] font-semibold tabular-nums text-cyan">
+          <span className="h-[3px] w-[3px] rounded-full bg-cyan/80" />
           {fmt(player.committed)}
-        </motion.span>
+        </span>
       )}
     </>
   );
 
-  const plate = (
-    <div
-      className={`relative min-w-[132px] rounded-xl border px-4 py-2 text-center transition-colors ${
-        isTurn ? "border-primary bg-primary/10" : "border-line bg-surface/90"
-      }`}
-    >
-      {isTurn && !reduced && (
-        <motion.span
-          className="absolute inset-0 rounded-lg ring-1 ring-primary"
-          animate={{ opacity: [0.25, 1, 0.25] }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-        />
-      )}
-      <div className={`text-sm font-semibold ${player.isHuman ? "text-green" : "text-subtle"}`}>
-        {player.name}
-      </div>
-      <div className="text-lg tabular-nums text-text">
-        {player.out ? "—" : fmt(player.chips)}
-      </div>
-    </div>
-  );
-
   return (
-    <div className={`flex flex-col items-center gap-1 ${dimmed ? "opacity-40" : ""}`}>
+    <div className={`flex flex-col items-center gap-2 ${dimmed ? "opacity-35" : ""}`}>
       <div className="flex gap-2">
         {player.hole.length > 0 && !player.out ? (
           player.hole.map((c, i) => (
@@ -170,19 +161,38 @@ function Seat({
         )}
       </div>
 
-      {/* Badges sit beside the plate, on the side facing the pot, and out of
-          flow. As a row underneath they cost every seat 32px of height: at the
-          bottom that pushed your cards up over the pot, and at the top it put
-          the bet chip down on the board. Beside the plate they cost nothing
-          and land where a real bet would — between the player and the pot. */}
       <div className="relative">
-        {plate}
+        {player.isHuman ? (
+          // Your seat is marked by a single accent rule and a label, not a box.
+          <div className="min-w-[8.5rem] pb-2">
+            <div className={`h-px w-full ${isTurn ? "bg-primary" : "bg-primary/45"}`} />
+            <div className="flex items-baseline justify-between gap-4 pt-1.5">
+              <span className="text-[10px] font-semibold tracking-[0.22em] text-primary">YOU</span>
+              <span className="text-[17px] leading-none tabular-nums text-text">{stack}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center">
+            {/* The active seat gets a hairline above its name. It occupies the
+                same space when inactive, so nothing shifts as the turn moves. */}
+            <div className={`h-px w-7 ${isTurn ? "bg-primary" : "bg-transparent"}`} />
+            <div
+              className={`pt-1.5 text-[12px] leading-none tracking-[0.1em] ${
+                isTurn ? "text-primary" : "text-dim"
+              }`}
+            >
+              {player.name}
+            </div>
+            <div className="pt-1.5 text-[16px] leading-none tabular-nums text-subtle">{stack}</div>
+          </div>
+        )}
+
         <div
-          className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1.5 ${
-            badgeSide === "right" ? "left-full ml-2" : "right-full mr-2"
+          className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-2 ${
+            badgeSide === "right" ? "left-full ml-3" : "right-full mr-3"
           }`}
         >
-          {badges}
+          {marks}
         </div>
       </div>
     </div>
@@ -361,7 +371,16 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
         transition={{ duration: 0.26 }}
       >
         {/* Felt */}
-        <div className="absolute left-1/2 top-1/2 h-[72%] w-[88%] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-primary/15 bg-[radial-gradient(ellipse_at_center,#131a24_0%,#0d131b_70%)] shadow-[inset_0_0_80px_rgba(97,175,239,0.06)]" />
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-1/2 h-[72%] w-[88%] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[45%] border border-white/[0.045]"
+          // A few percent of luminance across the whole surface, no more. The
+          // blue inset glow it used to carry read as a lit edge on a div.
+          style={{
+            background:
+              "radial-gradient(ellipse at center, #141b24 0%, #111821 55%, #0e141b 100%)",
+          }}
+        />
 
         {/* Board + pot */}
         <div
@@ -383,8 +402,6 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               const c = table.board[i];
               return (
                 <div key={i} className={`${BOARD_SLOT} relative shrink-0`}>
-                  {/* A slot with nothing in it still shows where a card goes. */}
-                  <div className="absolute inset-0 rounded-xl border border-white/5" />
                   <AnimatePresence initial={false}>
                     {c && (
                       <BoardCard
@@ -412,7 +429,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               );
             })}
             {!started && (
-              <span className="absolute inset-0 grid place-items-center text-base text-dim">
+              <span className="absolute inset-0 grid place-items-center text-[12px] tracking-[0.14em] text-dim">
                 press deal to start
               </span>
             )}
@@ -426,30 +443,27 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               where the player's own seat is anchored, so the two overlapped.
               Both are positioned out of flow, so a two-line result from a real
               side pot still cannot move the board. */}
-          <div className="relative flex h-9 items-center justify-center">
+          <div className="relative flex h-10 items-center justify-center">
             <AnimatePresence mode="wait">
               {table.result ? (
                 <motion.div
                   key="result"
-                  initial={reduced ? { opacity: 0 } : { opacity: 0, y: 6 }}
+                  initial={reduced ? { opacity: 0 } : { opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="absolute whitespace-nowrap rounded-full border border-green/40 bg-green/10 px-5 py-1.5 text-center text-base text-green"
+                  className="absolute whitespace-nowrap text-center text-[13px] tracking-[0.06em] text-green"
                 >
                   {table.result.map((r) => (
                     <div key={r}>{r}</div>
                   ))}
                 </motion.div>
               ) : pot > 0 ? (
-                <motion.div
-                  key="pot"
-                  initial={reduced ? false : { opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute whitespace-nowrap rounded-full border border-yellow/30 bg-yellow/10 px-5 py-1.5 text-lg font-semibold tabular-nums text-yellow"
-                >
-                  pot {fmt(pot)}
-                </motion.div>
+                <div className="absolute flex flex-col items-center whitespace-nowrap">
+                  <span className="text-[10px] font-semibold tracking-[0.22em] text-dim">POT</span>
+                  <span className="pt-1 text-[18px] leading-none tabular-nums text-yellow">
+                    {fmt(pot)}
+                  </span>
+                </div>
               ) : null}
             </AnimatePresence>
           </div>
@@ -481,7 +495,6 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               player={p}
               table={table}
               isTurn={table.toAct === p.id && !table.result}
-              reduced={reduced}
               lit={lit}
               badgeSide={positions[i].x > 50 ? "left" : "right"}
             />
@@ -494,17 +507,23 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
       {/* Controls.
 
           Two fixed bands, not a centred stack. Reserving the footer's height
-          kept the felt still but not the buttons: the turn state is ~122px
-          and "thinking" is ~56px, so centring each one inside the reserved
-          box put them at different heights and the controls slid every time
-          the turn changed. Every state now renders into the same action band,
-          with the raise band held above it. */}
-      <div className="flex-shrink-0 border-t border-line bg-surface/50 px-4 py-4 sm:px-6">
-        <div className="mx-auto flex max-w-4xl flex-col gap-4">
+          kept the felt still but not the buttons: the turn state and the
+          waiting state are different sizes, so centring each one inside the
+          reserved box put them at different heights and the controls slid
+          every time the turn changed. Every state renders into the same
+          action band, with the raise band held above it.
+
+          A hairline, not a panel: the controls sit on the same ground as the
+          table rather than in a tray beneath it. */}
+      <div className="flex-shrink-0 border-t border-line/70 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-3xl flex-col gap-3">
           {/* Raise band. Empty unless there is something to size. */}
-          <div className="flex h-11 items-center gap-3">
-            {myTurn && legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo && (
+          <div className="flex h-9 items-center gap-4">
+            {started && myTurn && legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo && (
               <>
+                <span className="w-24 text-[18px] leading-none tabular-nums text-primary">
+                  {fmt(raiseTo)}
+                </span>
                 <input
                   type="range"
                   min={legal.minRaiseTo}
@@ -513,17 +532,14 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                   value={raiseTo}
                   onChange={(e) => setRaiseTo(Number(e.target.value))}
                   aria-label="Raise amount"
-                  className="h-2 flex-1 cursor-pointer accent-primary"
+                  className="poker-slider h-2.5 flex-1 cursor-pointer"
                 />
-                <span className="w-28 text-right text-xl font-semibold tabular-nums text-primary">
-                  {fmt(raiseTo)}
-                </span>
-                <div className="hidden gap-1 sm:flex">
-                  {([["½", 0.5], ["¾", 0.75], ["pot", 1]] as const).map(([label, f]) => (
+                <div className="hidden items-center gap-4 sm:flex">
+                  {([["½", 0.5], ["¾", 0.75], ["POT", 1]] as const).map(([label, f]) => (
                     <button
                       key={label}
                       onClick={() => quick(f)}
-                      className="rounded border border-line px-3 py-1.5 text-sm text-subtle hover:border-primary/60 hover:text-primary"
+                      className="border-b border-transparent pb-0.5 text-[12px] font-semibold tracking-[0.14em] text-subtle/70 transition-colors hover:border-primary/70 hover:text-primary"
                     >
                       {label}
                     </button>
@@ -534,66 +550,63 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Action band. Fixed height, so a button never moves. */}
-          <div className="flex h-[3.875rem] items-stretch gap-2">
+          <div className="flex h-11 items-stretch gap-2">
             {busted ? (
               <>
-                <span className="flex flex-1 items-center text-sm text-subtle">
+                <span className="flex flex-1 items-center text-[13px] text-dim">
                   {you.out ? "you busted." : "you took every chip."}
                 </span>
-                <button
-                  onClick={reset}
-                  className="rounded-lg bg-primary px-6 text-base font-bold text-[#0b0d10]"
-                >
-                  new table
+                <button onClick={reset} className={`${ACTION} ${ACTION_PRIMARY} px-6`}>
+                  NEW TABLE
                 </button>
               </>
             ) : !started || (table.result && !autoDeal) ? (
               <button
                 onClick={deal}
                 disabled={locked}
-                className="mx-auto rounded-lg bg-primary px-10 text-lg font-bold text-[#0b0d10] transition-transform hover:scale-[1.02]"
+                className={`${ACTION} ${ACTION_PRIMARY} mx-auto px-10`}
               >
-                deal {table.handNo > 0 ? "next hand" : ""}
+                DEAL {table.handNo > 0 ? "NEXT HAND" : ""}
               </button>
             ) : myTurn ? (
               <>
                 {legal.canFold && (
                   <button
                     onClick={() => act({ type: "fold" })}
-                    className="flex-1 rounded-lg border border-red/40 text-lg font-semibold text-red transition-colors hover:bg-red/10"
+                    className={`${ACTION} flex-1 border-red/35 text-red hover:border-red/60 hover:bg-red/[0.07]`}
                   >
-                    fold <span className="text-dim">f</span>
+                    FOLD <Key>F</Key>
                   </button>
                 )}
                 {legal.canCheck ? (
                   <button
                     onClick={() => act({ type: "check" })}
-                    className="flex-1 rounded-lg border border-line text-lg font-semibold text-text transition-colors hover:border-primary/60"
+                    className={`${ACTION} ${ACTION_NEUTRAL} flex-1`}
                   >
-                    check <span className="text-dim">c</span>
+                    CHECK <Key>C</Key>
                   </button>
                 ) : (
                   legal.canCall && (
                     <button
                       onClick={() => act({ type: "call" })}
-                      className="flex-1 rounded-lg border border-line text-lg font-semibold text-text transition-colors hover:border-primary/60"
+                      className={`${ACTION} ${ACTION_NEUTRAL} flex-1`}
                     >
-                      call {fmt(legal.callAmount)} <span className="text-dim">c</span>
+                      CALL <span className="tabular-nums">{fmt(legal.callAmount)}</span> <Key>C</Key>
                     </button>
                   )
                 )}
                 {legal.canRaise && (
                   <button
                     onClick={() => act({ type: "raise", to: raiseTo })}
-                    className="flex-1 rounded-lg bg-primary text-lg font-bold text-[#0b0d10] transition-transform hover:scale-[1.02]"
+                    className={`${ACTION} ${ACTION_PRIMARY} flex-1`}
                   >
-                    {table.currentBet === 0 ? "bet" : "raise"} {fmt(raiseTo)}{" "}
-                    <span className="opacity-50">r</span>
+                    {table.currentBet === 0 ? "BET" : "RAISE"}{" "}
+                    <span className="tabular-nums">{fmt(raiseTo)}</span> <Key>R</Key>
                   </button>
                 )}
               </>
             ) : (
-              <div className="flex flex-1 items-center justify-center text-base text-dim">
+              <div className="flex flex-1 items-center justify-center text-[12px] tracking-[0.12em] text-dim">
                 {runout
                   ? "all in — running it out"
                   : table.result
