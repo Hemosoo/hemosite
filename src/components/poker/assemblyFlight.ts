@@ -92,7 +92,7 @@ export function planFlights(parts: CardPart[], spec: AssemblySpec): Flight[] {
   // exactly at impact, which is what makes the whole thing feel like one
   // event rather than an animation that happens to finish near a bang.
   const order = parts
-    .map((p, i) => ({ i, c: p.centrality }))
+    .map((p, i) => ({ i, c: p.settle }))
     .sort((a, b) => a.c - b.c)
     .map((o) => o.i);
   const lockAt = new Array<number>(parts.length);

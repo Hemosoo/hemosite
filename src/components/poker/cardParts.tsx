@@ -33,10 +33,13 @@ export interface CardPart {
   pivot: [number, number];
   wave: Wave;
   /**
-   * How central the piece is, 0..1. Used to order the locks so the outermost
-   * pieces settle first and the centre of the card completes last.
+   * Where the piece falls in the assembly sequence, 0..1, lowest first.
+   *
+   * For most pieces this is just how central they are, so the card builds
+   * from its edges inward and finishes in the middle. Court art overrides it
+   * — see faceParts.
    */
-  centrality: number;
+  settle: number;
   /**
    * Stroke-only line art. A pip is a filled shape that survives being flown
    * small; a court figure is a 2.1-unit line, and at a deep pass it thins to
@@ -90,7 +93,7 @@ function pipParts(rank: Rank, suit: Suit, seed: number): CardPart[] {
       id: `pip-${i}`,
       pivot: pipPivot(p),
       wave: hints.has(i) ? 0 : 2,
-      centrality: 1 - dist(pipPivot(p)),
+      settle: 1 - dist(pipPivot(p)),
       node: <Pip suit={suit} p={p} />,
     });
   }
@@ -110,7 +113,7 @@ function pipParts(rank: Rank, suit: Suit, seed: number): CardPart[] {
         id: `pip-cluster-${s}`,
         pivot: pv,
         wave: 2,
-        centrality: 1 - dist(pv),
+        settle: 1 - dist(pv),
         node: (
           <>
             {group.map((i) => (
@@ -124,15 +127,27 @@ function pipParts(rank: Rank, suit: Suit, seed: number): CardPart[] {
   return parts;
 }
 
+/**
+ * Where the court art sits in the sequence.
+ *
+ * Every piece of a face card's figure is central, so ordering by distance put
+ * all five of them after all four corner indices: the card finished, complete
+ * but faceless, and then the portrait arrived on top of it. Spreading them
+ * across the range instead interleaves the figure with the indices, so the
+ * card is never a blank with a face dropped onto it. The last piece is still
+ * art, so the reveal still completes in the middle of the card.
+ */
+const ART_SETTLE = [0.1, 0.26, 0.46, 0.7, 0.98];
+
 function faceParts(rank: "J" | "Q" | "K", gid: string): CardPart[] {
   const { x, y, scale } = FACE_PLACE;
-  return FACE_ART[rank].map((g) => {
+  return FACE_ART[rank].map((g, i) => {
     const pivot: [number, number] = [x + g.pivot[0] * scale, y + g.pivot[1] * scale];
     return {
       id: `art-${g.id}`,
       pivot,
       wave: 2 as Wave,
-      centrality: 1 - dist(pivot),
+      settle: ART_SETTLE[Math.min(i, ART_SETTLE.length - 1)],
       delicate: true,
       // Transform and stroke on one <g>, which is what PokerCard ends up with
       // once its placement wrapper and FaceCard's stroke wrapper are composed.
@@ -165,7 +180,7 @@ export function cardParts(
   const corner = (tag: string, transform: string, pivot: [number, number], node: ReactNode) => ({
     id: tag,
     pivot,
-    centrality: 1 - dist(pivot),
+    settle: 1 - dist(pivot),
     node: <g transform={transform}>{node}</g>,
   });
 
@@ -197,7 +212,7 @@ export function cardParts(
       id: "ace",
       pivot,
       wave: 2,
-      centrality: 1 - dist(pivot),
+      settle: 1 - dist(pivot),
       node: <AceSuit suit={suit} gid={aceGid} />,
     });
     if (heroAce) {
@@ -205,7 +220,7 @@ export function cardParts(
         id: "ace-inner",
         pivot,
         wave: 2,
-        centrality: 1,
+        settle: 1,
         node: <AceInner suit={suit} />,
       });
     }
