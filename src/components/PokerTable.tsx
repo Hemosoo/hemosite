@@ -534,12 +534,17 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                   aria-label="Raise amount"
                   className="poker-slider h-2.5 flex-1 cursor-pointer"
                 />
-                <div className="hidden items-center gap-4 sm:flex">
-                  {([["½", 0.5], ["¾", 0.75], ["POT", 1]] as const).map(([label, f]) => (
+                {/* Spelled out rather than ½ and ¾: in a monospaced face those
+                    are single narrow glyphs and come out far too small to aim
+                    at. Each carries a hairline, which gives the row a visible
+                    tap target without turning three text controls into three
+                    boxes. */}
+                <div className="hidden items-stretch gap-1 sm:flex">
+                  {([["1/2", 0.5], ["3/4", 0.75], ["POT", 1]] as const).map(([label, f]) => (
                     <button
                       key={label}
                       onClick={() => quick(f)}
-                      className="border-b border-transparent pb-0.5 text-[12px] font-semibold tracking-[0.14em] text-subtle/70 transition-colors hover:border-primary/70 hover:text-primary"
+                      className="min-w-[3.25rem] border-b border-line px-2 pb-1.5 pt-1 text-[14px] font-semibold tracking-[0.08em] text-subtle transition-colors hover:border-primary hover:text-primary"
                     >
                       {label}
                     </button>
