@@ -9,7 +9,7 @@
  */
 import { CARD_H, CARD_R, CARD_W, INK, SUIT_COLOR } from "./cardTheme";
 import type { Rank, Suit } from "./cardTheme";
-import { aceLayout, type PipPlacement } from "./cardLayout";
+import { TINT_FADE_MS, aceLayout, type PipPlacement } from "./cardLayout";
 import SuitIcon from "./SuitIcon";
 
 /**
@@ -24,9 +24,22 @@ export function CardBody({ tint }: { tint?: string }) {
   return (
     <>
       <rect x="0" y="0" width={CARD_W} height={CARD_H} rx={CARD_R} fill={INK.face} />
-      {tint && (
-        <rect x="0" y="0" width={CARD_W} height={CARD_H} rx={CARD_R} fill={tint} opacity="0.13" />
-      )}
+      {/*
+        Always drawn, transparent until the card is carrying the hand. Mounting
+        it on the tint made lighting a card a DOM insertion in the middle of a
+        reveal; as a standing element it is an attribute change, and it can
+        fade instead of appearing between one frame and the next.
+      */}
+      <rect
+        x="0"
+        y="0"
+        width={CARD_W}
+        height={CARD_H}
+        rx={CARD_R}
+        fill={tint ?? INK.violet}
+        opacity={tint ? 0.13 : 0}
+        style={{ transition: `opacity ${TINT_FADE_MS}ms ease-out` }}
+      />
       <rect
         x="1.5"
         y="1.5"
@@ -36,6 +49,9 @@ export function CardBody({ tint }: { tint?: string }) {
         fill="none"
         stroke={tint ?? INK.faceEdge}
         strokeWidth={tint ? "3.5" : "2.5"}
+        style={{
+          transition: `stroke ${TINT_FADE_MS}ms ease-out, stroke-width ${TINT_FADE_MS}ms ease-out`,
+        }}
       />
     </>
   );

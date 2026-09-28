@@ -13,7 +13,7 @@
 import { useEffect, useId, useMemo, useRef } from "react";
 import { CARD_H, CARD_R, CARD_W, isFace, type Rank, type Suit } from "./cardTheme";
 import { AceGradient, CardBody } from "./cardPieces";
-import { cardShadow } from "./cardLayout";
+import { TINT_FADE_MS, cardShadow } from "./cardLayout";
 import { FaceGradient } from "./FaceCard";
 import { cardParts } from "./cardParts";
 import {
@@ -101,7 +101,11 @@ export default function AssemblyReveal({
         className="h-full w-full"
         // The same filter the finished board card carries, so the handover
         // back to PokerCard at the end of the reveal is invisible.
-        style={{ overflow: "visible", filter: cardShadow(tint) }}
+        style={{
+          overflow: "visible",
+          filter: cardShadow(tint),
+          transition: `filter ${TINT_FADE_MS}ms ease-out`,
+        }}
         aria-hidden
       >
         <defs>

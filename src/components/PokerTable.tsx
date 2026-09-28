@@ -4,7 +4,7 @@ import type { Card } from "../poker/cards";
 import { toFace } from "../poker/cardFace";
 import { cardKey, highlightSet } from "../poker/highlight";
 import { INK } from "./poker/cardTheme";
-import { cardShadow } from "./poker/cardLayout";
+import { TINT_FADE_MS, cardShadow } from "./poker/cardLayout";
 import PokerCard from "./poker/PokerCard";
 
 /** Cards carrying the hand wear the deck's violet, the ace of spades' colour. */
@@ -104,7 +104,7 @@ function PlayingCard({
   return (
     <PokerCard
       className={`${dims} block`}
-      style={{ filter: cardShadow(lit) }}
+      style={{ filter: cardShadow(lit), transition: `filter ${TINT_FADE_MS}ms ease-out` }}
       faceUp={!hidden && !!card}
       rank={face?.rank}
       suit={face?.suit}

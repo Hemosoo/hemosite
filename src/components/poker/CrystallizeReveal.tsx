@@ -25,7 +25,7 @@
  */
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { CARD_H, CARD_R, CARD_W, type Rank, type Suit } from "./cardTheme";
-import { cardShadow } from "./cardLayout";
+import { TINT_FADE_MS, cardShadow } from "./cardLayout";
 import { CardFace } from "./PokerCard";
 import { cardShards, shardPoints } from "./cardShards";
 import { completionFrame, planShards, seamGlow, shardFrame } from "./crystalFlight";
@@ -152,7 +152,7 @@ export default function CrystallizeReveal({
         // Shards spend their flight well outside the card's own box. The card's
         // drop shadow is added at completion, not before: a shadow under a
         // half-built card gives away a solid object that is not there yet.
-        style={{ overflow: "visible" }}
+        style={{ overflow: "visible", transition: `filter ${TINT_FADE_MS}ms ease-out` }}
         aria-hidden
       >
         <defs>

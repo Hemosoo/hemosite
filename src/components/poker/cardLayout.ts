@@ -52,10 +52,18 @@ export const FACE_PLACE = { x: (CARD_W - 100 * 1.52) / 2, y: 74, scale: 1.52 };
 
 /**
  * The card's cast shadow, plus a glow when it is tinted. Built here so the
- * assembly reveal and the finished card carry exactly the same filter and the
+ * reveals and the finished card carry exactly the same filter and the
  * handover between them stays invisible.
+ *
+ * Both shadows are always present, the glow simply transparent when the card
+ * is not carrying the hand. A filter chain that changes length cannot be
+ * interpolated and makes the browser rebuild it mid-animation; one that only
+ * changes a colour can be transitioned, which is what turns lighting a card
+ * into something that arrives rather than something that switches.
  */
+export const TINT_FADE_MS = 90;
+
 export function cardShadow(tint?: string) {
   const base = "drop-shadow(0 6px 14px rgba(0,0,0,0.55))";
-  return tint ? `${base} drop-shadow(0 0 9px ${tint}99)` : base;
+  return `${base} drop-shadow(0 0 9px ${tint ? `${tint}99` : "rgba(0,0,0,0)"})`;
 }
