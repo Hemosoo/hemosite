@@ -45,6 +45,12 @@ const HAND_END_MS = 2600;
  */
 const RUNOUT_FLOP_MS = 420;
 const RUNOUT_STREET_MS = 850;
+/**
+ * How long the last card sits before its result is announced. It only has to
+ * outlast the gap between a card being shown and its reveal starting, which is
+ * one render; a quarter second also simply reads better.
+ */
+const RESULT_SETTLE_MS = 260;
 
 export function usePoker(seats = 6, stack = 10000, bigBlind = 100) {
   const [table, setTable] = useState<Table>(() => createTable(seats, stack, bigBlind));
@@ -92,6 +98,27 @@ export function usePoker(seats = 6, stack = 10000, bigBlind = 100) {
     );
     return () => window.clearTimeout(id);
   }, [table.board.length, table.result, shown, pending, held]);
+
+  /**
+   * The result waits for the last card to be down, out of the air, and still.
+   *
+   * This used to key off `held`, which PokerTable sets from an effect once a
+   * reveal starts — a render too late. On the frame the final card was shown
+   * the board was complete and no reveal had begun yet, so the winner was
+   * announced at the same millisecond the river landed, every time. A short
+   * settle cannot race: any reveal raises `held` well inside it and holds the
+   * result until the card has finished arriving.
+   */
+  const [resultReady, setResultReady] = useState(false);
+  useEffect(() => {
+    if (pending || !table.result) {
+      setResultReady(false);
+      return;
+    }
+    if (held) return; // a reveal is on screen; the card is still arriving
+    const id = window.setTimeout(() => setResultReady(true), RESULT_SETTLE_MS);
+    return () => window.clearTimeout(id);
+  }, [pending, table.result, held]);
 
   // The pot is awarded the moment an all-in resolves, so the real figure is
   // already zero while the board is still coming. Hold the last one.
@@ -146,29 +173,28 @@ export function usePoker(seats = 6, stack = 10000, bigBlind = 100) {
   const myTurn = !held && !table.result && !!table.players[table.toAct]?.isHuman;
 
   /**
-   * The result is also held back through the last card's reveal. Without that,
-   * the moment the river was dealt the board was complete, so the banner
-   * announced the winner while the card was still assembling in mid-air.
-   * Outside a run-out there is never a result while a reveal is playing, so
-   * this only ever affects the end of one.
-   */
-  const holding = pending || (held && table.result !== null);
-
-  /**
    * What the table looks like on screen: the board only as far as it has been
-   * shown, and no result until the last card is down. Hole cards stay face up
-   * through a run-out, the way they are when everyone is all in.
+   * shown, and no result until the last card is down and settled. Hole cards
+   * stay face up through a run-out, the way they are when everyone is all in.
    */
-  const view: Table = holding
-    ? { ...table, board: table.board.slice(0, shown), result: null }
-    : table;
+  const holdingBoard = pending;
+  const holdingResult = table.result !== null && !resultReady;
+  const view: Table =
+    holdingBoard || holdingResult
+      ? { ...table, board: table.board.slice(0, shown), result: holdingResult ? null : table.result }
+      : table;
 
   return {
     table: view,
     legal,
     myTurn,
-    runout: holding,
-    pot: holding ? lastPot.current : potSize(table),
+    // "Running it out" is only true of a decided hand with cards still to
+    // come. Keyed on `pending` alone it also fired for the frame an ordinary
+    // flop took to catch up, which flashed the wrong status on every hand.
+    runout: pending && table.result !== null,
+    /** The last card is down; its result is a beat away. */
+    settling: holdingResult && !pending,
+    pot: holdingBoard || holdingResult ? lastPot.current : potSize(table),
     autoDeal,
     setAutoDeal,
     held,
