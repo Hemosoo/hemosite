@@ -71,7 +71,7 @@ export default function PokerCard({
               <AceGradient gid={gid} />
             </defs>
           )}
-          <CardBody heroAce={heroAce} tint={tint} />
+          <CardBody tint={tint} />
 
           {/* Corner indices, the second rotated through the centre. */}
           <g transform={CORNER_TL}>

@@ -191,7 +191,7 @@ function Seat({
 
 export default function PokerTable({ onClose }: { onClose: () => void }) {
   const reduced = useReducedMotion();
-  const { table, legal, myTurn, pot, autoDeal, setAutoDeal, held, setHeld, deal, act, reset } =
+  const { table, legal, myTurn, pot, runout, autoDeal, setAutoDeal, held, setHeld, deal, act, reset } =
     usePoker(6);
   /** No input reaches the engine while a reveal is playing. */
   const locked = held;
@@ -594,7 +594,11 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               </>
             ) : (
               <div className="flex flex-1 items-center justify-center text-base text-dim">
-                {table.result ? "…" : `${table.players[table.toAct]?.name ?? ""} is thinking`}
+                {runout
+                  ? "all in — running it out"
+                  : table.result
+                    ? "…"
+                    : `${table.players[table.toAct]?.name ?? ""} is thinking`}
               </div>
             )}
           </div>

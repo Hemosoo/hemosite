@@ -125,7 +125,7 @@ export default function AssemblyReveal({
 
         <g ref={frameRef}>
           <g ref={bodyRef} opacity={0}>
-            <CardBody heroAce={heroAce} tint={tint} />
+            <CardBody tint={tint} />
           </g>
           {parts.map((p, i) => (
             <g

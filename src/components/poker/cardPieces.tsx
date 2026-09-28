@@ -15,11 +15,12 @@ import SuitIcon from "./SuitIcon";
 /**
  * The blank stock: fill, an optional tint wash, then the edge.
  *
- * The hero ace has always worn the deck's violet edge. `tint` generalises it:
- * any card carrying the hand gets the same treatment, so the ace is no longer
- * the only card on the table with a colour of its own.
+ * The violet edge used to be the ace of spades' permanently, as a hero card.
+ * It now means one thing only — this card is carrying the hand — so an ace
+ * that is doing nothing looks like any other card. The ace keeps the gradient
+ * on its big spade and its inner outline; that is artwork, not a signal.
  */
-export function CardBody({ heroAce, tint }: { heroAce?: boolean; tint?: string }) {
+export function CardBody({ tint }: { tint?: string }) {
   return (
     <>
       <rect x="0" y="0" width={CARD_W} height={CARD_H} rx={CARD_R} fill={INK.face} />
@@ -33,9 +34,8 @@ export function CardBody({ heroAce, tint }: { heroAce?: boolean; tint?: string }
         height={CARD_H - 3}
         rx={CARD_R - 1}
         fill="none"
-        stroke={tint ?? (heroAce ? INK.violet : INK.faceEdge)}
+        stroke={tint ?? INK.faceEdge}
         strokeWidth={tint ? "3.5" : "2.5"}
-        opacity={tint ? 1 : heroAce ? 0.85 : 1}
       />
     </>
   );
