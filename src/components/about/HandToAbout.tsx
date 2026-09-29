@@ -20,7 +20,7 @@
 import { useEffect, useRef } from "react";
 import { useReducedMotion, useScroll } from "framer-motion";
 import { anchorRect } from "./anchors";
-import { boardFrame, holeExit, holeFrame, metricsFor, type Frame } from "./handScene";
+import { boardFrame, feltFor, holeExit, holeFrame, metricsFor, type Frame } from "./handScene";
 import { HOLE, TOPICS } from "./topics";
 import { useViewport } from "../../hooks/useViewport";
 
@@ -89,6 +89,7 @@ export default function HandToAbout({ aboutRef }: { aboutRef: React.RefObject<HT
   }, [scene, flight, w, h, reduced]);
 
   const m = w ? metricsFor(w, h) : null;
+  const felt = m ? feltFor(m) : null;
 
   return (
     <>
@@ -102,11 +103,17 @@ export default function HandToAbout({ aboutRef }: { aboutRef: React.RefObject<HT
           className="pointer-events-none fixed inset-0 z-[6] overflow-hidden"
           style={{ visibility: "hidden" }}
         >
-          {/* Just enough surface to read as a table. */}
+          {/* Just enough surface to read as a table, sized to hold the hand
+              rather than to a fraction of the window — otherwise a phone gets
+              a tall dark egg with five small cards adrift in it. */}
           <div
             ref={feltRef}
-            className="absolute left-1/2 top-1/2 h-[46vh] w-[84vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 rounded-[45%]"
+            className="absolute left-1/2 top-1/2 rounded-[45%]"
             style={{
+              width: felt!.width,
+              height: felt!.height,
+              marginLeft: -felt!.width / 2,
+              marginTop: -felt!.height / 2 + felt!.y,
               background:
                 "radial-gradient(ellipse at center, #121a23 0%, #0d131b 60%, transparent 100%)",
             }}
@@ -126,6 +133,9 @@ export default function HandToAbout({ aboutRef }: { aboutRef: React.RefObject<HT
                 marginTop: -m.holeH / 2,
                 perspective: 1400,
                 opacity: 0,
+                // Everything on the face is in em, so the card can be any size
+                // and the writing on it still fits.
+                fontSize: m.holeW * 0.072,
               }}
             >
               <div
@@ -142,22 +152,40 @@ export default function HandToAbout({ aboutRef }: { aboutRef: React.RefObject<HT
                   <div className="absolute inset-3 rounded-lg border border-primary/15" />
                 </div>
                 <div
-                  className="absolute inset-0 flex flex-col justify-between rounded-xl border border-line bg-[#f2f4f8] p-3 text-[#11151b] shadow-2xl sm:p-4"
-                  style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+                  className="absolute inset-0 flex flex-col justify-between rounded-xl border border-line bg-[#f2f4f8] text-[#11151b] shadow-2xl"
+                  style={{
+                    backfaceVisibility: "hidden",
+                    transform: "rotateY(180deg)",
+                    padding: "0.9em",
+                  }}
                 >
-                  <div className={`text-lg font-bold leading-none ${face.tint}`}>{face.pip}</div>
+                  <div className={`font-bold leading-none ${face.tint}`} style={{ fontSize: "1.2em" }}>
+                    {face.pip}
+                  </div>
                   <div className="text-center">
-                    <div className="text-[clamp(1.4rem,3.6vw,2.4rem)] font-bold leading-none tracking-tight">
+                    <div
+                      className="font-bold leading-none tracking-tight"
+                      style={{ fontSize: "2.3em" }}
+                    >
                       {face.rank}
                     </div>
-                    <div className="mt-2 text-[11px] font-semibold leading-tight">{face.title}</div>
+                    <div className="font-semibold leading-tight" style={{ fontSize: "0.8em", marginTop: "0.6em" }}>
+                      {face.title}
+                    </div>
                     {face.lines.map((l) => (
-                      <div key={l} className="mt-0.5 text-[10px] leading-tight text-[#5b616b]">
+                      <div
+                        key={l}
+                        className="leading-tight text-[#5b616b]"
+                        style={{ fontSize: "0.72em", marginTop: "0.2em" }}
+                      >
                         {l}
                       </div>
                     ))}
                   </div>
-                  <div className={`rotate-180 text-lg font-bold leading-none ${face.tint}`}>
+                  <div
+                    className={`rotate-180 font-bold leading-none ${face.tint}`}
+                    style={{ fontSize: "1.2em" }}
+                  >
                     {face.pip}
                   </div>
                 </div>

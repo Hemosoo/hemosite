@@ -43,6 +43,24 @@ export const HAND = {
   river: [0.76, 0.88] as const,
 } as const;
 
+/** The table, sized to hold exactly what is on it. */
+export interface Felt {
+  width: number;
+  height: number;
+  /** Offset from the viewport's centre. */
+  y: number;
+}
+
+export function feltFor(m: Metrics): Felt {
+  const top = m.boardY - m.cardH / 2;
+  const bottom = m.holeY + m.holeH / 2;
+  return {
+    width: Math.min(4 * m.pitch + m.cardW * 1.7, m.w * 0.96),
+    height: Math.min((bottom - top) * 1.14, m.h * 0.92),
+    y: (top + bottom) / 2,
+  };
+}
+
 export interface Metrics {
   w: number;
   h: number;
@@ -61,20 +79,31 @@ export function metricsFor(w: number, h: number): Metrics {
   const narrow = w < 720;
   // Five across plus the gaps have to fit the narrowest phone, so the floor
   // here is set by the board's total width, not by what reads well alone.
-  const cardW = Math.min(Math.max(w * (narrow ? 0.15 : 0.1), 62), 150);
-  const holeW = cardW * (narrow ? 1.15 : 1.25);
+  const cardW = Math.min(Math.max(w * (narrow ? 0.17 : 0.115), 62), 190);
+  // The hand is much larger relative to the board on a phone: it has the full
+  // width to itself, and it is the one carrying words that have to be read.
+  const holeW = cardW * (narrow ? 1.8 : 1.25);
+  const cardH = cardW * 1.4;
+  const holeH = holeW * 1.4;
+
+  // The board sits above the hand, the way they are laid out on the table
+  // elsewhere on this site. Both rows are placed from the card size rather
+  // than from fixed fractions of the viewport, so that making the cards
+  // bigger cannot quietly slide the board down into the hand.
+  const gap = Math.max(24, h * 0.035);
+  const centre = h * 0.04;
+  const stack = cardH + gap + holeH;
+
   return {
     w,
     h,
     cardW,
-    cardH: cardW * 1.4,
+    cardH,
     holeW,
-    holeH: holeW * 1.4,
+    holeH,
     pitch: cardW * 1.08,
-    // The board sits above centre and the hand below it, the way they are laid
-    // out on the table elsewhere on this site.
-    boardY: -h * 0.09,
-    holeY: h * 0.24,
+    boardY: centre - stack / 2 + cardH / 2,
+    holeY: centre + stack / 2 - holeH / 2,
   };
 }
 
@@ -163,8 +192,8 @@ export function boardFrame(
     // photograph standing over the line rather than sitting in it. It shrinks
     // uniformly first — a photograph the whole way in — and only flattens into
     // the word's own shape at the end, as it is already dissolving.
-    const tx2 = anchor.width ? (anchor.width * 1.15) / m.cardW : 0.3;
-    const ty2 = anchor.height ? (anchor.height * 1.9) / m.cardH : 0.22;
+    const tx2 = anchor.width ? (anchor.width * 1.45) / m.cardW : 0.34;
+    const ty2 = anchor.height ? (anchor.height * 2.4) / m.cardH : 0.26;
     const uniform = mix(scale, Math.sqrt(tx2 * ty2), e);
     const flatten = easeInOutSine(seg(flight, 0.4, 0.8));
     scaleX = mix(uniform, tx2, flatten);
