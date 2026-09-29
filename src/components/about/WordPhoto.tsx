@@ -69,12 +69,14 @@ export default function WordPhoto({
     // The bio is a narrow column in a wide page, so the photograph goes in the
     // margin beside it and covers nothing — and it takes as much of that margin
     // as it can get, because the point of the hover is to look at the picture.
-    // The standing portrait has first claim on its side; where it is, the right
-    // margin ends at its edge, which on a wide window sends these to the left.
+    // The standing portrait has first claim on whichever side it is on; that
+    // margin ends at its edge, which on a wide window sends these to the other.
     const portrait = document.querySelector("[data-portrait]")?.getBoundingClientRect();
-    const rightEdge = portrait && portrait.width ? portrait.left - GAP : vw;
+    const onLeft = !!portrait?.width && portrait.right <= col.left;
+    const rightEdge = portrait?.width && !onLeft ? portrait.left - GAP : vw;
+    const leftEdge = onLeft ? portrait!.right + GAP : 0;
     const right = cap(rightEdge - col.right - GAP * 2 - 8);
-    const left = cap(col.left - GAP * 2 - 8);
+    const left = cap(col.left - leftEdge - GAP * 2 - 8);
     if (right >= MIN_SIDE_W) {
       place(right, col.right + GAP * 2, -14);
     } else if (left >= MIN_SIDE_W) {

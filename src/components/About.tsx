@@ -27,7 +27,7 @@ const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ 
       <div
         data-portrait
         aria-hidden
-        className="pointer-events-none absolute right-6 top-1/2 hidden w-52 -translate-y-1/2 xl:block 2xl:right-10 2xl:w-72"
+        className="pointer-events-none absolute left-6 top-1/2 hidden w-52 -translate-y-1/2 xl:block 2xl:left-10 2xl:w-72"
       >
         <img
           src={`${import.meta.env.BASE_URL}about/portrait.jpg`}
