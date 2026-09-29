@@ -14,13 +14,17 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { registerAnchor } from "./anchors";
 import { TOPICS } from "./topics";
 
-const CARD_W = 168;
-const CARD_H = Math.round(CARD_W * 1.4);
+/** Big enough to actually look at. It shrinks to whatever room there is. */
+const IDEAL_W = 300;
+/** Below this the margin is not worth using; go over the text instead. */
+const MIN_SIDE_W = 190;
 const GAP = 14;
 
 interface Spot {
   left: number;
   top: number;
+  width: number;
+  height: number;
   /** Which way it opened, so it grows out of the word rather than at it. */
   dx: number;
   dy: number;
@@ -45,23 +49,37 @@ export default function WordPhoto({
     if (!el) return;
     const r = el.getBoundingClientRect();
     const col = (el.closest("p") ?? el).getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
     const fit = (v: number, size: number, max: number) => Math.min(Math.max(8, v), max - size - 8);
-    const midY = fit(r.top + r.height / 2 - CARD_H / 2, CARD_H, window.innerHeight);
+    // As large as it can be without being taller than the window.
+    const cap = (w: number) => Math.round(Math.min(w, IDEAL_W, (vh - 16) / 1.4));
+    const place = (width: number, left: number, dx: number) => {
+      const height = Math.round(width * 1.4);
+      setSpot({ left, top: fit(r.top + r.height / 2 - height / 2, height, vh), width, height, dx, dy: 0 });
+    };
 
     // The bio is a narrow column in a wide page, so the photograph goes in the
-    // margin beside it and covers nothing. Only when there is no margin — a
-    // phone, a split window — does it fall back to sitting over the text.
-    if (window.innerWidth - col.right >= CARD_W + GAP * 2) {
-      setSpot({ left: col.right + GAP * 2, top: midY, dx: -12, dy: 0 });
-    } else if (col.left >= CARD_W + GAP * 2) {
-      setSpot({ left: col.left - GAP * 2 - CARD_W, top: midY, dx: 12, dy: 0 });
+    // margin beside it and covers nothing — and it takes as much of that margin
+    // as it can get, because the point of the hover is to look at the picture.
+    const right = cap(vw - col.right - GAP * 2 - 8);
+    const left = cap(col.left - GAP * 2 - 8);
+    if (right >= MIN_SIDE_W) {
+      place(right, col.right + GAP * 2, -14);
+    } else if (left >= MIN_SIDE_W) {
+      place(left, col.left - GAP * 2 - left, 14);
     } else {
-      const above = r.top - GAP - CARD_H >= 8;
+      // No margin — a phone, a split window. Over the text, as big as fits.
+      const width = cap(vw - 16);
+      const height = Math.round(width * 1.4);
+      const above = r.top - GAP - height >= 8;
       setSpot({
-        left: fit(r.left + r.width / 2 - CARD_W / 2, CARD_W, window.innerWidth),
-        top: above ? r.top - GAP - CARD_H : r.bottom + GAP,
+        left: fit(r.left + r.width / 2 - width / 2, width, vw),
+        top: fit(above ? r.top - GAP - height : r.bottom + GAP, height, vh),
+        width,
+        height,
         dx: 0,
-        dy: above ? 10 : -10,
+        dy: above ? 12 : -12,
       });
     }
   };
@@ -91,7 +109,7 @@ export default function WordPhoto({
           <motion.span
             aria-hidden
             className="pointer-events-none fixed z-[7] block overflow-hidden rounded-xl border border-line bg-surface shadow-2xl"
-            style={{ left: spot.left, top: spot.top, width: CARD_W, height: CARD_H }}
+            style={{ left: spot.left, top: spot.top, width: spot.width, height: spot.height }}
             initial={reduced ? { opacity: 0 } : { opacity: 0, x: spot.dx, y: spot.dy, scale: 0.94 }}
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={
