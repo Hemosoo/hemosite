@@ -16,8 +16,12 @@ import { TOPICS } from "./topics";
 
 /** Big enough to actually look at. It shrinks to whatever room there is. */
 const IDEAL_W = 300;
-/** Below this the margin is not worth using; go over the text instead. */
-const MIN_SIDE_W = 190;
+/**
+ * Below this there is no real margin left and the card goes over the text.
+ * Set low deliberately: a small photograph beside the sentence beats a large
+ * one lying across it.
+ */
+const MIN_SIDE_W = 128;
 const GAP = 14;
 
 interface Spot {
@@ -48,7 +52,10 @@ export default function WordPhoto({
     const el = ref.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    const col = (el.closest("p") ?? el).getBoundingClientRect();
+    // Measured against the whole bio block, not the paragraph the word is in:
+    // the heading runs wider than the prose, and a card placed off the
+    // paragraph's edge would sit on top of it.
+    const col = (el.closest("[data-bio]") ?? el.closest("p") ?? el).getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const fit = (v: number, size: number, max: number) => Math.min(Math.max(8, v), max - size - 8);
@@ -62,7 +69,11 @@ export default function WordPhoto({
     // The bio is a narrow column in a wide page, so the photograph goes in the
     // margin beside it and covers nothing — and it takes as much of that margin
     // as it can get, because the point of the hover is to look at the picture.
-    const right = cap(vw - col.right - GAP * 2 - 8);
+    // The standing portrait has first claim on its side; where it is, the right
+    // margin ends at its edge, which on a wide window sends these to the left.
+    const portrait = document.querySelector("[data-portrait]")?.getBoundingClientRect();
+    const rightEdge = portrait && portrait.width ? portrait.left - GAP : vw;
+    const right = cap(rightEdge - col.right - GAP * 2 - 8);
     const left = cap(col.left - GAP * 2 - 8);
     if (right >= MIN_SIDE_W) {
       place(right, col.right + GAP * 2, -14);

@@ -15,8 +15,29 @@ const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ 
   const reduced = useReducedMotion();
 
   return (
-    <section ref={ref} id="about" className="border-t border-line bg-bg px-6 py-24 sm:py-32">
-      <div className="mx-auto flex max-w-3xl flex-col gap-10">
+    <section
+      ref={ref}
+      id="about"
+      className="relative border-t border-line bg-bg px-6 py-24 sm:py-32"
+    >
+      {/* The portrait lives in the margin beside the column rather than in it,
+          so the measure of the text is untouched and it can simply not be
+          there on a window too narrow to have a margin. `data-portrait` is how
+          the hover photographs know this side is taken. */}
+      <div
+        data-portrait
+        aria-hidden
+        className="pointer-events-none absolute right-6 top-1/2 hidden w-52 -translate-y-1/2 xl:block 2xl:right-10 2xl:w-72"
+      >
+        <img
+          src={`${import.meta.env.BASE_URL}about/portrait.jpg`}
+          alt=""
+          className="w-full rounded-2xl border border-line object-cover shadow-2xl"
+          style={{ aspectRatio: "3 / 4", objectPosition: "50% 30%" }}
+        />
+      </div>
+
+      <div data-bio className="mx-auto flex max-w-3xl flex-col gap-10">
         <motion.div {...reveal(reduced)} className="flex flex-col gap-5">
           <span className="text-xs uppercase tracking-[0.22em] text-dim">about</span>
           <h2 className="text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight text-white">

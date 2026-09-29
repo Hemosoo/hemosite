@@ -25,8 +25,11 @@ export const TOPICS: Topic[] = [
   {
     id: "penn",
     word: "Penn",
-    img: asset("penn.jpg"),
-    focus: "50% 32%",
+    // Hey Day: the one afternoon of the year the whole junior class is in red
+    // with a cane and a hat. A portrait of me in a building would have been a
+    // picture of a person; this is a picture of the place.
+    img: asset("heyday.jpg"),
+    focus: "50% 30%",
   },
   {
     id: "amazon",
