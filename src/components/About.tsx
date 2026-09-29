@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { registerAnchor } from "./about/anchors";
+import WordPhoto from "./about/WordPhoto";
 import { SKILLS, LINKS } from "../data";
 import PokerTell from "./PokerTell";
 
@@ -10,20 +10,6 @@ const reveal = (reduced: boolean | null, delay = 0) => ({
   viewport: { once: true, margin: "-80px" } as const,
   transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
-
-/**
- * A highlighted word in the bio that a card lands on.
- *
- * It registers itself so the hand above can find it; nothing about how it
- * reads changes, because the point is that these were always the words.
- */
-function Anchor({ id, className, children }: { id: string; className: string; children: React.ReactNode }) {
-  return (
-    <span ref={(el) => registerAnchor(id, el)} className={className}>
-      {children}
-    </span>
-  );
-}
 
 const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ onPoker }, ref) {
   const reduced = useReducedMotion();
@@ -37,21 +23,21 @@ const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ 
             I build backend services and the infrastructure around them.
           </h2>
           <p className="max-w-2xl text-lg leading-relaxed text-subtle">
-            CS senior at <Anchor id="penn" className="text-accent">Penn</Anchor>, submatriculating into a
+            CS senior at <WordPhoto id="penn" className="text-accent">Penn</WordPhoto>, submatriculating into a
             master&apos;s in Computer and Information Science. Three summers as an SDE intern at{" "}
-            <Anchor id="amazon" className="text-yellow">Amazon</Anchor> in <span className="text-cyan">Seattle</span>:
+            <WordPhoto id="amazon" className="text-yellow">Amazon</WordPhoto> in <span className="text-cyan">Seattle</span>:
             two on customer-service systems — routing configuration read at runtime by Amazon
             Connect, and a network-health pipeline built from scratch — and one on{" "}
             <span className="text-orange">Fashion Fitness Tech</span>, building LLM tooling for the
             Amazon.com gateway.
           </p>
           <p className="max-w-2xl leading-relaxed text-subtle">
-            Outside of that I sing <Anchor id="acapella" className="text-green">acapella</Anchor>, play{" "}
-            <span ref={(el) => registerAnchor("poker", el)} className="inline-block">
+            Outside of that I sing <WordPhoto id="acapella" className="text-green">acapella</WordPhoto>, play{" "}
+            <WordPhoto id="poker" className="inline-block">
               <PokerTell onOpen={onPoker} />
-            </span>
+            </WordPhoto>
             , and am on the journey to{" "}
-            <Anchor id="dunking" className="text-orange">dunking</Anchor>. Amazon Future Engineer scholar.
+            <WordPhoto id="dunking" className="text-orange">dunking</WordPhoto>. Amazon Future Engineer scholar.
           </p>
         </motion.div>
 
