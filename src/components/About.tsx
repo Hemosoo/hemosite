@@ -1,4 +1,6 @@
+import { forwardRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { registerAnchor } from "./about/anchors";
 import { SKILLS, LINKS } from "../data";
 import PokerTell from "./PokerTell";
 
@@ -9,11 +11,25 @@ const reveal = (reduced: boolean | null, delay = 0) => ({
   transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
-export default function About({ onPoker }: { onPoker: () => void }) {
+/**
+ * A highlighted word in the bio that a card lands on.
+ *
+ * It registers itself so the hand above can find it; nothing about how it
+ * reads changes, because the point is that these were always the words.
+ */
+function Anchor({ id, className, children }: { id: string; className: string; children: React.ReactNode }) {
+  return (
+    <span ref={(el) => registerAnchor(id, el)} className={className}>
+      {children}
+    </span>
+  );
+}
+
+const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ onPoker }, ref) {
   const reduced = useReducedMotion();
 
   return (
-    <section id="about" className="border-t border-line bg-bg px-6 py-24 sm:py-32">
+    <section ref={ref} id="about" className="border-t border-line bg-bg px-6 py-24 sm:py-32">
       <div className="mx-auto flex max-w-3xl flex-col gap-10">
         <motion.div {...reveal(reduced)} className="flex flex-col gap-5">
           <span className="text-xs uppercase tracking-[0.22em] text-dim">about</span>
@@ -21,18 +37,21 @@ export default function About({ onPoker }: { onPoker: () => void }) {
             I build backend services and the infrastructure around them.
           </h2>
           <p className="max-w-2xl text-lg leading-relaxed text-subtle">
-            CS senior at <span className="text-accent">Penn</span>, submatriculating into a
+            CS senior at <Anchor id="penn" className="text-accent">Penn</Anchor>, submatriculating into a
             master&apos;s in Computer and Information Science. Three summers as an SDE intern at{" "}
-            <span className="text-yellow">Amazon</span> in <span className="text-cyan">Seattle</span>:
+            <Anchor id="amazon" className="text-yellow">Amazon</Anchor> in <span className="text-cyan">Seattle</span>:
             two on customer-service systems — routing configuration read at runtime by Amazon
             Connect, and a network-health pipeline built from scratch — and one on{" "}
             <span className="text-orange">Fashion Fitness Tech</span>, building LLM tooling for the
             Amazon.com gateway.
           </p>
           <p className="max-w-2xl leading-relaxed text-subtle">
-            Outside of that I sing <span className="text-green">acapella</span>, play{" "}
-            <PokerTell onOpen={onPoker} />, and am on the journey to{" "}
-            <span className="text-orange">dunking</span>. Amazon Future Engineer scholar.
+            Outside of that I sing <Anchor id="acapella" className="text-green">acapella</Anchor>, play{" "}
+            <span ref={(el) => registerAnchor("poker", el)} className="inline-block">
+              <PokerTell onOpen={onPoker} />
+            </span>
+            , and am on the journey to{" "}
+            <Anchor id="dunking" className="text-orange">dunking</Anchor>. Amazon Future Engineer scholar.
           </p>
         </motion.div>
 
@@ -79,4 +98,6 @@ export default function About({ onPoker }: { onPoker: () => void }) {
       </div>
     </section>
   );
-}
+});
+
+export default About;
