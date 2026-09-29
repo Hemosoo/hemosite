@@ -43,8 +43,10 @@ export const TOPICS: Topic[] = [
   {
     id: "poker",
     word: "poker",
+    // The only wide shot of the five, and the only one with someone else in
+    // it: centred, the crop keeps the other player and loses me. Weighted left.
     img: asset("poker.jpg"),
-    focus: "50% 45%",
+    focus: "18% 22%",
   },
   {
     id: "dunking",
