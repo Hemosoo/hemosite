@@ -72,7 +72,11 @@ const apply = (
     photoEl.style.opacity = (1 - f.morph).toFixed(3);
   }
   if (wordEl) {
-    wordEl.style.opacity = f.morph.toFixed(3);
+    // Gone the moment the bio's own copy comes back. Two identical words in
+    // the same place are not invisible: they double their own antialiasing,
+    // and the word thickens and smears as the page keeps moving under it.
+    // Exactly one of the two is ever drawn.
+    wordEl.style.opacity = f.landed ? "0" : f.morph.toFixed(3);
     // The wrapper is being squashed toward the shape of a word, which is the
     // right thing to do to a photograph and the wrong thing to do to type.
     // The word undoes its share of that, so it is only ever at its own size,

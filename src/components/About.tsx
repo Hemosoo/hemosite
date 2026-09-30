@@ -27,7 +27,18 @@ const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ 
       <div
         data-portrait
         aria-hidden
-        className="pointer-events-none absolute left-6 top-1/2 hidden w-52 -translate-y-1/2 xl:block 2xl:left-10 2xl:w-72"
+        className="pointer-events-none absolute top-1/2 hidden -translate-y-1/2 xl:block"
+        // Sized to the margin and centred in it, rather than pinned to the
+        // window at a fixed width. Fixed, it was a small picture stranded
+        // against the edge with a hundred and forty pixels of nothing between
+        // it and the text on the screens this is actually read on — every
+        // width between the breakpoints got whichever size was wrong for it.
+        style={{
+          ["--gutter" as string]: "calc((100vw - 48rem) / 2)",
+          ["--pw" as string]: "clamp(11rem, calc(var(--gutter) - 3rem), 20rem)",
+          left: "calc((var(--gutter) - var(--pw)) / 2)",
+          width: "var(--pw)",
+        }}
       >
         <img
           src={`${import.meta.env.BASE_URL}about/portrait.jpg`}
