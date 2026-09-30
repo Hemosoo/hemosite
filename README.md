@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+# hemosite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal site. React + TypeScript + Vite, Tailwind v4, framer-motion.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm install
+npm run dev              # local, with hot reload
+npm run build            # typecheck + production build into dist/
+npm run preview          # serve dist/ exactly as it will be served
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Deploying
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Two sites are built from this one source tree. They are the *same build* —
+the preview only rewrites which domain it claims to be and adds a `noindex`,
+so what you look at is what goes live.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| | branch | URL | trigger |
+| --- | --- | --- | --- |
+| production | `main` | https://hemosoo.com | push to `main` |
+| preview | `staging` | https://staging.hemosoo.com | `npm run deploy:preview` |
+
+```sh
+# work on staging, look at it on the real internet
+git switch staging
+npm run deploy:preview           # pushes staging -> the preview repo's main
+
+# happy with it
+git switch main && git merge staging && git push    # live in a minute or two
 ```
+
+`deploy:preview` pushes to `Hemosoo/hemosite-preview`, a second repository
+that exists only to host the preview. It has no history of its own: its `main`
+is always a copy of this repository's `staging`.
+
+Both sites are GitHub Pages. `.github/workflows/deploy.yml` builds both; the
+one step that differs keys off the repository name.
+
+## Domains
+
+`hemosoo.com` is registered with Cloudflare and resolves straight to GitHub
+Pages — the apex on Pages' four A records, `www` and `staging` as CNAMEs to
+`hemosoo.github.io`, none of them proxied. An orange cloud in front of the
+apex stops Pages issuing its certificate. If proxying is ever turned on,
+Cloudflare's SSL mode has to be Full (strict); Flexible loops against a Pages
+site that already forces HTTPS.
+
+`public/CNAME` is what carries the production domain through each deploy,
+since the workflow replaces the whole published tree. `base` in
+`vite.config.ts` is `/` because the site sits at the root of a domain rather
+than under a path — the two have to agree or every asset 404s.
