@@ -55,13 +55,17 @@ export default function FlopReveal({
     setSlots(got);
   }, [rowRef, spec]);
 
+  /** Set once per reveal, so a re-render resumes rather than starting over. */
+  const startedRef = useRef(0);
+
   useEffect(() => {
     if (!slots) return;
     const unit = slots[0].width;
     // Distance between neighbouring slots, in card widths: what lets the three
     // stack on one slot without the gap being written down anywhere here.
     const pitch = (slots[1].left - slots[0].left) / unit;
-    const started = performance.now();
+    if (!startedRef.current) startedRef.current = performance.now();
+    const started = startedRef.current;
     let raf = 0;
 
     const tick = (now: number) => {

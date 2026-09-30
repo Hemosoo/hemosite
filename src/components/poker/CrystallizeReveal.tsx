@@ -57,8 +57,27 @@ export default function CrystallizeReveal({
   const clipRefs = useRef<Array<SVGPolygonElement | null>>([]);
   const seamRefs = useRef<Array<SVGPolygonElement | null>>([]);
 
+  /**
+   * The latest tint, for the loop to read without being restarted by it.
+   *
+   * The tint is released shortly before impact, so a card that completes a
+   * hand finishes already lit. That is a prop change, and a prop change this
+   * reveal's effects depended on: it restarted the whole thing from zero with
+   * the card nine tenths built — every seated shard un-seated and flying
+   * again — and then the reveal unmounted on its original schedule, part way
+   * through the rebuild. It is why this one looked unlike the other reveals
+   * on exactly the hands where the card mattered.
+   */
+  const tintRef = useRef(tint);
+  tintRef.current = tint;
+
+  /** Set once per reveal, so a re-render resumes rather than starting over. */
+  const startedRef = useRef(0);
+
   // The face, flattened to one self-contained image the flying shards share.
-  // Built once on mount, well before the first shard is due.
+  // Built once on mount, well before the first shard is due — and not rebuilt
+  // when the tint arrives, which would swap the artwork under every piece
+  // still in the air at once. By then all but a few have seated.
   useEffect(() => {
     const g = faceRef.current;
     if (!g) return;
@@ -67,11 +86,12 @@ export default function CrystallizeReveal({
       g.innerHTML +
       `</svg>`;
     setSheet(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(doc)}`);
-  }, [rank, suit, tint]);
+  }, [rank, suit]);
 
   useEffect(() => {
     let raf = 0;
-    const started = performance.now();
+    if (!startedRef.current) startedRef.current = performance.now();
+    const started = startedRef.current;
     // Dropped once, at the moment the last shard seats.
     let unclipped = false;
     // Which phase each shard was in last frame. Writing `display` every frame
@@ -125,7 +145,7 @@ export default function CrystallizeReveal({
         unclipped = true;
         assembledRef.current?.removeAttribute("clip-path");
         // The card only casts its shadow once it is a card.
-        rootRef.current?.style.setProperty("filter", cardShadow(tint));
+        rootRef.current?.style.setProperty("filter", cardShadow(tintRef.current));
       }
 
       const done = completionFrame(spec, t);
@@ -141,7 +161,7 @@ export default function CrystallizeReveal({
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [spec, flights, tint]);
+  }, [spec, flights]);
 
   return (
     <div className="pointer-events-none absolute inset-0" style={{ zIndex: 30 }}>

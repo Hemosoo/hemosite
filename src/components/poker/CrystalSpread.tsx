@@ -122,10 +122,17 @@ export default function CrystalSpread({
     );
   }, [cards, slots]);
 
+  /**
+   * Set once per reveal. `cards` is a fresh array on every render of the
+   * table, so without this any re-render during the flop restarts it at zero.
+   */
+  const startedRef = useRef(0);
+
   useEffect(() => {
     if (!slots) return;
     const unit = slots[0].width;
-    const started = performance.now();
+    if (!startedRef.current) startedRef.current = performance.now();
+    const started = startedRef.current;
     let raf = 0;
 
     const unclipped = cards.map(() => false);

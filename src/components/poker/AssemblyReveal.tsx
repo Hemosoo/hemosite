@@ -51,9 +51,13 @@ export default function AssemblyReveal({
   const ringRef = useRef<SVGRectElement>(null);
   const partRefs = useRef<Array<SVGGElement | null>>([]);
 
+  /** Set once per reveal, so a re-render resumes rather than starting over. */
+  const startedRef = useRef(0);
+
   useEffect(() => {
     let raf = 0;
-    const started = performance.now();
+    if (!startedRef.current) startedRef.current = performance.now();
+    const started = startedRef.current;
 
     const tick = (now: number) => {
       const t = Math.min(1, (now - started) / spec.totalMs);

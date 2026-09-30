@@ -88,13 +88,17 @@ export default function DealReveal({
     setGeo({ w: base.width, h: base.height, seats: orders.size, origin, placed });
   }, [frameRef, heroCards, spec]);
 
+  /** Set once per reveal, so a re-render resumes rather than starting over. */
+  const startedRef = useRef(0);
+
   useEffect(() => {
     if (!geo) return;
     const { w, h, placed, seats: seatCount } = geo;
     // The deck sits at the middle of the table. Its own coordinates are the
     // same as everything else's, so a card launches from exactly where it is.
     const deck = { x: 0, y: 0 };
-    const started = performance.now();
+    if (!startedRef.current) startedRef.current = performance.now();
+    const started = startedRef.current;
     let raf = 0;
 
     const tick = (now: number) => {
