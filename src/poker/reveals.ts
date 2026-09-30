@@ -88,7 +88,7 @@ export type RevealSpec = SlamSpec | AssemblySpec | CrystallizeSpec;
  * bigger card, a harder landing. One builder, two intensities, so the two
  * streets can diverge without the code doing so.
  */
-function impactSmash(street: BigStreet, seed: number): SlamSpec {
+export function impactSmash(street: BigStreet, seed: number): SlamSpec {
   void seed;
   const river = street === "river";
   const k = river ? 1.22 : 1; // one intensity dial
@@ -198,7 +198,7 @@ function dismantleAssembly(street: BigStreet, seed: number): AssemblySpec {
  *
  * The river runs the same shape with more travel and a harder finish.
  */
-function crystallize(street: BigStreet, seed: number): CrystallizeSpec {
+export function crystallize(street: BigStreet, seed: number): CrystallizeSpec {
   const river = street === "river";
 
   return {

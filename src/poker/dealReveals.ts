@@ -54,7 +54,7 @@ export type DealSpec = OrbitDealSpec | CalmDealSpec;
  * Under two seconds, because it happens before every hand and a flourish that
  * outstays its welcome stops being one.
  */
-function orbitDeal(seed: number): OrbitDealSpec {
+export function orbitDeal(seed: number): OrbitDealSpec {
   return {
     kind: "orbitDeal",
     id: "deal-orbit",

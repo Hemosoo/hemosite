@@ -87,3 +87,20 @@ export const HOLE: HoleFace[] = [
     tint: "text-red",
   },
 ];
+
+/**
+ * A CSS object-position as the nearest SVG preserveAspectRatio alignment.
+ *
+ * SVG only offers thirds where CSS offers percentages, so this is a rounding
+ * rather than a conversion. It is only used where a photograph is drawn as
+ * SVG — the river card, which is cut into pieces of itself — and at these
+ * crops the difference is a few percent of the frame.
+ */
+export function svgAlign(focus: string): string {
+  const [px = "50%", py = "50%"] = focus.split(/\s+/);
+  const third = (v: string, lo: string, mid: string, hi: string) => {
+    const n = parseFloat(v) / 100;
+    return n < 0.34 ? lo : n < 0.67 ? mid : hi;
+  };
+  return third(px, "xMin", "xMid", "xMax") + third(py, "YMin", "YMid", "YMax");
+}

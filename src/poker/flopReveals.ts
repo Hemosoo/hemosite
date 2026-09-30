@@ -77,7 +77,7 @@ export type FlopSpec = SpreadSpec | OrbitSpec | CrystalSpreadSpec | CalmFlopSpec
  * turning over. The most poker-literal of the three and the one that should
  * feel tactile rather than clever.
  */
-function spread(seed: number): SpreadSpec {
+export function spread(seed: number): SpreadSpec {
   return {
     kind: "spread",
     id: "flop-spread",
@@ -95,7 +95,7 @@ function spread(seed: number): SpreadSpec {
  * different depths, turn over on the way, then break formation into their
  * places. The showy one, and the longest of the three.
  */
-function orbit(seed: number): OrbitSpec {
+export function orbit(seed: number): OrbitSpec {
   return {
     kind: "orbit",
     id: "flop-orbit",
