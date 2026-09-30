@@ -41,8 +41,23 @@ function mulberry32(seed: number) {
  * Twenty cells, a little under half of them split, lands around 28 pieces —
  * enough that the card genuinely builds, few enough to stay cheap to draw.
  */
-const COLS = [0, 0.21, 0.47, 0.72, 1];
-const ROWS = [0, 0.17, 0.38, 0.6, 0.8, 1];
+const FINE_COLS = [0, 0.21, 0.47, 0.72, 1];
+const FINE_ROWS = [0, 0.17, 0.38, 0.6, 0.8, 1];
+
+/**
+ * A coarser cut, for when three cards crystallise at once.
+ *
+ * The cost of this effect is the pieces still in the air, each of which is the
+ * whole card drawn again through its own clip. One card at 28 pieces runs at
+ * sixty frames a second; three at 28 measured at thirty. Twelve cells lands
+ * around seventeen pieces, which is three cards for rather less than two — and
+ * bigger fragments are the right call for the flop anyway, because they are
+ * read from further away and for less time.
+ */
+const COARSE_COLS = [0, 0.34, 0.68, 1];
+const COARSE_ROWS = [0, 0.27, 0.54, 0.79, 1];
+
+export type Grain = "fine" | "coarse";
 
 /** How far an interior vertex may wander, as a share of the smaller cell. */
 const JITTER = 0.3;
@@ -78,8 +93,10 @@ function centroid(points: Array<[number, number]>): [number, number] {
   return [cx / (6 * a), cy / (6 * a)];
 }
 
-export function cardShards(seed: number): Shard[] {
+export function cardShards(seed: number, grain: Grain = "fine"): Shard[] {
   const rnd = mulberry32(seed ^ 0x9e3779b9);
+  const COLS = grain === "coarse" ? COARSE_COLS : FINE_COLS;
+  const ROWS = grain === "coarse" ? COARSE_ROWS : FINE_ROWS;
 
   // The lattice, warped. Border points may slide along their own edge so the
   // cut meets the card's edge at irregular places; corners stay put.

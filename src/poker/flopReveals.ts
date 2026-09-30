@@ -11,7 +11,7 @@
  * only ever describes how they arrive.
  */
 
-export type FlopKind = "spread" | "orbit" | "chain" | "calm";
+export type FlopKind = "spread" | "orbit" | "crystalSpread" | "calm";
 
 interface FlopBase {
   kind: FlopKind;
@@ -39,17 +39,36 @@ export interface OrbitSpec extends FlopBase {
   sweep: number;
 }
 
-export interface ChainSpec extends FlopBase {
-  kind: "chain";
-  /** Which side the cards lean in from: -1 left, +1 right. */
-  lean: -1 | 1;
+export interface CrystalSpreadSpec extends FlopBase {
+  kind: "crystalSpread";
+  /**
+   * How far in from their slots the three begin, as a share of the gap between
+   * slots. They crystallise close together and separate as they build.
+   */
+  converge: number;
+  /** When the three have reached their places, as a fraction of the reveal. */
+  spreadBy: number;
+  /** How far out the shared field of fragments reaches. */
+  reach: number;
+  /** Which way the field swirls in. */
+  dir: 1 | -1;
+  phase: {
+    /** Fractions of totalMs at which the first and last fragment seat. */
+    firstLock: number;
+    lastLock: number;
+    /** Below 1: arrivals bunch up toward the end. */
+    curve: number;
+    /** How long a fragment is in the air, as a fraction of totalMs. */
+    flightMin: number;
+    flightSpan: number;
+  };
 }
 
 export interface CalmFlopSpec extends FlopBase {
   kind: "calm";
 }
 
-export type FlopSpec = SpreadSpec | OrbitSpec | ChainSpec | CalmFlopSpec;
+export type FlopSpec = SpreadSpec | OrbitSpec | CrystalSpreadSpec | CalmFlopSpec;
 
 /**
  * Spread — a dealer putting the flop out.
@@ -89,19 +108,37 @@ function orbit(seed: number): OrbitSpec {
 }
 
 /**
- * Chain — each card's landing sets off the next.
+ * Crystal Spread — the flop is built rather than delivered.
  *
- * Rhythmic rather than spatial: soft, then harder, then hardest, with the row
- * locking as the third seats. Nothing explodes; the trigger is carried by
- * timing and a small local reaction.
+ * The board is empty, then one field of fragments converges on it and divides
+ * between three cards that are standing too close together. They construct and
+ * separate at the same time, so the row opens out as it becomes legible, and
+ * the last fragments cascade into all three at once.
+ *
+ * The crystallisation language is the turn and river's, but the event is the
+ * flop's: one field, three cards, one completion. It is not the single-card
+ * reveal played three times — that is precisely what it exists not to be.
  */
-function chain(seed: number): ChainSpec {
+function crystalSpread(seed: number): CrystalSpreadSpec {
   return {
-    kind: "chain",
-    id: "flop-chain",
-    totalMs: 1200,
+    kind: "crystalSpread",
+    id: "flop-crystal",
+    totalMs: 1420,
     seed,
-    lean: seed % 2 === 0 ? 1 : -1,
+    // Two thirds of the way in: close enough to read as one forming mass,
+    // far enough apart that three cards are distinguishable from the start.
+    converge: 0.62 + (seed % 4) * 0.03,
+    spreadBy: 0.78,
+    reach: 0.94 + (seed % 5) * 0.04,
+    dir: seed % 2 === 0 ? 1 : -1,
+    phase: {
+      firstLock: 0.3,
+      lastLock: 0.88,
+      // Under 1, so the gaps shrink the whole way and the end is a cascade.
+      curve: 0.66,
+      flightMin: 0.17,
+      flightSpan: 0.11,
+    },
   };
 }
 
@@ -110,7 +147,7 @@ function calmFlop(seed: number): CalmFlopSpec {
   return { kind: "calm", id: "flop-calm", totalMs: 560, seed };
 }
 
-export const FLOP_REVEALS: Array<(seed: number) => FlopSpec> = [spread, orbit, chain];
+export const FLOP_REVEALS: Array<(seed: number) => FlopSpec> = [spread, orbit, crystalSpread];
 
 /** Chosen once, when the flop is dealt, and fixed for that whole reveal. */
 export function pickFlop(reduced: boolean): FlopSpec {

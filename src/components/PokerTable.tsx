@@ -40,6 +40,9 @@ import BoardCard from "./BoardCard";
 import { pickReveal, type RevealSpec } from "../poker/reveals";
 import { pickFlop, type FlopSpec } from "../poker/flopReveals";
 import FlopReveal from "./poker/FlopReveal";
+import CrystalSpread from "./poker/CrystalSpread";
+import DealReveal from "./poker/DealReveal";
+import { pickDeal, type DealSpec } from "../poker/dealReveals";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
@@ -129,6 +132,7 @@ function Seat({
   isTurn,
   badgeSide,
   lit,
+  dealOrder,
 }: {
   player: Player;
   table: Table;
@@ -137,6 +141,13 @@ function Seat({
   lit: Set<string>;
   /** Which side of the name the bet sits on: the one facing the pot. */
   badgeSide: "left" | "right";
+  /**
+   * Set while the initial deal is playing: this seat's place in the dealing
+   * order. The cards are rendered but invisible, so the deal overlay can
+   * measure the slots they are about to occupy and land exactly on them, and
+   * so they are simply there when it unmounts rather than arriving twice.
+   */
+  dealOrder?: number;
 }) {
   const show = player.isHuman || (table.revealed && !player.folded && player.hole.length > 0);
   const dimmed = player.folded || player.out;
@@ -166,13 +177,20 @@ function Seat({
       <div className="flex gap-2">
         {player.hole.length > 0 && !player.out ? (
           player.hole.map((c, i) => (
-            <PlayingCard
+            <div
               key={i}
-              card={show ? c : undefined}
-              hidden={!show}
-              size={player.isHuman ? "you" : "sm"}
-              tint={lit.has(cardKey(c)) ? TINT : undefined}
-            />
+              data-deal={
+                dealOrder === undefined ? undefined : `${dealOrder}:${i}:${player.isHuman ? 1 : 0}`
+              }
+              style={dealOrder === undefined ? undefined : { opacity: 0 }}
+            >
+              <PlayingCard
+                card={show ? c : undefined}
+                hidden={!show}
+                size={player.isHuman ? "you" : "sm"}
+                tint={lit.has(cardKey(c)) ? TINT : undefined}
+              />
+            </div>
           ))
         ) : (
           <div className={player.isHuman ? "h-[var(--card-you)]" : "h-[var(--card-bot)]"} />
@@ -235,6 +253,13 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
    * choreography rather than the single-card reveal run three times.
    */
   const [flop, setFlop] = useState<FlopSpec | null>(null);
+  /**
+   * The hole cards have their own system too. Every seat getting something at
+   * once is a different event from a card arriving on the board, so it gets
+   * its own choreography rather than the board's run twelve times.
+   */
+  const [dealing, setDealing] = useState<DealSpec | null>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
   /** True once a flop reveal has placed the cards, until the next hand. */
   const [flopSettled, setFlopSettled] = useState(false);
   const boardRowRef = useRef<HTMLDivElement>(null);
@@ -322,6 +347,40 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
     );
     return () => timers.forEach(clearTimeout);
   }, [table.board.length, reduced, setHeld, boardFx]);
+  /**
+   * Who is being dealt to, and in what order round the table.
+   *
+   * Dealing starts left of the button, the way it does at a table. Players who
+   * are out take no place in the order, so the stagger stays even as the table
+   * empties.
+   */
+  const dealOrders = useMemo(() => {
+    const n = table.players.length;
+    const button = Math.max(0, table.players.findIndex((p) => p.id === table.button));
+    const inHand = table.players
+      .map((p, i) => ({ i, p, from: (i - button + n - 1) % n }))
+      .filter(({ p }) => !p.out && p.hole.length === 2)
+      .sort((a, b) => a.from - b.from);
+    return new Map(inHand.map(({ i }, order) => [i, order]));
+  }, [table.players, table.button]);
+
+  // A new hand: the cards are already dealt, and this is only how they arrive.
+  useEffect(() => {
+    if (table.street === "idle") return;
+    if (!table.players.some((p) => p.hole.length === 2)) return;
+    const spec = pickDeal(!!reduced);
+    setDealing(spec);
+    setHeld(true);
+    const id = window.setTimeout(() => {
+      setDealing(null);
+      setHeld(false);
+    }, spec.totalMs);
+    return () => window.clearTimeout(id);
+    // Once per hand. The cards themselves are not a dependency: they are the
+    // engine's, and re-running this on a re-render would deal them twice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table.handNo, reduced, setHeld]);
+
   const [raiseTo, setRaiseTo] = useState(0);
 
   useEffect(() => {
@@ -423,6 +482,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
       </header>
 
       <motion.div
+        ref={frameRef}
         className="relative min-h-0 flex-1"
         animate={{ filter: focus ? `brightness(${1 - focus * 0.55})` : "brightness(1)" }}
         transition={{ duration: 0.26 }}
@@ -487,20 +547,31 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
                 </div>
               );
             })}
-            {flop && table.board.length >= 3 && (
-              <FlopReveal
-                cards={table.board.slice(0, 3)}
-                spec={flop}
-                rowRef={boardRowRef}
-                renderCard={(card, hidden) => (
-                  <PlayingCard
-                    card={card}
-                    hidden={hidden}
-                    tint={card && lit.has(cardKey(card)) ? TINT : undefined}
-                  />
-                )}
-              />
-            )}
+            {flop &&
+              table.board.length >= 3 &&
+              // Crystal Spread builds the cards out of fragments of themselves
+              // rather than flying finished cards in, so it draws its own.
+              (flop.kind === "crystalSpread" ? (
+                <CrystalSpread
+                  cards={table.board.slice(0, 3)}
+                  spec={flop}
+                  rowRef={boardRowRef}
+                  tintFor={(card) => (lit.has(cardKey(card)) ? TINT : undefined)}
+                />
+              ) : (
+                <FlopReveal
+                  cards={table.board.slice(0, 3)}
+                  spec={flop}
+                  rowRef={boardRowRef}
+                  renderCard={(card, hidden) => (
+                    <PlayingCard
+                      card={card}
+                      hidden={hidden}
+                      tint={card && lit.has(cardKey(card)) ? TINT : undefined}
+                    />
+                  )}
+                />
+              ))}
             {!started && (
               <span className="absolute inset-0 grid place-items-center text-[12px] tracking-[0.14em] text-dim">
                 press deal to start
@@ -570,11 +641,30 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
               isTurn={table.toAct === p.id && !table.result}
               lit={lit}
               badgeSide={positions[i].x > 50 ? "left" : "right"}
+              dealOrder={dealing ? dealOrders.get(i) : undefined}
             />
           </div>
           );
         })}
 
+        {/* The deal, over the whole table: the cards are in the air across it,
+            not inside any one seat. */}
+        {dealing && (
+          <DealReveal
+            spec={dealing}
+            frameRef={frameRef}
+            heroCards={you?.hole ?? []}
+            renderCard={(card, hidden, w, h) => (
+              <PokerCard
+                className="block"
+                style={{ width: w, height: h, filter: cardShadow(undefined) }}
+                faceUp={!hidden && !!card}
+                rank={card ? toFace(card).rank : undefined}
+                suit={card ? toFace(card).suit : undefined}
+              />
+            )}
+          />
+        )}
       </motion.div>
 
       {/* Controls.

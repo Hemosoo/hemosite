@@ -190,54 +190,6 @@ function orbitFrame(spec: Extract<FlopSpec, { kind: "orbit" }>, i: number, t: nu
   };
 }
 
-/**
- * Chain: each landing sets off the next.
- *
- * The three windows abut rather than overlap, which is what makes it read as
- * cause and effect. Each card is a little faster and comes from a little
- * further than the one before, so the rhythm builds.
- */
-function chainFrame(spec: Extract<FlopSpec, { kind: "chain" }>, i: number, t: number, pitch: number): FlopFrame {
-  void pitch;
-  const begin = [0.02, 0.3, 0.58][i];
-  const end = [0.32, 0.6, 0.88][i];
-  const travel = seg(t, begin, end);
-  const energy = 1 + i * 0.22;
-
-  // Later cards come from further out and arrive harder.
-  const fromX = spec.lean * (2.9 + i * 0.5);
-  const fromY = -1 - i * 0.28;
-  const e = i === 2 ? easeOutQuint(travel) : easeOutCubic(travel);
-
-  let x = mix(fromX, 0, e);
-  let y = mix(fromY, 0, e);
-  let rotate = mix(spec.lean * -9 * energy, 0, e);
-  let scale = mix(0.88, 1, e);
-
-  // The beat on landing: a short compression, stronger for each card.
-  const hit = seg(t, end, end + 0.05);
-  if (travel >= 1) scale = 1 - 0.015 * energy * swing(hit);
-
-  // The row locks together as the third seats.
-  const lock = seg(t, 0.86, SETTLED);
-  if (lock > 0) {
-    y += 0.01 * swing(lock);
-    x = 0;
-    rotate = 0;
-  }
-
-  return {
-    x,
-    y,
-    scale,
-    rotate,
-    // Turned over in flight, so each one adds to the board as it arrives.
-    flip: flipAt(t, begin + 0.1, 0.16),
-    opacity: clamp01(seg(t, begin, begin + 0.06)),
-    depth: 0.5 + i * 0.05,
-  };
-}
-
 /** Reduced motion: a short stagger, a little travel, no flight. */
 function calmFrame(i: number, t: number): FlopFrame {
   const p = seg(t, i * 0.14, i * 0.14 + 0.5);
@@ -252,8 +204,6 @@ export function flopFrame(spec: FlopSpec, i: number, t: number, pitch: number): 
       return spreadFrame(spec, i, t, pitch);
     case "orbit":
       return orbitFrame(spec, i, t, pitch);
-    case "chain":
-      return chainFrame(spec, i, t, pitch);
     default:
       return calmFrame(i, t);
   }
