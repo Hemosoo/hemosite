@@ -20,40 +20,59 @@ const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ 
       id="about"
       className="relative border-t border-line bg-bg px-6 py-24 sm:py-32"
     >
-      {/* The portrait lives in the margin beside the column rather than in it,
-          so the measure of the text is untouched and it can simply not be
-          there on a window too narrow to have a margin. `data-portrait` is how
-          the hover photographs know this side is taken. */}
-      <div
-        data-portrait
-        aria-hidden
-        className="pointer-events-none absolute top-1/2 hidden -translate-y-1/2 xl:block"
-        // Sized to the margin and centred in it, rather than pinned to the
-        // window at a fixed width. Fixed, it was a small picture stranded
-        // against the edge with a hundred and forty pixels of nothing between
-        // it and the text on the screens this is actually read on — every
-        // width between the breakpoints got whichever size was wrong for it.
-        style={{
-          ["--gutter" as string]: "calc((100vw - 48rem) / 2)",
-          ["--pw" as string]: "clamp(11rem, calc(var(--gutter) - 3rem), 20rem)",
-          left: "calc((var(--gutter) - var(--pw)) / 2)",
-          width: "var(--pw)",
-        }}
-      >
-        <img
-          src={`${import.meta.env.BASE_URL}about/portrait.jpg`}
-          alt=""
-          className="w-full rounded-2xl border border-line object-cover shadow-2xl"
-          style={{ aspectRatio: "3 / 4", objectPosition: "50% 30%" }}
-        />
-      </div>
-
       <div data-bio className="mx-auto flex max-w-3xl flex-col gap-10">
         <motion.div {...reveal(reduced)} className="flex flex-col gap-5">
           <span className="text-xs uppercase tracking-[0.22em] text-dim">about</span>
-          <h2 className="text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight text-white">
-            I build backend services and the infrastructure around them.
-          </h2>
+          {/* The heading and, out in the margin beside it, the portrait.
+
+              They are wrapped together because that is what keeps them level:
+              the portrait hangs off the heading's own box rather than off a
+              number that has to be kept equal to the section's padding plus
+              the label above plus the gap between them. Change any of those
+              and the two stay lined up. */}
+          <div className="relative">
+            <div
+              data-portrait
+              aria-hidden
+              className="pointer-events-none absolute hidden xl:block"
+              /*
+                Sized to the margin and centred in it, rather than pinned to
+                the window at a fixed width — fixed, it was a small picture
+                stranded against the edge with a hundred and forty pixels of
+                nothing between it and the text on the screens this is
+                actually read on.
+
+                `left` is negative because this sits inside the text column
+                and has to reach back out past it: half the gutter and half
+                its own width, which lands it centred in the margin.
+
+                The nudge is optical. The heading's box starts above the caps
+                by its half-leading, so a picture level with the box reads as
+                sitting high; a tenth of the type size down and the top of the
+                photograph is level with the top of the I. The heading is at
+                its clamp ceiling at every width this is shown at, so one
+                number is right for all of them.
+              */
+              style={{
+                ["--gutter" as string]: "calc((100vw - 48rem) / 2)",
+                ["--pw" as string]: "clamp(11rem, calc(var(--gutter) - 3rem), 20rem)",
+                left: "calc(-1 * (var(--gutter) + var(--pw)) / 2)",
+                width: "var(--pw)",
+                top: "0.4rem",
+              }}
+            >
+              <img
+                src={`${import.meta.env.BASE_URL}about/portrait.jpg`}
+                alt=""
+                className="w-full rounded-2xl border border-line object-cover shadow-2xl"
+                style={{ aspectRatio: "3 / 4", objectPosition: "50% 30%" }}
+              />
+            </div>
+
+            <h2 className="text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight text-white">
+              I build backend services and the infrastructure around them.
+            </h2>
+          </div>
           <p className="max-w-2xl text-lg leading-relaxed text-subtle">
             CS senior at <WordPhoto id="penn" className="text-accent">Penn</WordPhoto>, submatriculating into a
             master&apos;s in Computer and Information Science. Three summers as an SDE intern at{" "}
