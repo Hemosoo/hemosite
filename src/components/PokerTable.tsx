@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import type { Card } from "../poker/cards";
 import { toFace } from "../poker/cardFace";
@@ -277,7 +277,12 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
   const boardFx = useAnimationControls();
   const lastBoard = useRef(0);
 
-  useEffect(() => {
+  /**
+   * The board, for the same reason: a card is in the DOM the moment the engine
+   * deals it, and a reveal that mounts an effect later is a reveal that plays
+   * over a card the eye has already seen arrive.
+   */
+  useLayoutEffect(() => {
     const n = table.board.length;
     const prev = lastBoard.current;
     lastBoard.current = n;
@@ -364,8 +369,17 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
     return new Map(inHand.map(({ i }, order) => [i, order]));
   }, [table.players, table.button]);
 
-  // A new hand: the cards are already dealt, and this is only how they arrive.
-  useEffect(() => {
+  /**
+   * A new hand: the cards are already dealt, and this is only how they arrive.
+   *
+   * A layout effect, because an ordinary one runs a painted frame too late.
+   * The engine deals, the seats render their cards, the browser paints them —
+   * and only then does this hide them behind the deal. The whole hand was
+   * flashed for a frame before the deal that was about to reveal it. A layout
+   * effect runs after the commit and before the paint, so the frame that
+   * reaches the screen is the one with the cards already held back.
+   */
+  useLayoutEffect(() => {
     if (table.street === "idle") return;
     if (!table.players.some((p) => p.hole.length === 2)) return;
     const spec = pickDeal(!!reduced);
