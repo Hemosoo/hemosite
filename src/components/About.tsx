@@ -77,7 +77,7 @@ const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ 
             CS senior at <WordPhoto id="penn" className="text-accent">Penn</WordPhoto>, submatriculating into a
             master&apos;s in Computer and Information Science. Three summers as an SDE intern at{" "}
             <WordPhoto id="amazon" className="text-yellow">Amazon</WordPhoto> in <span className="text-cyan">Seattle</span>:
-            two on <span className="text-orange">Customer Service Aqua (CS Aqua)</span>, part of
+            two on <span className="text-orange">Customer Service Aqua</span>, part of
             Customer Service Journey Management, working on routing configuration read at runtime
             by Amazon Connect and a network health pipeline built from scratch; and one on{" "}
             <span className="text-orange">Fashion Fitness Tech</span>, building LLM tooling for the
@@ -89,7 +89,7 @@ const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ 
               <PokerTell onOpen={onPoker} />
             </WordPhoto>
             , and am on the journey to{" "}
-            <WordPhoto id="dunking" className="text-orange">dunking</WordPhoto>. Amazon Future Engineer scholar.
+            <WordPhoto id="dunking" className="text-orange">dunking</WordPhoto>.
           </p>
         </motion.div>
 
