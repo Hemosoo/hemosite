@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import WordPhoto from "./about/WordPhoto";
 import { SKILLS, LINKS } from "../data";
 import PokerTell from "./PokerTell";
+import MagneticLink from "./MagneticLink";
 
 const reveal = (reduced: boolean | null, delay = 0) => ({
   initial: reduced ? {} : { opacity: 0, y: 20 },
@@ -89,7 +90,16 @@ const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ 
               <PokerTell onOpen={onPoker} />
             </WordPhoto>
             , and am on the journey to{" "}
-            <WordPhoto id="dunking" className="text-orange">dunking</WordPhoto>.
+            <WordPhoto id="dunking" className="inline-block">
+              <MagneticLink
+                href={LINKS.dunks}
+                className="text-orange"
+                label="dunking — the attempts, on Instagram"
+              >
+                dunking
+              </MagneticLink>
+            </WordPhoto>
+            .
           </p>
         </motion.div>
 

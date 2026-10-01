@@ -75,8 +75,28 @@ interface Styling {
  */
 const styles = new Map<string, Styling>();
 
+/**
+ * The element the word is really set on.
+ *
+ * Some of these words are wrapped — a link, a button — and the colour lives
+ * on the inner one while the registered anchor is the outer. Reading the
+ * wrapper gave the flying word the paragraph's grey where the real one was
+ * yellow. Walks down while there is exactly one element child holding all the
+ * text, which stops at the link or the button and goes no further.
+ */
+function typeOf(el: HTMLElement): HTMLElement {
+  let node = el;
+  for (let i = 0; i < 4; i++) {
+    const kids = [...node.children].filter((c): c is HTMLElement => c instanceof HTMLElement);
+    const only = kids.length === 1 ? kids[0] : null;
+    if (!only || only.textContent !== node.textContent) break;
+    node = only;
+  }
+  return node;
+}
+
 function read(id: string, el: HTMLElement): Styling {
-  const cs = getComputedStyle(el);
+  const cs = getComputedStyle(typeOf(el));
   const out = {
     fontSize: parseFloat(cs.fontSize) || 16,
     color: cs.color,
