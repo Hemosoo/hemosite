@@ -77,8 +77,9 @@ const About = forwardRef<HTMLElement, { onPoker: () => void }>(function About({ 
             CS senior at <WordPhoto id="penn" className="text-accent">Penn</WordPhoto>, submatriculating into a
             master&apos;s in Computer and Information Science. Three summers as an SDE intern at{" "}
             <WordPhoto id="amazon" className="text-yellow">Amazon</WordPhoto> in <span className="text-cyan">Seattle</span>:
-            two on customer-service systems — routing configuration read at runtime by Amazon
-            Connect, and a network-health pipeline built from scratch — and one on{" "}
+            two on <span className="text-orange">Customer Service Journey Management</span> —
+            routing configuration read at runtime by Amazon Connect, and a network-health
+            pipeline built from scratch — and one on{" "}
             <span className="text-orange">Fashion Fitness Tech</span>, building LLM tooling for the
             Amazon.com gateway.
           </p>
