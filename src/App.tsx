@@ -6,7 +6,6 @@ import PokerTable from "./components/PokerTable";
 import Hero from "./components/Hero";
 import Cursor from "./components/Cursor";
 import About from "./components/About";
-import HandToAbout from "./components/about/HandToAbout";
 import NowPlaying from "./components/NowPlaying";
 import { TRACKS } from "./data";
 import type { CommandResult } from "./terminal/commands";
@@ -92,7 +91,6 @@ export default function App() {
   }, [trackIndex]);
 
   const [pokerOpen, setPokerOpen] = useState(false);
-  const aboutRef = useRef<HTMLElement>(null);
 
   const onEffect = useCallback((effect: NonNullable<CommandResult["effect"]>) => {
     if (effect.kind === "open") {
@@ -113,10 +111,7 @@ export default function App() {
   return (
     <div className="min-h-[100svh] bg-bg font-mono text-subtle">
       <Hero />
-      {/* One hand: the hole cards, the board, and then the photographs flying
-          into the words they belong to in the bio below. */}
-      <HandToAbout aboutRef={aboutRef} />
-      <About ref={aboutRef} onPoker={() => setPokerOpen(true)} />
+      <About onPoker={() => setPokerOpen(true)} />
 
       <header className="sticky top-0 z-20 flex items-center gap-4 border-y border-line bg-bg/90 px-4 py-3 text-xs backdrop-blur sm:px-8 sm:text-[13px]">
         <span className="text-dim">hemosoo.com</span>

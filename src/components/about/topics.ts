@@ -1,19 +1,20 @@
 /**
- * The five community cards: a photograph each, and the word in the bio that
- * each one flies into when the about section arrives.
+ * The five photographs under the bio, and the word in the bio each one
+ * belongs to.
  *
- * Order is the storytelling, not the poker. The flop lays down what is on
- * paper — school, work, the thing I do with other people — and the turn and
- * river are the two that are just mine. Dunking lands last because it is the
- * only one still unfinished, which is a better note to end on than a job.
- *
- * No rank and no suit on these. They are photographs, and an index in the
- * corner would only be a label competing with the picture.
+ * Order is the sentence's order, so the strip reads left to right the way
+ * the bio does: school, work, the thing I do with other people, and the two
+ * that are just mine. Dunking is last because it is the only one still
+ * unfinished, which is a better note to end on than a job.
  */
 export interface Topic {
   id: string;
-  /** The highlighted word in the bio this card lands on. */
+  /** The highlighted word in the bio this photograph belongs to. */
   word: string;
+  /** What is in the picture, under it. Short: a caption, not a story. */
+  caption: string;
+  /** The word's colour in the bio, so card and word read as a pair. */
+  tint: string;
   img: string;
   /** Where the photo should sit when it is cropped hard. */
   focus: string;
@@ -28,18 +29,24 @@ export const TOPICS: Topic[] = [
     // Hey Day: the one afternoon of the year the whole junior class is in red
     // with a cane and a hat. A portrait of me in a building would have been a
     // picture of a person; this is a picture of the place.
+    caption: "Hey Day",
+    tint: "text-accent",
     img: asset("heyday.jpg"),
     focus: "50% 30%",
   },
   {
     id: "amazon",
     word: "Amazon",
+    caption: "the Spheres, Seattle",
+    tint: "text-yellow",
     img: asset("amazon.jpg"),
     focus: "50% 38%",
   },
   {
     id: "acapella",
     word: "acapella",
+    caption: "on stage",
+    tint: "text-green",
     img: asset("acapella.jpg"),
     focus: "50% 40%",
   },
@@ -48,59 +55,17 @@ export const TOPICS: Topic[] = [
     word: "poker",
     // The only wide shot of the five, and the only one with someone else in
     // it: centred, the crop keeps the other player and loses me. Weighted left.
+    caption: "at the table",
+    tint: "text-yellow",
     img: asset("poker.jpg"),
     focus: "18% 22%",
   },
   {
     id: "dunking",
     word: "dunking",
+    caption: "in progress",
+    tint: "text-orange",
     img: asset("dunking.jpg"),
     focus: "50% 30%",
   },
 ];
-
-/**
- * The hand itself: the two cards that open the story before the board comes.
- * These stay as words — they are the claim, and the board is the evidence.
- */
-export interface HoleFace {
-  pip: string;
-  rank: string;
-  title: string;
-  lines: string[];
-  tint: string;
-}
-
-export const HOLE: HoleFace[] = [
-  {
-    pip: "\u2660",
-    rank: "3\u00d7",
-    title: "Amazon SDE Intern",
-    lines: ["Seattle, WA", "2024 \u00b7 2025 \u00b7 2026"],
-    tint: "text-primary",
-  },
-  {
-    pip: "\u2665",
-    rank: "Penn",
-    title: "BSE + MSE",
-    lines: ["Computer Science", "Class of 2027"],
-    tint: "text-red",
-  },
-];
-
-/**
- * A CSS object-position as the nearest SVG preserveAspectRatio alignment.
- *
- * SVG only offers thirds where CSS offers percentages, so this is a rounding
- * rather than a conversion. It is only used where a photograph is drawn as
- * SVG — the river card, which is cut into pieces of itself — and at these
- * crops the difference is a few percent of the frame.
- */
-export function svgAlign(focus: string): string {
-  const [px = "50%", py = "50%"] = focus.split(/\s+/);
-  const third = (v: string, lo: string, mid: string, hi: string) => {
-    const n = parseFloat(v) / 100;
-    return n < 0.34 ? lo : n < 0.67 ? mid : hi;
-  };
-  return third(px, "xMin", "xMid", "xMax") + third(py, "YMin", "YMid", "YMax");
-}
