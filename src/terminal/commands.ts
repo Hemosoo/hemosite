@@ -42,7 +42,20 @@ const warn = "text-yellow";
 /** Wrap prose to a column so output reads like a terminal, not a paragraph.
  *  Continuation lines align under the first one rather than repeating its
  *  marker, so a "  · " bullet indents to "    ". */
+/**
+ * How many characters fit across the shell right now, set per command by
+ * runCommand. Output is wrapped by hand, and wrapped wider than the screen it
+ * gets wrapped a second time by the browser into a ragged mess — on a phone
+ * the shell is about 44 columns, not 76.
+ */
+let cols = 80;
+/** Below this the shell is a phone, and indents and side-by-sides give way. */
+const narrow = () => cols < 60;
+
 function wrap(text: string, width = 76, indent = ""): Line[] {
+  // `width` is the text's own width, not counting the indent, so the indent
+  // comes out of what the screen has room for.
+  width = Math.min(width, cols - indent.length);
   const words = text.split(/\s+/);
   const out: string[] = [];
   let line = "";
@@ -96,7 +109,7 @@ const whoami: Command = {
   summary: "who I am, briefly",
   run: () => ({
     lines: [
-      [t("Hemosoo Woo", val), t(" — full-stack developer", "text-subtle")],
+      [t("Hemosoo Woo", val), t(" — backend developer", "text-subtle")],
       blank,
       ...wrapHl(
         "CS senior at Penn, submatriculating into a master's in Computer and Information Science. I build backend services and the infrastructure around them. Three summers as an SDE intern at Amazon in Seattle: two on customer-service systems, one on Fashion Fitness Tech.",
@@ -148,15 +161,21 @@ const work: Command = {
         ],
       };
     }
+    // One entry per summer, the headline result wrapped under it in full.
+    // This used to be a table with the impact column cut at 46 characters,
+    // which cut the one thing a reader came to this command for.
     return {
       lines: [
-        [t("PERIOD  ", dim), t("SERVICE                 ", dim), t("IMPACT", dim)],
-        ...ROLES.map((r) => [
-          t(r.year + "    ", warn),
-          t(r.service.padEnd(24).slice(0, 24), val),
-          t(r.bullets[0].length > 46 ? r.bullets[0].slice(0, 46) + "…" : r.bullets[0], "text-subtle"),
+        ...ROLES.flatMap((r) => [
+          ...(narrow()
+            ? [
+                [t(r.year, warn), t("  ", dim), t(r.service, val)],
+                [t("      Amazon " + r.team, dim)],
+              ]
+            : [[t(r.year, warn), t("  ", dim), t(r.service, val), t("  ·  Amazon " + r.team, dim)]]),
+          ...wrap(r.bullets[0], 70, "      "),
+          blank,
         ]),
-        blank,
         [t("run ", dim), t("work 2026", key), t(" for the full entry", dim)],
       ],
     };
@@ -297,7 +316,9 @@ export const COMMANDS: Command[] = [
   },
 ];
 
-export function runCommand(input: string): CommandResult {
+/** `columns` is how many characters fit across the shell; output wraps to it. */
+export function runCommand(input: string, columns = 80): CommandResult {
+  cols = Math.max(24, Math.floor(columns));
   const [name, ...args] = input.trim().split(/\s+/);
   if (!name) return { lines: [] };
   const cmd = COMMANDS.find((c) => c.name === name.toLowerCase());

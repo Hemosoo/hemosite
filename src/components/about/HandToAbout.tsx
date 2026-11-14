@@ -198,8 +198,12 @@ export default function HandToAbout({ aboutRef }: { aboutRef: React.RefObject<HT
 
   return (
     <>
-      {/* A spacer: the hand is played out over this much scrolling. */}
-      <section ref={sceneRef} aria-hidden className="h-[460vh] bg-bg" />
+      {/* A spacer: the hand is played out over this much scrolling.
+
+          Pulled up under the hero's lower half and left transparent, so the
+          hole cards start rising as the name finishes fading rather than a
+          screen of empty black later. */}
+      <section ref={sceneRef} aria-hidden className="pointer-events-none -mt-[40svh] h-[380vh]" />
 
       {m && felt && (
         <div
@@ -219,7 +223,7 @@ export default function HandToAbout({ aboutRef }: { aboutRef: React.RefObject<HT
               marginLeft: -felt.width / 2,
               marginTop: -felt.height / 2 + felt.y,
               background:
-                "radial-gradient(ellipse at center, #121a23 0%, #0d131b 60%, transparent 100%)",
+                "radial-gradient(ellipse at center, #16202b 0%, #0f1720 60%, transparent 100%)",
             }}
           />
 
@@ -250,10 +254,10 @@ export default function HandToAbout({ aboutRef }: { aboutRef: React.RefObject<HT
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div
-                  className="absolute inset-0 rounded-xl border border-primary/25 bg-[repeating-linear-gradient(45deg,#111a24_0_8px,#0b1219_8px_16px)] shadow-2xl"
+                  className="absolute inset-0 rounded-xl border border-primary/50 bg-[repeating-linear-gradient(45deg,#1a2736_0_8px,#101924_8px_16px)] shadow-2xl"
                   style={{ backfaceVisibility: "hidden" }}
                 >
-                  <div className="absolute inset-3 rounded-lg border border-primary/15" />
+                  <div className="absolute inset-3 rounded-lg border border-primary/30" />
                 </div>
                 <div
                   className="absolute inset-0 flex flex-col justify-between rounded-xl border border-line bg-[#f2f4f8] text-[#11151b] shadow-2xl"
@@ -318,7 +322,7 @@ export default function HandToAbout({ aboutRef }: { aboutRef: React.RefObject<HT
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div
-                  className="absolute inset-0 rounded-xl border border-primary/25 bg-[repeating-linear-gradient(45deg,#111a24_0_8px,#0b1219_8px_16px)] shadow-2xl"
+                  className="absolute inset-0 rounded-xl border border-primary/50 bg-[repeating-linear-gradient(45deg,#1a2736_0_8px,#101924_8px_16px)] shadow-2xl"
                   style={{ backfaceVisibility: "hidden" }}
                 />
                 {/* The card's surface: photograph, frame and shadow together,

@@ -34,13 +34,20 @@ interface Props {
 }
 
 const BOOT: Line[] = [
-  [{ t: "Hemosoo Woo", c: "text-text" }, { t: " — full-stack developer · CS @ Penn · 3× Amazon SDE intern", c: "text-subtle" }],
+  [{ t: "Hemosoo Woo", c: "text-text" }, { t: " — backend developer · CS @ Penn · 3× Amazon SDE intern", c: "text-subtle" }],
   [],
   [{ t: "This page is a shell. ", c: "text-subtle" }, { t: "help", c: "text-yellow" }, { t: " lists everything, or use the buttons below.", c: "text-subtle" }],
   [],
 ];
 
 const QUICK = ["whoami", "work", "projects", "contact", "resume"];
+
+/** Run by the shell itself the first time it scrolls into view. The work and
+ *  the projects are what most visitors came for, and they should not have to
+ *  know to ask; the shell stays a shell for everything past them. */
+const AUTORUN = ["work", "projects"];
+/** The beat between one command finishing and the next being "typed". */
+const AUTORUN_GAP_MS = 350;
 
 /** Characters per second, and the ceiling on how long any one block may take.
  *  Long output speeds up rather than dragging — nobody waits out a `help`. */
@@ -90,6 +97,26 @@ export default function Terminal({ onEffect }: Props) {
   const nextId = useRef(1);
   const pendingRef = useRef<Block | null>(null);
   pendingRef.current = pending;
+  const rootRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  /** Characters that fit across the output column, measured from the font
+   *  actually rendering, so hand-wrapped output never wraps a second time. */
+  const columns = useCallback(() => {
+    const box = textRef.current;
+    if (!box) return 80;
+    const probe = document.createElement("span");
+    probe.textContent = "0".repeat(40);
+    probe.style.visibility = "hidden";
+    probe.style.position = "absolute";
+    probe.style.whiteSpace = "pre";
+    box.appendChild(probe);
+    const ch = probe.getBoundingClientRect().width / 40;
+    box.removeChild(probe);
+    return ch > 0 ? box.clientWidth / ch : 80;
+  }, []);
+  const queue = useRef<string[]>([]);
+  const [queued, setQueued] = useState(0);
 
   /** Drop the animation and show the whole block now. */
   const finishPending = useCallback(() => {
@@ -152,9 +179,42 @@ export default function Terminal({ onEffect }: Props) {
     endRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
   }, [blocks, revealed]);
 
+  // Arm the autorun once, when the top of the shell is well into the window.
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        io.disconnect();
+        // Someone who already typed has taken the shell over.
+        if (interacted.current) return;
+        queue.current = [...AUTORUN];
+        setQueued((n) => n + 1);
+      },
+      { rootMargin: "0px 0px -30% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Feed the queue one command at a time, each after the last has finished
+  // typing. Not counted as interaction, so it never scrolls the page.
+  useEffect(() => {
+    if (!booted || pending || !queue.current.length) return;
+    const id = window.setTimeout(() => {
+      const cmd = queue.current.shift();
+      if (!cmd) return;
+      setBlocks((b) => [...b, { id: nextId.current++, input: cmd, lines: [] }]);
+      emit({ id: nextId.current++, lines: runCommand(cmd, columns()).lines }, !!reduced);
+    }, AUTORUN_GAP_MS);
+    return () => window.clearTimeout(id);
+  }, [booted, pending, queued, blocks.length, reduced, emit, columns]);
+
   const submit = useCallback(
     (raw: string) => {
       interacted.current = true;
+      queue.current = [];
       finishPending();
       const value = raw.trim();
       setInput("");
@@ -164,7 +224,7 @@ export default function Terminal({ onEffect }: Props) {
         return;
       }
       setHistory((h) => (h[h.length - 1] === value ? h : [...h, value]));
-      const result = runCommand(value);
+      const result = runCommand(value, columns());
       if (result.clear) {
         setBlocks([]);
       } else {
@@ -175,7 +235,7 @@ export default function Terminal({ onEffect }: Props) {
       }
       if (result.effect) onEffect(result.effect);
     },
-    [onEffect, reduced, emit, finishPending]
+    [onEffect, reduced, emit, finishPending, columns]
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -267,6 +327,7 @@ export default function Terminal({ onEffect }: Props) {
 
   return (
     <div
+      ref={rootRef}
       className="min-h-[60svh] w-full"
       onClick={(e) => {
         if (window.getSelection()?.toString()) return;
@@ -281,7 +342,7 @@ export default function Terminal({ onEffect }: Props) {
         aria-live="polite"
         aria-label="Terminal output"
       >
-        <div className="mx-auto max-w-3xl text-[13.5px] leading-[1.7] sm:text-sm">
+        <div ref={textRef} className="relative mx-auto max-w-3xl text-[13.5px] leading-[1.7] sm:text-sm">
           {blocks.map((b) => renderBlock(b, b.lines))}
           {pending && renderBlock(pending, pendingLines, true)}
 
