@@ -2,7 +2,14 @@
 /* ---break---            */
 @custom-variant dark (&:is(.dark *));
 
-/* ── Atom One Dark, pushed over near-black ────────────────────────────────────
+/* ── Type ──────────────────────────────────────────────────────────────────────
+   Schibsted Grotesk for everything that is read: the name, the headline, the
+   bio. JetBrains Mono only where the page is being a machine: the shell, the
+   bar, the hero's tagline, the photo captions, the poker table and the
+   player. Mono everywhere made every block look equally technical, and the
+   shell stopped standing out from the rest of the page.
+
+   ── Atom One Dark, pushed over near-black ────────────────────────────────────
    Atom's own background is #282c34; using it as an elevated surface instead of
    the page base is what gives the accents room to read as bright.            */
 @theme {
@@ -23,8 +30,8 @@
   --color-red: #e06c75;
   --color-cyan: #56b6c2;
 
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-sans: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 /* shadcn/GodUI token contract, mapped onto the same palette so copied
@@ -312,8 +319,8 @@
    so anything of ours they shadow has to be restated here to win.          */
 @theme {
   --color-subtle: #c3cad8;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-sans: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 :root {

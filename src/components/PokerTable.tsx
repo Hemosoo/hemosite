@@ -457,7 +457,7 @@ export default function PokerTable({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 14 }}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-50 flex flex-col bg-[#11151c]/97 backdrop-blur-sm isolate"
+      className="fixed inset-0 z-50 flex flex-col font-mono bg-[#11151c]/97 backdrop-blur-sm isolate"
       style={
         {
           // The felt is the viewport less the fixed header and footer. Sizing

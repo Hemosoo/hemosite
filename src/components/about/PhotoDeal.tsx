@@ -340,7 +340,7 @@ export default function PhotoDeal() {
                 ref={(el) => {
                   capRefs.current[i] = el;
                 }}
-                className="text-center text-[11px] leading-snug sm:text-xs"
+                className="text-center font-mono text-[11px] leading-snug sm:text-xs"
                 style={{ opacity: waiting ? 0 : 1 }}
               >
                 <span className={topic.tint}>{topic.word}</span>

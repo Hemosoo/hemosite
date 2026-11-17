@@ -23,7 +23,7 @@ export default function NowPlaying({ pinned, open, title, isPlaying, embedRef, o
       animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
       initial={false}
       transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 36 }}
-      className={`overflow-hidden border-t border-line bg-surface/95 backdrop-blur ${pinned ? "fixed inset-x-0 bottom-0 z-30" : ""}`}
+      className={`overflow-hidden border-t border-line bg-surface/95 font-mono backdrop-blur ${pinned ? "fixed inset-x-0 bottom-0 z-30" : ""}`}
     >
       <div className="mx-auto flex max-w-3xl flex-col gap-2 px-4 py-3 sm:px-8">
         <div className="flex items-center gap-2 text-xs">

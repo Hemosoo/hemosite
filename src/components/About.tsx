@@ -26,7 +26,6 @@ export default function About({ onPoker }: { onPoker: () => void }) {
       >
         <div data-bio className="mx-auto flex max-w-3xl flex-col gap-10">
           <motion.div {...reveal(reduced)} className="flex flex-col gap-5">
-            <span className="text-xs uppercase tracking-[0.22em] text-dim">about</span>
             {/* The heading and, out in the margin beside it, the portrait.
 
                 They are wrapped together because that is what keeps them level:
@@ -73,11 +72,11 @@ export default function About({ onPoker }: { onPoker: () => void }) {
                 />
               </div>
 
-              <h2 className="text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight text-white">
+              <h2 className="text-balance text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-[1.08] tracking-[-0.03em] text-white">
                 I build backend services and the infrastructure around them.
               </h2>
             </div>
-            <p className="max-w-2xl text-lg leading-relaxed text-subtle">
+            <p className="max-w-2xl text-[1.15rem] leading-[1.6] text-subtle">
               CS senior at <WordPhoto id="penn" className="text-accent">Penn</WordPhoto>, submatriculating into a
               master&apos;s in Computer and Information Science. Three summers as an SDE intern at{" "}
               <WordPhoto id="amazon" className="text-yellow">Amazon</WordPhoto> in <span className="text-cyan">Seattle</span>:
@@ -87,7 +86,7 @@ export default function About({ onPoker }: { onPoker: () => void }) {
               <span className="text-orange">Fashion Fitness Tech</span>, building LLM tooling for the
               Amazon.com gateway.
             </p>
-            <p className="max-w-2xl leading-relaxed text-subtle">
+            <p className="max-w-2xl leading-[1.6] text-subtle">
               Outside of that I sing <WordPhoto id="acapella" className="text-green">acapella</WordPhoto>, play{" "}
               <WordPhoto id="poker" className="inline-block">
                 <PokerTell onOpen={onPoker} />
@@ -111,16 +110,10 @@ export default function About({ onPoker }: { onPoker: () => void }) {
             <PhotoDeal />
           </div>
 
-          <motion.div {...reveal(reduced, 0.08)} className="flex flex-wrap gap-2">
-            {SKILLS.map((s) => (
-              <span
-                key={s}
-                className="rounded-full border border-line px-3 py-1 text-xs text-subtle"
-              >
-                {s}
-              </span>
-            ))}
-          </motion.div>
+          {/* The tools as a sentence in the bio's own voice, not a row of tags. */}
+          <motion.p {...reveal(reduced, 0.08)} className="max-w-2xl leading-relaxed text-dim">
+            I work in {SKILLS.slice(0, -1).join(", ")} and {SKILLS[SKILLS.length - 1]}.
+          </motion.p>
 
           <motion.div {...reveal(reduced, 0.14)} className="flex flex-wrap items-center gap-3">
             <a

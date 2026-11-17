@@ -109,11 +109,11 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-[100svh] bg-bg font-mono text-subtle">
+    <div className="min-h-[100svh] bg-bg font-sans text-subtle">
       <Hero />
       <About onPoker={() => setPokerOpen(true)} />
 
-      <header className="sticky top-0 z-20 flex items-center gap-4 border-y border-line bg-bg/90 px-4 py-3 text-xs backdrop-blur sm:px-8 sm:text-[13px]">
+      <header className="sticky top-0 z-20 flex items-center gap-4 border-y font-mono border-line bg-bg/90 px-4 py-3 text-xs backdrop-blur sm:px-8 sm:text-[13px]">
         <span className="text-dim">hemosoo.com</span>
         <span className="flex-1" />
         <button

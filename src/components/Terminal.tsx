@@ -328,7 +328,7 @@ export default function Terminal({ onEffect }: Props) {
   return (
     <div
       ref={rootRef}
-      className="min-h-[60svh] w-full"
+      className="min-h-[60svh] w-full font-mono"
       onClick={(e) => {
         if (window.getSelection()?.toString()) return;
         if ((e.target as HTMLElement).closest("a,button")) return;

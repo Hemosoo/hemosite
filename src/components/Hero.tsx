@@ -47,14 +47,14 @@ export default function Hero() {
             color: "transparent",
             WebkitTextFillColor: "transparent",
           }}
-          className="text-[clamp(3.25rem,15vw,11rem)] font-bold leading-[0.85] tracking-tight"
+          className="text-[clamp(3.25rem,15vw,11rem)] font-extrabold leading-[0.85] tracking-[-0.045em]"
         >
           <span className="block">Hemosoo</span>
           <span className="block">Woo</span>
         </h1>
         {/* One line on a wide screen; on a phone, two whole lines, rather
             than a stranded "intern" or a dot left at the start of a line. */}
-        <p className="text-xs leading-relaxed text-subtle sm:text-sm">
+        <p className="font-mono text-xs leading-relaxed text-subtle sm:text-sm">
           <span className="whitespace-nowrap">Backend developer</span>{" "}
           <span className="text-dim">·</span> <span className="whitespace-nowrap">CS @ Penn</span>
           <span className="hidden sm:inline">
@@ -67,7 +67,7 @@ export default function Hero() {
 
       <motion.div
         style={reduced ? undefined : { opacity: hint }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center text-xs text-dim"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center font-mono text-xs text-dim"
       >
         <div>scroll</div>
         <div aria-hidden className="mt-1">↓</div>
