@@ -140,7 +140,7 @@ body { background: var(--bg); }
   white-space: nowrap;
 }
 .v2-name .ln { display: inline-block; }
-.v2-name .ln + .ln { margin-left: 0.22em; }
+.v2-name .ln + .ln { margin-left: 0.04em; }
 @media (max-width: 767px) {
   .v2-name { white-space: normal; font-size: clamp(52px, 17vw, 84px); }
   .v2-name .ln { display: block; }
@@ -159,7 +159,7 @@ body { background: var(--bg); }
 /* The standfirst: three facts, each under a hairline, a recruiter's 10 seconds. */
 .v2-facts {
   margin: 40px 0 0; padding: 0; list-style: none;
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; max-width: 760px;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; max-width: 840px;
 }
 .v2-facts li { border-top: 1px solid var(--line-strong); padding-top: 12px; min-width: 0; }
 .v2-facts .k { display: block; font: 500 13.5px/1.4 var(--mono); color: var(--fc); }
@@ -172,12 +172,12 @@ body { background: var(--bg); }
 }
 
 .v2-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-top: 32px; }
-.v2-btn {
+.v2 .v2-btn {
   display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px;
   font: 600 14px/1 var(--sans); color: var(--bg); background: var(--text); text-decoration: none;
   border-radius: 3px; transition: background .2s, transform .2s var(--ease);
 }
-.v2-btn:hover { background: #fff; transform: translateY(-1px); }
+.v2 .v2-btn:hover { background: #fff; transform: translateY(-1px); }
 .v2-link {
   display: inline-flex; align-items: center; min-height: 44px;
   font: 500 13.5px/1 var(--mono); color: var(--muted); text-decoration: none;
@@ -263,20 +263,22 @@ body { background: var(--bg); }
 .v2-cb-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 2.6cqi; border-bottom: .3cqi solid var(--line-strong); }
 .v2-cb-head b { font: 800 5.8cqi/1 var(--sans); letter-spacing: -0.02em; color: #f6f6f8; }
 .v2-cb-head span { font: 500 3.4cqi/1 var(--mono); color: var(--gold); }
-.v2-stats { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; }
+/* The stats share the height between the head and the toolkit evenly: no
+   dead band at the bottom of the list. */
+.v2-stats { list-style: none; margin: 0; padding: 0; display: grid; align-content: space-between; }
 .v2-stat {
   --c: var(--c-exp);
-  width: 100%; display: grid; grid-template-columns: 17cqi minmax(0, 1fr); align-items: baseline; gap: 2.4cqi;
+  width: 100%; display: grid; grid-template-columns: 19.5cqi minmax(0, 1fr); align-items: baseline; gap: 2.4cqi;
   padding: 1.5cqi 1.4cqi; text-align: left; border-radius: 1cqi; color: #c7cdd7;
   transition: background .25s, color .25s;
 }
-.v2-stat .n { font: 600 5cqi/1 var(--mono); color: #fff; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+.v2-stat .n { font: 600 4.6cqi/1 var(--mono); color: #fff; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
 .v2-stat .l { font: 400 3.5cqi/1.25 var(--sans); }
 .v2-stat:hover, .v2-stat:focus-visible, .v2-stat.lit { background: color-mix(in oklab, var(--c) 16%, transparent); color: #fff; }
 .v2-stat:focus-visible { outline: none; }
 .v2-stat.lit .n { color: var(--c); }
 .v2-kit { display: grid; gap: 1.2cqi; padding-top: 2.6cqi; border-top: .3cqi solid var(--line-strong); }
-.v2-kit div { display: grid; grid-template-columns: 17cqi minmax(0, 1fr); gap: 2.4cqi; padding-inline: 1.4cqi; font: 400 3.1cqi/1.35 var(--mono); color: #b9c0cb; }
+.v2-kit div { display: grid; grid-template-columns: 19.5cqi minmax(0, 1fr); gap: 2.4cqi; padding-inline: 1.4cqi; font: 400 3.1cqi/1.35 var(--mono); color: #b9c0cb; }
 .v2-kit b { font-weight: 500; color: var(--gold); }
 .v2-cb-foot { display: flex; justify-content: space-between; font: 400 3.2cqi/1 var(--mono); color: #9ba3b0; }
 .v2-cb-foot a { color: var(--gold); text-decoration: none; }
@@ -352,6 +354,7 @@ body { background: var(--bg); }
 }
 .v2-bio .st-ph:hover, .v2-bio .st-ph:focus-visible, .v2-bio .st-ph.big { z-index: 4; }
 .v2-bio .st-ph:focus-visible { outline: none; }
+@media (max-width: 767px) { .v2-bio .st-margin { left: -10px; width: 10px; } }
 @media (max-width: 767px) { .v2-bio .st-ph:hover img, .v2-bio .st-ph:focus-visible img, .v2-bio .st-ph.big img { transform: scale(3.4); } }
 /* Opened passages read as the same sentence continuing: a hairline in the
    passage's colour at the left edge of the column, nothing more. */
@@ -476,7 +479,8 @@ body { background: var(--bg); }
 .v2-contact .k { font: 400 13.5px/1 var(--mono); color: var(--faint); }
 .v2-contact a, .v2-contact button { justify-self: start; font: 500 16px/1.4 var(--sans); color: var(--text); text-decoration: none; display: inline-flex; gap: 10px; align-items: center; min-height: 44px; }
 .v2-contact a:hover, .v2-contact button:hover { color: var(--c-eng); }
-.v2-contact .mail { font-family: var(--mono); font-size: 15px; user-select: all; }
+.v2-contact .mail { font-family: var(--mono); font-size: 15px; user-select: all; overflow-wrap: anywhere; }
+.v2-contact a { overflow-wrap: anywhere; }
 @media (max-width: 400px) { .v2-contact li { grid-template-columns: 84px minmax(0, 1fr); } }
 
 .v2-foot { padding: 40px 0 56px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; font: 400 13px/1.6 var(--mono); color: var(--faint); }
@@ -486,4 +490,15 @@ body { background: var(--bg); }
   .v2-flip, .v2-detail, .v2-nav a::after, .v2-life img { transition: none; }
   .v2-tilt { transform: none !important; }
   .v2-bio .st-pulse { animation: none; background: color-mix(in oklab, var(--c, var(--c-exp)) 22%, transparent); }
+}
+
+@media (max-width: 767px) { .v2-bio .st-margin { left: -10px; width: 10px; } }
+
+/* Inline links in the facts are touch targets too. */
+@media (pointer: coarse) { .v2-facts a { display: inline-block; padding: 11px 0; margin: -11px 0; } }
+
+/* On a phone the card closes the hero: centred, a little smaller, its turn button under it. */
+@media (max-width: 767px) {
+  .v2-hero-card .v2-cardbox { justify-items: center; }
+  .v2-hero-card .v2-card { max-width: 264px; }
 }
