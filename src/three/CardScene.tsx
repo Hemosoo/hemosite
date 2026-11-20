@@ -5,11 +5,15 @@ import Deck from "./Deck";
 import { deckTopOffset } from "./deckMetrics";
 import Lighting from "./Lighting";
 import FoldingCard from "./FoldingCard";
-import { makePlayerFaceTexture, makeBackTexture } from "./textures";
+import { makeBackTexture } from "./textures";
 import { landing } from "./landing";
-import { PORTRAIT } from "../bio/content";
+import { makePlayerFaceTexture } from "./playerFace";
+import { PERSON } from "../content/profile";
 
 /**
+ * The hero scene: the deck, and the player card that leaves it, folds into a
+ * plane and lands as the page's card. The deck sits level with the name.
+ *
  * Camera framing is derived from aspect rather than scaled from a desktop
  * layout: a narrow viewport pulls back and raises the camera so the deck stays
  * in frame and the flight still crosses interesting space.
@@ -26,7 +30,14 @@ function Rig() {
       THREE.MathUtils.lerp(9.5, 13.5, narrow)
     );
     cam.fov = THREE.MathUtils.lerp(38, 52, narrow);
-    cam.lookAt(0, -0.2, 0);
+    // On a squarer screen (a small laptop, a tablet held sideways) the fold
+    // pose falls off the left edge: slide the view left so the whole scene
+    // moves right, toward the name it sits beside.
+    // Portrait screens keep the original framing.
+    const shift =
+      THREE.MathUtils.clamp((1.6 - aspect) / 0.35, 0, 1) * THREE.MathUtils.clamp((aspect - 0.95) / 0.2, 0, 1) * 1.1;
+    cam.position.x -= shift;
+    cam.lookAt(-shift, -0.2, 0);
     cam.updateProjectionMatrix();
   }, [camera, size]);
   return null;
@@ -35,7 +46,8 @@ function Rig() {
 /** Resting size of the deck. The extracted card starts here and grows to 1. */
 const DECK_SCALE = 0.3;
 const ORIGIN = new THREE.Vector3(0, 0, 0);
-const GROUND_POS = new THREE.Vector3(0, -1.95, 0);
+// Just under the raised deck, so its shadow still lands on something.
+const GROUND_POS = new THREE.Vector3(0, -1.3, 0);
 
 /**
  * The deck belongs to the hero, and the canvas is fixed to the window so the
@@ -109,7 +121,7 @@ function Gate() {
 function Scene({ shadows, quality }: { shadows: boolean; quality: number }) {
   // The card that leaves the deck is the player card, so the one that lands
   // on the page is the one that left.
-  const face = useMemo(() => makePlayerFaceTexture(PORTRAIT, quality), [quality]);
+  const face = useMemo(() => makePlayerFaceTexture(PERSON.portrait, quality), [quality]);
   const back = useMemo(() => makeBackTexture(quality), [quality]);
 
   // Textures are canvas-backed and owned here; release the GPU copies on unmount.
@@ -122,7 +134,9 @@ function Scene({ shadows, quality }: { shadows: boolean; quality: number }) {
    * The deck is a background source, not the subject: smaller and set back in
    * depth, so the card that leaves it can become the thing you look at.
    */
-  const deckPos = useMemo(() => new THREE.Vector3(-3.5, -1.85, -2.4), []);
+  // Raised from the original's bottom corner: level with the lower half of
+  // the name, so deck, card and type read as one composition.
+  const deckPos = useMemo(() => new THREE.Vector3(-3.6, -1.2, -2.4), []);
   // Top of the stack, in world units, accounting for the deck's own scale.
   const deckTop = useMemo(
     () =>

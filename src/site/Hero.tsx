@@ -10,9 +10,9 @@
  */
 import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { useCursorBands, bandGradient } from "../../hooks/useCursorBands";
-import CardBackdrop from "./CardBackdrop";
-import { PERSON } from "../../content/profile";
+import { useCursorBands, bandGradient } from "../hooks/useCursorBands";
+import CardBackdrop from "../components/CardBackdrop";
+import { PERSON } from "../content/profile";
 
 interface Props {
   onGo: (where: "experience" | "projects" | "contact") => void;

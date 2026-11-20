@@ -2,7 +2,7 @@ export const LINKS = {
   github: "https://github.com/Hemosoo",
   linkedin: "https://www.linkedin.com/in/hemosoowoo",
   dunks: "https://www.instagram.com/hemodunks/",
-  email: "hemosoo.woo@gmail.com",
+  email: "hemosoow@gmail.com",
   resume: `${import.meta.env.BASE_URL}resume.pdf`,
 };
 

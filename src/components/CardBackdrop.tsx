@@ -4,33 +4,29 @@ import { Suspense, lazy, useEffect, useState } from "react";
 // means the wordmark paints before any of this is fetched.
 const CardScene = lazy(() => import("../three/CardScene"));
 
-/** WebGL hero backdrop: mounts only when it can run and is worth running. */
+/**
+ * The WebGL hero backdrop: mounts only when it can run and is worth running. Fixed to the window,
+ * because the plane leaves the hero: scrolling down, it flies back down the
+ * page and lands as the player card. The scene raises this layer above the
+ * page while it lands (data-stage).
+ */
 export default function CardBackdrop() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    // A phone with no pointer gets the static page; the scene is not worth the
-    // battery or the download there.
     if (!window.matchMedia("(min-width: 640px)").matches) return;
     try {
       const probe = document.createElement("canvas");
-      const gl = probe.getContext("webgl2") ?? probe.getContext("webgl");
-      if (!gl) return;
+      if (!(probe.getContext("webgl2") ?? probe.getContext("webgl"))) return;
     } catch {
       return;
     }
-    // Wait for first paint so the scene never competes with the hero's own
-    // entrance animation.
     const id = window.setTimeout(() => setReady(true), 360);
     return () => window.clearTimeout(id);
   }, []);
 
   if (!ready) return null;
-
-  // Fixed to the window rather than the hero, because the plane leaves the
-  // hero: scrolling down, it flies back down the page and lands as the player
-  // card. The scene raises this above the page while it lands (data-stage).
   return (
     <div aria-hidden data-stage className="pointer-events-none fixed inset-0" style={{ zIndex: 1 }}>
       <Suspense fallback={null}>

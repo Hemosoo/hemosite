@@ -1,13 +1,10 @@
-/* ── V1 · Refined Original ───────────────────────────────────────────────────
-   The current site, finished: the same name, plane, card and opening bio,
-   with a real hierarchy under the name, navigation that goes to content, a
-   card that reads as one object, and the experience and projects one glance
-   below the bio instead of three clicks inside it.
+/* ── hemosoo.com ────────────────────────────────────────────────────────────
+   The name, the deck and the plane; the plane lands as the player card; the
+   card sits beside a short bio, the experience and the projects.
 
    Colour is semantic everywhere: blue engineering and projects, gold
-   experience, purple education, green personal. The bio's markup reads them
-   as --c-eng/--c-exp/--c-edu/--c-per, and the air-mail courier resolves them
-   from :root, so they live there. */
+   experience, purple education, green personal. In the bio, colour means a
+   word does something. */
 
 :root {
   color-scheme: dark;
@@ -27,8 +24,8 @@
   --v-ease: cubic-bezier(.16, 1, .3, 1);
   --v-max: 1240px;
   --v-pad: max(20px, env(safe-area-inset-left, 0px));
-  /* The margin of notes to the left of the bio. */
-  --gut: 132px;
+  /* Breathing room between the card and the text column. */
+  --gut: 40px;
   --cardw: min(320px, calc((100svh - 170px) * 5 / 7));
 }
 html { background: var(--v-bg); }
@@ -149,21 +146,12 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 .v1-bar .div { width: 1px; height: 18px; background: var(--v-line); margin: 0 8px; }
 @media (max-width: 1100px) { .v1-bar .ext-opt { display: none; } }
 @media (max-width: 899px) {
-  .v1-bar .depth, .v1-bar .depth + .div { display: none; }
 }
 @media (max-width: 639px) {
   .v1-bar-in { gap: 0; font-size: 13.5px; padding: 0 12px; justify-content: space-between; }
   .v1-bar .home, .v1-bar .grow, .v1-bar .div, .v1-bar .ext { display: none; }
   .v1-bar button { padding: 0 8px; }
 }
-
-/* The depth control: what it does is said on it. */
-.v1-depth { display: inline-flex; align-items: center; gap: 2px; }
-.v1-depth .lbl { font: 500 12px var(--v-mono); color: var(--v-dim); margin-right: 6px; }
-.v1-depth button { font-size: 13.5px; padding: 0 9px; min-height: 32px; border: 1px solid transparent; }
-.v1-depth button[aria-pressed="true"] { color: var(--v-text); border-color: var(--v-line); background: var(--v-surface); }
-.v1-depth.inline { display: none; margin-bottom: 14px; }
-@media (max-width: 899px) { .v1-depth.inline { display: flex; flex-wrap: wrap; } .v1-depth.inline button { min-height: 40px; } }
 
 /* ── layout ─────────────────────────────────────────────────────────────── */
 .v1-main { min-height: 100svh; }
@@ -315,125 +303,75 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 .v1c-bf .turn { margin-left: auto; font: 500 2.9cqi var(--v-mono); color: var(--v-dim); }
 
 /* ── the bio ────────────────────────────────────────────────────────────── */
-.st-sheet { position: relative; scroll-margin-top: 90px; }
-.st-sheet.moving { overflow: hidden; }
-.st-bio {
-  margin: 0; max-width: 33em;
+.v1-bioarea { scroll-margin-top: 90px; }
+.v1-bio { max-width: 34em; }
+.v1-bio p {
+  margin: 0;
   /* Large enough to be the voice of the page, small enough to read as prose. */
-  font-size: clamp(1.14rem, 0.98rem + 0.5vw, 1.48rem);
-  line-height: 1.52; font-weight: 500; letter-spacing: -0.008em; color: var(--v-text);
+  font-size: clamp(1.1rem, 0.96rem + 0.45vw, 1.38rem);
+  line-height: 1.55; font-weight: 500; letter-spacing: -0.008em; color: var(--v-text);
   text-wrap: pretty;
 }
-/* Opened passages continue the sentence in a slightly quieter voice: still
-   the same paragraph, visibly the part you asked for. */
-.st-bio .d1 { color: #d3d7df; }
-.st-bio .d2, .st-bio .d3 { color: var(--v-muted); }
-.st-break { display: block; height: .7em; }
-.st-x {
+.v1-bio p + p { margin-top: .85em; }
+.v1-bio .w {
+  --c: var(--c-eng);
   font: inherit; letter-spacing: inherit; color: var(--c); cursor: pointer;
-  text-decoration: underline dotted; text-decoration-thickness: .07em; text-underline-offset: .22em;
-  text-decoration-color: color-mix(in oklab, var(--c) 55%, transparent);
-  border-radius: .15em; transition: text-decoration-color .2s;
-  scroll-margin-top: 110px;
+  text-decoration: underline; text-decoration-thickness: .07em; text-underline-offset: .2em;
+  text-decoration-color: color-mix(in oklab, var(--c) 40%, transparent);
+  transition: text-decoration-color .2s;
 }
-.st-x:hover { text-decoration-style: solid; text-decoration-color: var(--c); }
-.st-x:focus-visible { outline: 2px solid var(--c); outline-offset: 3px; }
-.st-g {
-  display: inline-block; font: 500 .45em/1 var(--v-mono); vertical-align: .9em;
-  margin-left: .1em; width: 1em; text-align: center; color: var(--c);
-  transition: transform .35s cubic-bezier(.2,.9,.3,1.3);
-}
-.st-x[aria-expanded="true"] .st-g { transform: rotate(45deg); }
-.st-x[aria-expanded="true"] { text-decoration-color: transparent; }
-.st-x.sending { cursor: progress; }
-.st-x.sending .st-g { animation: v1-spin .7s linear infinite; }
-@keyframes v1-spin { to { transform: rotate(360deg); } }
-.st-act {
-  font: 500 .64em/1 var(--v-mono); vertical-align: .12em; color: var(--c-per);
-  border: 1px solid color-mix(in oklab, var(--c-per) 45%, transparent);
-  border-radius: .35em; padding: .38em .62em; margin-left: .15em; cursor: pointer;
-  transition: background-color .2s, border-color .2s;
-}
-.st-act:hover, .st-act:focus-visible { background: color-mix(in oklab, var(--c-per) 14%, transparent); border-color: var(--c-per); outline: none; }
-.st-w { display: inline; }
-.st-w.in { animation: v1-word .5s var(--v-ease) both; }
-@keyframes v1-word { from { opacity: 0; filter: blur(3px); } to { opacity: 1; filter: blur(0); } }
-.st-num { font-family: var(--v-mono); font-size: .88em; font-weight: 600; color: var(--v-text); letter-spacing: -0.02em; border-radius: .15em; }
-.st-lnk { color: var(--c-eng); text-decoration: underline; text-decoration-thickness: .06em; text-underline-offset: .18em; text-decoration-color: color-mix(in oklab, var(--c-eng) 45%, transparent); }
-.st-lnk:hover { text-decoration-color: var(--c-eng); }
-.st-mail { font-family: var(--v-mono); font-size: .8em; color: var(--v-text); user-select: all; -webkit-user-select: all; }
-.st-ph {
-  position: relative; display: inline-block; vertical-align: -.28em; width: 2.3em; height: 1.25em;
-  margin-inline: .12em; font: inherit; background: var(--v-surface); border-radius: .28em; cursor: zoom-in;
-}
-.st-ph img {
-  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.12); transform-origin: var(--ox, 50%) 50%;
-  transition: transform .45s var(--v-ease), box-shadow .3s, border-radius .3s;
-}
-.st-ph.tall { width: 1.25em; height: 1.6em; vertical-align: -.45em; }
-.st-ph:hover img, .st-ph:focus-visible img, .st-ph.big img { transform: scale(5); z-index: 4; border-radius: .06em; box-shadow: 0 0 0 .2px rgba(255,255,255,.25), 0 .6em 2em rgba(0,0,0,.85); }
-.st-ph:hover, .st-ph:focus-visible, .st-ph.big { z-index: 4; }
-.st-ph:focus-visible { outline: none; }
-.st-ph.arriving img { opacity: 0; }
-.st-ph.landed img { animation: v1-fade .35s var(--v-ease) both; }
-.st-kick { display: none; }
-/* No inline name tags on narrow screens either: inline, they mostly repeat
-   the phrase just opened, and the stepped rules already mark each passage. */
-@media (max-width: 900px) {
-  .st-ph:hover img, .st-ph:focus-visible img, .st-ph.big img { transform: scale(3.4); }
-}
-.st-margin { position: absolute; top: 0; bottom: 0; left: calc(-1 * var(--gut)); width: var(--gut); pointer-events: none; }
-.st-mrule { position: absolute; width: 2px; border-radius: 2px; background: color-mix(in oklab, var(--c) 70%, transparent); animation: v1-fade .4s var(--v-ease) both; }
-.st-mlabel { position: absolute; right: 26px; width: calc(var(--gut) - 32px); text-align: right; font: 500 11.5px/1.35 var(--v-mono); color: var(--c); text-wrap: balance; animation: v1-fade .4s var(--v-ease) both; }
-.st-mlabel span { display: block; color: var(--v-dim); }
-@media (max-width: 900px) { .st-mlabel { display: none; } }
-@keyframes v1-fade { from { opacity: 0; } to { opacity: 1; } }
-.st-pulse { animation: v1-pulse 1.3s var(--v-ease); }
-@keyframes v1-pulse {
-  0%, 35% { background: color-mix(in oklab, var(--c, var(--c-exp)) 30%, transparent); box-shadow: 0 0 0 .12em color-mix(in oklab, var(--c, var(--c-exp)) 30%, transparent); }
-  100% { background: transparent; box-shadow: 0 0 0 .12em transparent; }
-}
-.v1-hint { margin: 1.6em 0 0; font-size: 13.5px; line-height: 1.55; color: var(--v-dim); max-width: 60ch; transition: opacity .6s; }
-.v1-hint kbd { font: 500 12px var(--v-mono); color: var(--v-muted); border: 1px solid var(--v-line); border-radius: 4px; padding: 0 5px; }
-.v1-hint.gone { opacity: 0; }
+.v1-bio .w:hover { text-decoration-color: var(--c); }
+.v1-bio .w:focus-visible { outline: 2px solid var(--c); outline-offset: 3px; }
+.v1-bio .w.exp { --c: var(--c-exp); }
+.v1-bio .w.per { --c: var(--c-per); }
+.v1-bio .w.eng { --c: var(--c-eng); }
+/* Penn names a place, not a link: emphasis without colour. */
+.v1-bio .strong { font-weight: 650; }
+.v1-bio .mail { font-family: var(--v-mono); font-size: .8em; user-select: all; -webkit-user-select: all; }
 
-/* ── the index: experience and projects, one glance below the bio ────────── */
-.v1-index { margin-top: clamp(56px, 8vw, 96px); display: grid; gap: clamp(44px, 6vw, 64px); }
-.v1-h { margin: 0 0 6px; font-size: 15px; font-weight: 700; letter-spacing: -0.005em; color: var(--v-text); display: flex; align-items: baseline; gap: 12px; }
-.v1-h .n { font: 500 12px var(--v-mono); color: var(--v-dim); }
-.v1-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--v-line); max-width: 46rem; }
-.v1-rows > li { border-bottom: 1px solid var(--v-line); }
-.v1-row {
+/* Where a stat on the card points: a moment of its colour. */
+.flash { animation: v1-flash 1.4s var(--v-ease); }
+@keyframes v1-flash {
+  0%, 30% { background-color: color-mix(in oklab, var(--c, var(--c-exp)) 16%, transparent); }
+  100% { background-color: transparent; }
+}
+
+/* ── experience and projects ────────────────────────────────────────────── */
+.v1-index { margin-top: clamp(56px, 8vw, 96px); display: grid; gap: clamp(48px, 6vw, 72px); }
+.v1-index section { scroll-margin-top: 80px; }
+.v1-h { margin: 0 0 8px; font: 500 12.5px var(--v-mono); color: var(--v-dim); }
+
+/* A role: the employer first and strongest; what, when and where quieter;
+   then the one line that matters, and the stack. */
+.v1-roles { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--v-line); max-width: 44rem; }
+.v1-role {
   --c: var(--c-exp);
-  display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto; column-gap: 18px; align-items: baseline;
-  width: 100%; text-align: left; padding: 18px 0; position: relative;
+  padding: 20px 14px 20px 16px; margin: 0 -14px 0 -16px; border-bottom: 1px solid var(--v-line);
+  border-radius: 4px; scroll-margin-top: 120px;
 }
-button.v1-row { cursor: pointer; }
-button.v1-row::before { content: ""; position: absolute; left: -16px; top: 18px; bottom: 18px; width: 2px; border-radius: 2px; background: var(--c); opacity: 0; transition: opacity .2s; }
-button.v1-row:hover::before, button.v1-row:focus-visible::before { opacity: 1; }
-.v1-row .yr { font: 600 13px var(--v-mono); color: var(--c); }
-.v1-row .t { font-size: 17px; font-weight: 700; color: var(--v-text); letter-spacing: -0.01em; }
-.v1-row .t small { font-size: 14px; font-weight: 500; color: var(--v-dim); margin-left: .5em; }
-.v1-row .s { grid-column: 2; margin-top: 4px; font-size: 15px; line-height: 1.5; color: var(--v-muted); max-width: 36rem; }
-.v1-row .go { grid-row: 1; grid-column: 3; font: 500 12.5px var(--v-mono); color: var(--v-dim); white-space: nowrap; transition: color .2s; }
-button.v1-row:hover .go, button.v1-row:focus-visible .go { color: var(--c); }
-.v1-row .stk { grid-column: 2; margin-top: 8px; font: 500 12px/1.6 var(--v-mono); color: var(--v-dim); }
-.v1-proj .dec { grid-column: 2; margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14.5px; color: #c9ced7; }
-.v1-proj .dec li::before { content: "— "; color: var(--v-dim); }
-.v1-proj .t a { color: var(--c-eng); text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--c-eng) 35%, transparent); text-underline-offset: 3px; }
-.v1-proj .t a:hover { text-decoration-color: var(--c-eng); }
-.v1-proj .go-b { grid-row: 1; grid-column: 3; font: 500 12.5px var(--v-mono); color: var(--v-dim); min-height: 32px; padding: 0 4px; transition: color .2s; }
-.v1-proj .go-b:hover, .v1-proj .go-b:focus-visible { color: var(--c-eng); }
-@media (max-width: 639px) {
-  .v1-row { grid-template-columns: minmax(0, 1fr) auto; padding: 16px 0; }
-  .v1-row .yr { grid-column: 1; grid-row: 1; }
-  .v1-row .t { grid-column: 1 / -1; grid-row: 2; margin-top: 2px; }
-  .v1-row .t small { display: block; margin: 2px 0 0; }
-  .v1-row .s, .v1-row .stk, .v1-proj .dec { grid-column: 1 / -1; }
-  .v1-row .go, .v1-proj .go-b { grid-column: 2; grid-row: 1; }
-  button.v1-row::before { left: -10px; }
+.v1-role .head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap; }
+.v1-role .org { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: var(--v-text); }
+.v1-role .when { font: 500 12.5px var(--v-mono); color: var(--v-dim); white-space: nowrap; }
+.v1-role .meta { margin: 3px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--v-dim); }
+.v1-role .what { margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: var(--v-muted); max-width: 38rem; }
+.v1-role .svc { color: var(--c); font-weight: 600; }
+.v1-role .stk, .v1-feature .stk, .v1-project .stk { margin: 8px 0 0; font: 500 12px/1.6 var(--v-mono); color: var(--v-dim); }
+
+/* The featured project leads, a size up; the rest follow as rows. */
+.v1-feature { max-width: 44rem; padding: 4px 0 22px 18px; margin-bottom: 4px; border-left: 2px solid var(--c-eng); }
+.v1-feature h3 { margin: 0; font-size: clamp(22px, 1.4rem + .4vw, 26px); font-weight: 800; letter-spacing: -0.02em; }
+.v1-feature h3 a, .v1-project .head a {
+  color: var(--c-eng); text-decoration: underline; text-underline-offset: .18em;
+  text-decoration-thickness: .06em; text-decoration-color: color-mix(in oklab, var(--c-eng) 35%, transparent);
 }
+.v1-feature h3 a:hover, .v1-project .head a:hover { text-decoration-color: var(--c-eng); }
+.v1-feature .what { margin: 6px 0 0; font-size: 16px; line-height: 1.55; color: var(--v-muted); }
+.v1-projects { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px solid var(--v-line); max-width: 44rem; }
+.v1-project { padding: 18px 0; border-bottom: 1px solid var(--v-line); }
+.v1-project .head { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.v1-project .what { margin: 4px 0 0; font-size: 15px; line-height: 1.55; color: var(--v-muted); }
+.v1-project .dec { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; color: #c9ced7; }
+.v1-project .dec li::before { content: "— "; color: var(--v-dim); }
 
 /* ── contact ────────────────────────────────────────────────────────────── */
 .v1-foot { margin-top: clamp(64px, 9vw, 112px); padding-bottom: 48px; scroll-margin-top: 80px; }
@@ -447,19 +385,14 @@ button.v1-row:hover .go, button.v1-row:focus-visible .go { color: var(--c); }
 .v1-small { margin-top: 36px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 18px; font: 500 12px/1.6 var(--v-mono); color: var(--v-dim); }
 .v1-small button { color: var(--v-muted); text-decoration: underline; text-decoration-color: var(--v-line); text-underline-offset: 3px; min-height: 32px; }
 
-/* ── air mail ───────────────────────────────────────────────────────────── */
-.am-sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-
 @media (prefers-reduced-motion: reduce) {
   .v1c-flip, .v1c-ear { transition: none; }
   .v1c-tilt { transform: none !important; }
-  .st-w.in, .st-mrule, .st-mlabel { animation: none; }
-  .st-g, .st-ph img { transition: none; }
-  .st-pulse { animation: none; background: color-mix(in oklab, var(--c, var(--c-exp)) 22%, transparent); }
+  .flash { animation: none; }
   html { scroll-behavior: auto; }
 }
 
 /* Touch: everything tappable is at least 40px tall. */
 @media (pointer: coarse) {
-  .v1-contact .copy, .v1-small button, .v1-proj .go-b, .v1-depth button { min-height: 40px; }
+  .v1-contact .copy, .v1-small button { min-height: 40px; }
 }

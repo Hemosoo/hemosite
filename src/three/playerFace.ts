@@ -1,10 +1,10 @@
 import * as THREE from "three";
 
 /**
- * V1's player card face, for the 3D card that leaves the deck, folds into the
- * plane and lands as the page's card.
+ * The player card's face, for the 3D card that leaves the deck, folds into
+ * the plane and lands as the page's card.
  *
- * Every coordinate here is the DOM front's (src/versions/v1/card.css, in
+ * Every coordinate here is the DOM front's (.v1c-front in site/site.css, in
  * card-width units: the card is 100 x 140), so when the flat 3D card lands on
  * the DOM card and cross-fades into it nothing moves. The corner the DOM card
  * turns down (the flip affordance) is cut and folded here too.
@@ -26,7 +26,7 @@ export const FACE = {
 export const TYPE_LINE = ["Player", "Backend · Infra · Applied AI"] as const;
 export const FOOT_LINE = ["Penn ’27 · Amazon ×3", "hemosoo.com"] as const;
 
-export function makeV1FaceTexture(portraitUrl: string, aniso = 4) {
+export function makePlayerFaceTexture(portraitUrl: string, aniso = 4) {
   const TW = 1000;
   const TH = 1400;
   const U = TW / 100;

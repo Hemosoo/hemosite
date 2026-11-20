@@ -44,8 +44,7 @@ export const PERSON = {
   tagline: "Backend systems, infrastructure, and applied AI",
   facts: ["CS at Penn", "MSE in CIS", "3× Amazon SDE intern"],
   portrait: photo("portrait"),
-  /** The address the site has always shown. (The résumé lists a different
-   *  Gmail address; one of the two should be made to match.) */
+  /** The address on the résumé. */
   email: LINKS.email,
   links: {
     github: LINKS.github,
@@ -196,7 +195,8 @@ export interface Project {
   what: string;
   /** The longer description, from the original site. */
   detail: string;
-  /** The technical decisions worth pointing at, each stated in the repo. */
+  /** The technical decisions worth pointing at, each stated in the repo
+   *  (empty where the repo doesn't say). */
   decisions: string[];
   stack: string[];
   category: Category;
@@ -206,6 +206,20 @@ export interface Project {
 }
 
 export const PROJECTS: Project[] = [
+  {
+    // First on purpose: the one to look at. Everything said here is what the
+    // repository says about itself ("Personal customization of pokernow.com",
+    // TypeScript); its fuller story isn't in this repo yet.
+    id: "mypokernow",
+    name: "mypokernow",
+    repo: "https://github.com/Hemosoo/mypokernow",
+    what: "A personal customization of pokernow.com.",
+    detail: "A personal customization of pokernow.com.",
+    decisions: [],
+    stack: ["TypeScript"],
+    category: "engineering",
+    screenshots: [],
+  },
   {
     id: "holdem",
     name: "holdem-bot",
@@ -277,8 +291,8 @@ export const INTERESTS: Interest[] = [
 
 /**
  * The player card's back. Accomplishments over counts: each one is a thing
- * that happened, and each points at where it is told in full (`node` is a bio
- * passage id; `role`/`project` an id above).
+ * that happened, and each points at where it is told in full (`node` is a
+ * role id in EXPERIENCE, or "amazon"/"penn" for the section).
  *
  * "5 upload architectures weighed" is gone from the headline set: it is how a
  * decision was made, not an outcome. It stays in the role's detail.

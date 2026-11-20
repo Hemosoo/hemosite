@@ -1,23 +1,23 @@
 /**
- * V1's player card: a foil collectible that tilts toward the pointer and turns
+ * The player card: a foil collectible that tilts toward the pointer and turns
  * over to its stats.
  *
  * The front is laid out from the same numbers as the hero's 3D card face
- * (three/textures.ts, FACE), so the plane lands on its exact double. Its
+ * (three/playerFace.ts, FACE), so the plane lands on its exact double. Its
  * bottom-right corner is turned down: the flip affordance, which lifts a
  * little further under the pointer.
  *
  * The back is the same object's reverse: the same frame and hairline, the
  * accomplishments first (one lead figure, then the rest as a grid of values
- * that read at a glance), then a compact toolkit. Every figure points into
- * the bio: hovering lights the place it is told, clicking opens it.
+ * that read at a glance), then a compact toolkit. Every figure points at the
+ * role it comes from: hovering lights the row, clicking goes there.
  *
  * Tilt runs on its own requestAnimationFrame loop writing CSS variables and
  * stops when it settles: no React state per frame.
  */
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { PERSON, STATS, TOOLKIT, ACCENT } from "../../content/profile";
-import { TYPE_LINE, FOOT_LINE } from "./three/textures";
+import { PERSON, STATS, TOOLKIT, ACCENT } from "../content/profile";
+import { TYPE_LINE, FOOT_LINE } from "../three/playerFace";
 
 export interface CardHandle {
   card: HTMLDivElement | null;
