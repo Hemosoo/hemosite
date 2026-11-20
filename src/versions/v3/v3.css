@@ -360,12 +360,14 @@
 .v3-inspect {
   position: fixed; inset: 0; z-index: 50; overflow-y: auto; overscroll-behavior: contain;
   background: rgba(5,5,5,.9); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  display: grid; justify-items: center; align-items: start;
+  display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; align-items: start;
   padding: max(20px, env(safe-area-inset-top, 0px)) 16px 40px;
   animation: v3-fade .25s var(--ease) both;
 }
 @keyframes v3-fade { from { opacity: 0; } }
-.v3-inspect-col { width: min(480px, 100%); display: grid; gap: 14px; margin: auto 0; }
+.v3-inspect-col { width: min(480px, 100%); min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin: auto 0; }
+.v3-big, .v3-big-flip { min-width: 0; }
+.v3-big-flip { grid-template-columns: minmax(0, 1fr); }
 .v3-inspect-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; }
 .v3-x {
   font: 500 13px var(--mono); color: var(--muted); min-height: 40px; padding: 0 12px; border: 1px solid var(--line);
@@ -558,3 +560,10 @@
   .v3-pc-tilt { transform: none !important; }
   .v3-inspect { animation: none; }
 }
+
+/* Only the side facing the reader takes the pointer: Chrome still hit-tests
+   the hidden face's positioned children through backface-visibility. */
+.v3-pc.is-flipped .v3-pc-front,
+.v3-pc:not(.is-flipped) .v3-pc-back,
+.v3-big.is-flipped .v3-big-front,
+.v3-big:not(.is-flipped) .v3-big-back { pointer-events: none; }
