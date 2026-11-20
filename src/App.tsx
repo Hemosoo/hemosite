@@ -1,14 +1,15 @@
 import "./index.css";
+import "./styles/player.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import Terminal from "./components/Terminal";
 import PokerTable from "./components/PokerTable";
 import Hero from "./components/Hero";
 import Cursor from "./components/Cursor";
-import About from "./components/About";
+import Showcase from "./components/Showcase";
 import NowPlaying from "./components/NowPlaying";
 import { TRACKS } from "./data";
-import type { CommandResult } from "./terminal/commands";
+import type { Stretch, StretchState } from "./bio/stretch";
+import { TOTAL_NODES } from "./bio/content";
 
 // ─── Spotify iFrame API ───────────────────────────────────────────────────────
 
@@ -91,42 +92,67 @@ export default function App() {
   }, [trackIndex]);
 
   const [pokerOpen, setPokerOpen] = useState(false);
+  const openPoker = useCallback(() => setPokerOpen(true), []);
 
-  const onEffect = useCallback((effect: NonNullable<CommandResult["effect"]>) => {
-    if (effect.kind === "open") {
-      window.open(effect.href, effect.href.startsWith("mailto:") ? "_self" : "_blank", "noopener");
-      return;
-    }
-    if (effect.kind === "poker") {
-      setPokerOpen(true);
-      return;
-    }
-    if (effect.action === "toggle") setMusicOpen((o) => !o);
-    else {
-      setMusicOpen(true);
-      setTrackIndex((i) => (i + 1) % TRACKS.length);
-    }
-  }, []);
+  // The bio's engine, and what the bar shows of it.
+  const stretchRef = useRef<Stretch | null>(null);
+  const [bio, setBio] = useState<StretchState>({ open: 0, total: TOTAL_NODES, depth: "0" });
+  const barRef = useRef<HTMLElement>(null);
+  const getBar = useCallback(() => barRef.current, []);
 
   return (
     <div className="min-h-[100svh] bg-bg font-sans text-subtle">
       <Hero />
-      <About onPoker={() => setPokerOpen(true)} />
 
-      <header className="sticky top-0 z-20 flex items-center gap-4 border-y font-mono border-line bg-bg/90 px-4 py-3 text-xs backdrop-blur sm:px-8 sm:text-[13px]">
-        <span className="text-dim">hemosoo.com</span>
+      <header
+        ref={barRef}
+        className="sticky top-0 z-20 flex items-center gap-3 border-y border-line bg-bg/90 px-4 py-2 font-mono text-xs text-dim backdrop-blur sm:gap-4 sm:px-8 sm:text-[12.5px]"
+      >
+        <span className="hidden sm:inline">hemosoo.com</span>
         <span className="flex-1" />
+        {/* How much of the bio to show. */}
+        <div className="sc-depth" role="group" aria-label="How much of the bio to show">
+          <span className="count">
+            {bio.open} of {bio.total} open
+          </span>
+          {(
+            [
+              ["0", "Short"],
+              ["1", "More"],
+              ["9", "Everything"],
+            ] as const
+          ).map(([d, label]) => (
+            <button
+              key={d}
+              type="button"
+              aria-pressed={bio.depth === d}
+              onClick={() => stretchRef.current?.setDepth(Number(d))}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <span aria-hidden className="h-4 w-px bg-line" />
         <button
           onClick={() => setMusicOpen((o) => !o)}
           aria-pressed={musicOpen}
-          className="flex items-center gap-2 text-dim transition-colors hover:text-text"
+          className="flex items-center gap-2 transition-colors hover:text-text"
         >
           <span className={isPlaying ? "text-green" : "text-dim"}>{isPlaying ? "▶" : "■"}</span>
           music
         </button>
+        {musicOpen && (
+          <button
+            onClick={() => setTrackIndex((i) => (i + 1) % TRACKS.length)}
+            className="transition-colors hover:text-text"
+            aria-label="Next track"
+          >
+            next
+          </button>
+        )}
       </header>
 
-      <Terminal onEffect={onEffect} />
+      <Showcase stretchRef={stretchRef} onState={setBio} onPoker={openPoker} bar={getBar} />
 
       <NowPlaying
         pinned

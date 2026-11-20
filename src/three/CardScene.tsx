@@ -1,11 +1,13 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import Deck from "./Deck";
 import { deckTopOffset } from "./deckMetrics";
 import Lighting from "./Lighting";
 import FoldingCard from "./FoldingCard";
-import { makeFaceTexture, makeBackTexture } from "./textures";
+import { makePlayerFaceTexture, makeBackTexture } from "./textures";
+import { landing } from "./landing";
+import { PORTRAIT } from "../bio/content";
 
 /**
  * Camera framing is derived from aspect rather than scaled from a desktop
@@ -33,9 +35,81 @@ function Rig() {
 /** Resting size of the deck. The extracted card starts here and grows to 1. */
 const DECK_SCALE = 0.3;
 const ORIGIN = new THREE.Vector3(0, 0, 0);
+const GROUND_POS = new THREE.Vector3(0, -1.95, 0);
+
+/**
+ * The deck belongs to the hero, and the canvas is fixed to the window so the
+ * plane can fly down the page to land: the deck (and the floor that catches
+ * its shadow) scroll away with the hero, at their own depth, as if they were
+ * printed on it. `deckTop` is moved with them, so a card drawn mid-scroll
+ * still leaves the top of the stack.
+ */
+function ScrollWithPage({
+  deck,
+  ground,
+  deckPos,
+  deckTop,
+}: {
+  deck: React.RefObject<THREE.Group | null>;
+  ground: React.RefObject<THREE.Mesh | null>;
+  deckPos: THREE.Vector3;
+  deckTop: THREE.Vector3;
+}) {
+  const topOffset = useMemo(() => deckTopOffset() * DECK_SCALE, []);
+  const up = useMemo(() => new THREE.Vector3(), []);
+  const fwd = useMemo(() => new THREE.Vector3(), []);
+  const tmp = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ camera, size }) => {
+    const cam = camera as THREE.PerspectiveCamera;
+    up.set(0, 1, 0).applyQuaternion(cam.quaternion);
+    fwd.set(0, 0, -1).applyQuaternion(cam.quaternion);
+    const d = tmp.copy(deckPos).sub(cam.position).dot(fwd);
+    const perPx = (2 * d * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2))) / Math.max(1, size.height);
+    const lift = window.scrollY * perPx;
+    deck.current?.position.copy(deckPos).addScaledVector(up, lift);
+    ground.current?.position.copy(GROUND_POS).addScaledVector(up, lift);
+    deckTop.copy(deckPos).addScaledVector(up, lift);
+    deckTop.y += topOffset;
+  });
+  return null;
+}
+
+/**
+ * Once the card has landed the page owns it: stop rendering, hide the canvas,
+ * and show the DOM card. Scrolling back up starts it all again from where the
+ * plane left off.
+ */
+function Gate() {
+  const setFrameloop = useThree((s) => s.setFrameloop);
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    const stage = gl.domElement.parentElement?.parentElement ?? gl.domElement;
+    let landed: boolean | null = null;
+    const check = () => {
+      const now = !!landing.slot && landing.progress() >= 1;
+      if (now === landed) return;
+      landed = now;
+      stage.style.visibility = now ? "hidden" : "visible";
+      if (now) landing.show(1);
+      setFrameloop(now ? "never" : "always");
+    };
+    check();
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+      stage.style.visibility = "";
+      landing.release();
+    };
+  }, [gl, setFrameloop]);
+  return null;
+}
 
 function Scene({ shadows, quality }: { shadows: boolean; quality: number }) {
-  const face = useMemo(() => makeFaceTexture(quality), [quality]);
+  // The card that leaves the deck is the player card, so the one that lands
+  // on the page is the one that left.
+  const face = useMemo(() => makePlayerFaceTexture(PORTRAIT, quality), [quality]);
   const back = useMemo(() => makeBackTexture(quality), [quality]);
 
   // Textures are canvas-backed and owned here; release the GPU copies on unmount.
@@ -60,17 +134,27 @@ function Scene({ shadows, quality }: { shadows: boolean; quality: number }) {
     [deckPos]
   );
 
+  const deckGroup = useRef<THREE.Group>(null);
+  const ground = useRef<THREE.Mesh>(null);
+
   return (
     <>
       <Rig />
+      <Gate />
       <Lighting shadows={shadows} />
-      <group position={deckPos} scale={DECK_SCALE}>
+      <ScrollWithPage
+        deck={deckGroup}
+        ground={ground}
+        deckPos={deckPos}
+        deckTop={deckTop}
+      />
+      <group ref={deckGroup} position={deckPos} scale={DECK_SCALE}>
         <Deck position={ORIGIN} back={back} />
       </group>
       <FoldingCard face={face} back={back} deckTop={deckTop} startScale={DECK_SCALE} />
       {/* Catches the deck's shadow; invisible against the black otherwise. */}
       {shadows && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.95, 0]} receiveShadow>
+        <mesh ref={ground} rotation={[-Math.PI / 2, 0, 0]} position={GROUND_POS} receiveShadow>
           <planeGeometry args={[40, 40]} />
           <shadowMaterial opacity={0.5} />
         </mesh>

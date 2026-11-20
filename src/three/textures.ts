@@ -112,3 +112,142 @@ export function makeBackTexture(aniso = 4) {
   x.restore();
   return finish(c, aniso);
 }
+
+/**
+ * The player card's face, for the card that folds into the plane and lands
+ * as the page's player card.
+ *
+ * Drawn from the same coordinates as the DOM card's front (.pc-front in
+ * styles/player.css, in card widths: 100 x 140), so when the flat 3D card
+ * lands on the DOM one and cross-fades into it nothing moves. Corners are cut
+ * to the DOM card's radius with alpha (the material alpha-tests them), so the
+ * outline matches too.
+ *
+ * Returned at once and redrawn when the portrait and the fonts arrive: the
+ * scene never waits on an image.
+ */
+export function makePlayerFaceTexture(portraitUrl: string, aniso = 4) {
+  const TW = 1000;
+  const TH = 1400;
+  const U = TW / 100;
+  const RAD = 4.5 * U;
+  const STAR = "M8 1.2l2 4.3 4.7.5-3.5 3.2 1 4.6L8 11.4l-4.2 2.4 1-4.6L1.3 6l4.7-.5z";
+  const SANS = '"Schibsted Grotesk Variable", system-ui, sans-serif';
+  const MONO = '"JetBrains Mono Variable", ui-monospace, monospace';
+
+  const c = document.createElement("canvas");
+  c.width = TW;
+  c.height = TH;
+  const x = c.getContext("2d")!;
+  const rr = (l: number, t: number, w: number, h: number, r: number) => {
+    x.beginPath();
+    x.roundRect(l, t, w, h, r);
+  };
+
+  const draw = (img: HTMLImageElement | null) => {
+    x.clearRect(0, 0, TW, TH);
+    x.save();
+    rr(0, 0, TW, TH, RAD);
+    x.clip();
+    x.fillStyle = "#3a3222";
+    x.fillRect(0, 0, TW, TH);
+    // linear-gradient(160deg, rgba(255,255,255,.10), transparent 40%)
+    const a = (160 * Math.PI) / 180;
+    const dx = Math.sin(a);
+    const dy = -Math.cos(a);
+    const L = Math.abs(TW * dx) + Math.abs(TH * dy);
+    const g = x.createLinearGradient(TW / 2 - (dx * L) / 2, TH / 2 - (dy * L) / 2, TW / 2 + (dx * L) / 2, TH / 2 + (dy * L) / 2);
+    g.addColorStop(0, "rgba(255,255,255,.10)");
+    g.addColorStop(0.4, "rgba(255,255,255,0)");
+    x.fillStyle = g;
+    x.fillRect(0, 0, TW, TH);
+
+    x.textBaseline = "middle";
+    x.fillStyle = "#f4f6fa";
+    x.font = `800 ${6.4 * U}px ${SANS}`;
+    x.letterSpacing = `${-0.02 * 6.4 * U}px`;
+    x.fillText("Hemosoo Woo", 4.5 * U, 7.7 * U);
+    x.letterSpacing = "0px";
+    x.save();
+    x.translate(TW - 10.5 * U, 4.7 * U);
+    x.scale((6 * U) / 16, (6 * U) / 16);
+    x.fillStyle = "#e5c07b";
+    x.fill(new Path2D(STAR));
+    x.restore();
+
+    // The art window.
+    const ax = 4.5 * U;
+    const ay = 13.5 * U;
+    const aw = 91 * U;
+    const ah = 105.36 * U;
+    const ar = 2.2 * U;
+    x.save();
+    rr(ax, ay, aw, ah, ar);
+    x.clip();
+    x.fillStyle = "#0b0f15";
+    x.fillRect(ax, ay, aw, ah);
+    if (img) {
+      const k = Math.max(aw / img.naturalWidth, ah / img.naturalHeight);
+      const dw = img.naturalWidth * k;
+      const dh = img.naturalHeight * k;
+      x.drawImage(img, ax + (aw - dw) * 0.5, ay + (ah - dh) * 0.3, dw, dh);
+    }
+    x.lineWidth = 1.2 * U;
+    x.strokeStyle = "rgba(0,0,0,.35)";
+    rr(ax, ay, aw, ah, ar);
+    x.stroke();
+    x.restore();
+    x.lineWidth = 0.5 * U;
+    x.strokeStyle = "rgba(255,255,255,.18)";
+    rr(ax - 0.25 * U, ay - 0.25 * U, aw + 0.5 * U, ah + 0.5 * U, ar + 0.25 * U);
+    x.stroke();
+
+    // The type bar.
+    const tx = 4.5 * U;
+    const ty = 121.46 * U;
+    const tw = 91 * U;
+    const th = 8.24 * U;
+    const tr = 1.4 * U;
+    x.fillStyle = "rgba(5,6,8,.55)";
+    rr(tx, ty, tw, th, tr);
+    x.fill();
+    x.save();
+    rr(tx, ty, tw, th, tr);
+    x.clip();
+    x.lineWidth = 0.8 * U;
+    x.strokeStyle = "rgba(255,255,255,.12)";
+    x.stroke();
+    x.restore();
+    x.font = `700 ${4.2 * U}px ${SANS}`;
+    x.fillStyle = "#e5c07b";
+    x.fillText("Player", tx + 3 * U, ty + th / 2);
+    const pw = x.measureText("Player").width;
+    x.fillStyle = "#eef1f6";
+    x.fillText(" — Backend developer", tx + 3 * U + pw, ty + th / 2);
+
+    // The foot.
+    x.font = `400 ${3.2 * U}px ${MONO}`;
+    x.fillStyle = "rgba(244,246,250,.72)";
+    x.fillText("001/001 · Penn · Amazon", 4.5 * U, 133.9 * U);
+    x.textAlign = "right";
+    x.fillText("hemosoo.com · 2026", TW - 4.5 * U, 133.9 * U);
+    x.textAlign = "left";
+    x.restore();
+  };
+
+  draw(null);
+  const t = finish(c, aniso);
+  const img = new Image();
+  img.decoding = "async";
+  const redraw = () => {
+    draw(img.complete && img.naturalWidth ? img : null);
+    t.needsUpdate = true;
+  };
+  img.onload = () => {
+    if (document.fonts) document.fonts.ready.then(redraw);
+    else redraw();
+  };
+  img.src = portraitUrl;
+  document.fonts?.ready.then(redraw);
+  return t;
+}

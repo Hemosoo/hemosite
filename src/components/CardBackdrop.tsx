@@ -28,8 +28,11 @@ export default function CardBackdrop() {
 
   if (!ready) return null;
 
+  // Fixed to the window rather than the hero, because the plane leaves the
+  // hero: scrolling down, it flies back down the page and lands as the player
+  // card. The scene raises this above the page while it lands (data-stage).
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+    <div aria-hidden data-stage className="pointer-events-none fixed inset-0" style={{ zIndex: 1 }}>
       <Suspense fallback={null}>
         <CardScene />
       </Suspense>
