@@ -25,14 +25,6 @@
     <meta name="twitter:title" content="Hemosoo Woo — Backend Developer" />
     <meta name="twitter:description" content="CS senior at Penn and three-time Amazon SDE intern." />
     <meta name="twitter:image" content="https://hemosoo.com/og.jpg" />
-    <!-- Capture the iFrame API even if it initialises before React mounts. -->
-    <script>
-      window.onSpotifyIframeApiReady = function (api) {
-        window.__spotifyIframeApi = api;
-        window.dispatchEvent(new Event("spotify-iframe-api-ready"));
-      };
-    </script>
-    <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
   </head>
   <body>
     <div id="root"></div>
