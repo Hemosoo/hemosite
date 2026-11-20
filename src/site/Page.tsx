@@ -212,29 +212,29 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
             </h2>
             <article className="v1-feature">
               <h3>
-                <a href={featured.repo} target="_blank" rel="noreferrer">
+                <a href={featured.href} target="_blank" rel="noreferrer">
                   {featured.name} ↗
                 </a>
               </h3>
               <p className="what">{featured.what}</p>
               <p className="stk">{featured.stack.join(" · ")}</p>
+              {featured.preview ? (
+                <img className="v1-preview" src={featured.preview} alt={`${featured.name}, a screenshot`} loading="lazy" />
+              ) : (
+                <div className="v1-preview empty" role="img" aria-label={`A preview of ${featured.name} is coming`}>
+                  <span>Preview coming soon</span>
+                </div>
+              )}
             </article>
             <ol className="v1-projects">
               {others.map((p) => (
                 <li key={p.id} className="v1-project">
                   <div className="head">
-                    <a href={p.repo} target="_blank" rel="noreferrer">
+                    <a href={p.href} target="_blank" rel="noreferrer">
                       {p.name} ↗
                     </a>
                   </div>
                   <p className="what">{p.what}</p>
-                  {p.decisions.length > 0 && (
-                    <ul className="dec">
-                      {p.decisions.map((d) => (
-                        <li key={d}>{d}</li>
-                      ))}
-                    </ul>
-                  )}
                   <p className="stk">{p.stack.join(" · ")}</p>
                 </li>
               ))}

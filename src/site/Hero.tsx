@@ -50,10 +50,14 @@ export default function Hero({ onGo }: Props) {
         </h1>
         <p className="v1-tagline">Software engineer. {PERSON.tagline}.</p>
         <p className="v1-facts">
-          <span className="k1">CS at Penn</span>
-          <i>·</i>
-          <span className="k1">MSE in CIS</span>
-          <i>·</i>
+          {/* Each fact holds together, keeping its dot; the line can break
+              between them, so a narrow screen wraps instead of scrolling. */}
+          <span className="k1">
+            CS at Penn<i>·</i>
+          </span>{" "}
+          <span className="k1">
+            MSE in CIS<i>·</i>
+          </span>{" "}
           <span className="k3">3× Amazon SDE intern</span>
         </p>
         <nav className="v1-access" aria-label="Quick links">

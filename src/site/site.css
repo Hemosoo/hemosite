@@ -37,6 +37,9 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
   position: relative;
   min-height: 100svh;
   display: grid;
+  /* One column, never wider than the screen: left to size itself, the track
+     grew to its widest child and pushed a 320px phone sideways. */
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   padding: 88px var(--v-pad) 64px;
 }
@@ -75,7 +78,7 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
   color: var(--v-muted);
 }
 .v1-facts span { white-space: nowrap; }
-.v1-facts i { font-style: normal; color: var(--v-dim); padding: 0 .45em; }
+.v1-facts i { font-style: normal; color: var(--v-dim); padding-left: .45em; }
 .v1-facts .k1 { color: var(--c-edu); }
 .v1-facts .k3 { color: var(--c-exp); }
 .v1-access {
@@ -366,12 +369,24 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 }
 .v1-feature h3 a:hover, .v1-project .head a:hover { text-decoration-color: var(--c-eng); }
 .v1-feature .what { margin: 6px 0 0; font-size: 16px; line-height: 1.55; color: var(--v-muted); }
+/* Where the screenshot goes. Until there is one, an honest empty frame at
+   the size it will be, so adding it later moves nothing. */
+.v1-preview {
+  display: block; width: 100%; aspect-ratio: 16 / 10; margin-top: 18px;
+  border: 1px solid var(--v-line); border-radius: 8px; object-fit: cover; background: var(--v-surface);
+}
+.v1-preview.empty {
+  display: grid; place-items: center;
+  border-style: dashed; border-color: #343b47;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0 1px, transparent 1px 12px),
+    var(--v-bg);
+}
+.v1-preview.empty span { font: 500 12.5px var(--v-mono); color: var(--v-dim); }
 .v1-projects { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px solid var(--v-line); max-width: 44rem; }
 .v1-project { padding: 18px 0; border-bottom: 1px solid var(--v-line); }
 .v1-project .head { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
 .v1-project .what { margin: 4px 0 0; font-size: 15px; line-height: 1.55; color: var(--v-muted); }
-.v1-project .dec { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; color: #c9ced7; }
-.v1-project .dec li::before { content: "— "; color: var(--v-dim); }
 
 /* ── contact ────────────────────────────────────────────────────────────── */
 .v1-foot { margin-top: clamp(64px, 9vw, 112px); padding-bottom: 48px; scroll-margin-top: 80px; }

@@ -190,69 +190,35 @@ export const EARLIER: Role = {
 export interface Project {
   id: string;
   name: string;
-  repo: string;
+  /** Where the name links. */
+  href: string;
   /** What it is, in one line. */
   what: string;
-  /** The longer description, from the original site. */
-  detail: string;
-  /** The technical decisions worth pointing at, each stated in the repo
-   *  (empty where the repo doesn't say). */
-  decisions: string[];
   stack: string[];
-  category: Category;
-  /** Real screenshots: none exist in the repository yet. Leave empty rather
-   *  than mock one up. */
-  screenshots: string[];
+  /** A screenshot (a path under public/). Absent: the page shows a placeholder
+   *  frame where it will go, rather than a mocked-up image. */
+  preview?: string;
+  /** The source, when the name links somewhere else. */
+  source?: string;
 }
 
 export const PROJECTS: Project[] = [
   {
-    // First on purpose: the one to look at. Everything said here is what the
-    // repository says about itself ("Personal customization of pokernow.com",
-    // TypeScript); its fuller story isn't in this repo yet.
+    // What the repository says about itself: "Personal customization of
+    // pokernow.com", in TypeScript. Its screenshot goes in public/projects/
+    // and its path in `preview`.
     id: "mypokernow",
     name: "mypokernow",
-    repo: "https://github.com/Hemosoo/mypokernow",
+    href: "https://github.com/Hemosoo/mypokernow",
     what: "A personal customization of pokernow.com.",
-    detail: "A personal customization of pokernow.com.",
-    decisions: [],
     stack: ["TypeScript"],
-    category: "engineering",
-    screenshots: [],
   },
   {
-    id: "holdem",
-    name: "holdem-bot",
-    repo: "https://github.com/Hemosoo/holdem-bot",
-    what: "A Texas Hold'em simulator with bots that learn by playing themselves.",
-    detail:
-      "Texas Hold'em simulator with full betting rounds, position-aware strategy bots with GTO big-blind defence ranges, a CFR self-play trainer, and an OpenCV screen reader.",
-    decisions: [
-      "Counterfactual regret minimization (CFR) self-play to train strategy",
-      "Position-aware bots with GTO big-blind defence ranges",
-      "An OpenCV screen reader to read a live table",
-      "Full betting rounds, not a simplified game",
-    ],
-    stack: ["Python", "CFR", "OpenCV"],
-    category: "engineering",
-    screenshots: [],
-  },
-  {
-    id: "mcp",
-    name: "learning-tool-mcp",
-    repo: "https://github.com/Hemosoo/learning-tool-mcp",
-    what: "An MCP server that turns PDFs into flashcards and quizzes.",
-    detail:
-      "An MCP server that turns PDFs into flashcards and quizzes, with session tracking. Runs locally for a single user, with no LLM inside the server itself.",
-    decisions: [
-      "Exposed as an MCP server, so an assistant drives it",
-      "No LLM inside the server itself",
-      "Runs locally, for a single user",
-      "Session tracking across study sessions",
-    ],
-    stack: ["Python", "MCP"],
-    category: "engineering",
-    screenshots: [],
+    id: "hemosoo",
+    name: "hemosoo.com",
+    href: "https://github.com/Hemosoo/hemosite",
+    what: "This website.",
+    stack: ["React", "TypeScript", "three.js", "Vite"],
   },
 ];
 
