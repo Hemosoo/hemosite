@@ -31,7 +31,14 @@ function Rig() {
       THREE.MathUtils.lerp(9.5, 13.5, narrow)
     );
     cam.fov = THREE.MathUtils.lerp(38, 52, narrow);
-    cam.lookAt(0, -0.2, 0);
+    // On a squarer screen (a small laptop, a tablet held sideways) the fold
+    // pose falls off the left edge: slide the view left so the whole scene
+    // moves right, toward the name it sits beside.
+    // Portrait screens keep the original framing.
+    const shift =
+      THREE.MathUtils.clamp((1.6 - aspect) / 0.35, 0, 1) * THREE.MathUtils.clamp((aspect - 0.95) / 0.2, 0, 1) * 1.1;
+    cam.position.x -= shift;
+    cam.lookAt(-shift, -0.2, 0);
     cam.updateProjectionMatrix();
   }, [camera, size]);
   return null;

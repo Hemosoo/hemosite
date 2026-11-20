@@ -152,8 +152,8 @@ const Card = forwardRef<CardHandle, Props>(function Card({ onStat, onLight }, re
       ref={cardRef}
       className={`v1c${flipped ? " flipped" : ""}`}
       tabIndex={0}
-      role="button"
-      aria-pressed={flipped}
+      role="group"
+      aria-roledescription="player card"
       aria-label={flipped ? "Player card, stats side. Press Enter to turn it back over." : "Player card. Press Enter to turn it over for the stats."}
     >
       <div className="v1c-tilt">

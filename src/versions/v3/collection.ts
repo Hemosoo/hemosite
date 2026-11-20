@@ -74,7 +74,7 @@ const roleCard = (r: Role): Omit<CardData, "no"> => {
 const projectCard = (p: Project): Omit<CardData, "no"> => ({
   id: p.id,
   set: "projects",
-  line: `Project · ${p.stack.join(", ")}`,
+  line: `Project · ${p.stack[0]}`,
   title: p.name,
   sub: "Built in my own time",
   summary: p.what,
