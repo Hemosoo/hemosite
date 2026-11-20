@@ -16,7 +16,7 @@
  * airmail/post.ts). Without one, or with reduced motion, it just opens.
  * Closing is always instant, and so is the depth control.
  */
-import { NODES, TOTAL_NODES, photoUrl } from "./content";
+import { NODES as DEFAULT_NODES, photoUrl, type BioNode } from "./content";
 
 export interface Delivery {
   id: string;
@@ -55,6 +55,9 @@ interface Options {
   /** Called the first time anything is opened, so the hint can go. */
   onFirstUse: () => void;
   email: string;
+  /** The bio to show. Defaults to the site's own (bio/content.ts); the design
+   *  alternatives pass theirs (content/bio.ts). */
+  nodes?: Record<string, BioNode>;
 }
 
 const TOKEN =
@@ -66,6 +69,8 @@ const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)"
 
 export class Stretch {
   private o: Options;
+  private nodes: Record<string, BioNode>;
+  private total: number;
   private open = new Map<string, HTMLElement>();
   private triggers = new Map<string, HTMLButtonElement>();
   private parent: Record<string, string> = {};
@@ -78,10 +83,12 @@ export class Stretch {
 
   constructor(o: Options) {
     this.o = o;
+    this.nodes = o.nodes ?? DEFAULT_NODES;
+    this.total = Object.keys(this.nodes).length - 1;
     // Every passage's parent, from the content up front: a stat on the card
     // can point into a passage whose parent has never been opened, and the
     // way there has to be known before anything is built.
-    for (const [id, node] of Object.entries(NODES)) {
+    for (const [id, node] of Object.entries(this.nodes)) {
       for (const m of node.text.matchAll(/\[\[(\w+)\|/g)) this.parent[m[1]] = id;
     }
     for (const n of this.build("root")) o.bio.appendChild(n);
@@ -148,7 +155,7 @@ export class Stretch {
   }
 
   private build(id: string): Node[] {
-    const text = NODES[id].text;
+    const text = this.nodes[id].text;
     const frag: Node[] = [];
     let last = 0;
     for (const m of text.matchAll(TOKEN)) {
@@ -162,7 +169,7 @@ export class Stretch {
         b.type = "button";
         b.className = "st-x st-w";
         b.dataset.id = child;
-        b.style.setProperty("--c", `var(${NODES[child].color})`);
+        b.style.setProperty("--c", `var(${this.nodes[child].color})`);
         b.setAttribute("aria-expanded", "false");
         const lbl = document.createElement("span");
         lbl.textContent = m[2];
@@ -170,7 +177,9 @@ export class Stretch {
         g.className = "st-g";
         g.setAttribute("aria-hidden", "true");
         g.textContent = "+";
-        b.append(lbl, g);
+        // A word joiner: the glyph is an inline-block, and may otherwise be
+        // carried to the next line on its own.
+        b.append(lbl, document.createTextNode("\u2060"), g);
         b.addEventListener("click", () => this.toggle(child));
         this.triggers.set(child, b);
         frag.push(b);
@@ -204,6 +213,9 @@ export class Stretch {
         });
         b.addEventListener("blur", () => b.classList.remove("big"));
         frag.push(b);
+        // The photo is an inline-block too: keep the comma or full stop after
+        // it on its line.
+        frag.push(document.createTextNode("\u2060"));
       } else if (m[6] === "MAIL") {
         const s = document.createElement("span");
         s.className = "st-mail";
@@ -223,14 +235,16 @@ export class Stretch {
         const b = document.createElement("button");
         b.type = "button";
         b.className = "st-x st-w";
-        b.style.setProperty("--c", `var(${NODES[target].color})`);
+        b.style.setProperty("--c", `var(${this.nodes[target].color})`);
         const lbl = document.createElement("span");
         lbl.textContent = m[9];
         const g = document.createElement("span");
         g.className = "st-g";
         g.setAttribute("aria-hidden", "true");
         g.textContent = "→";
-        b.append(lbl, g);
+        // A word joiner: the glyph is an inline-block, and may otherwise be
+        // carried to the next line on its own.
+        b.append(lbl, document.createTextNode("\u2060"), g);
         b.addEventListener("click", () => this.go(target, undefined, b));
         frag.push(b);
       } else if (m[10]) {
@@ -278,7 +292,7 @@ export class Stretch {
     if (this.open.has(id)) return;
     const b = this.triggers.get(id);
     if (!b) return;
-    const node = NODES[id];
+    const node = this.nodes[id];
     const span = document.createElement("span");
     span.className = `st-exp d${Math.min(3, this.depthOf(id))}`;
     span.dataset.of = id;
@@ -317,7 +331,7 @@ export class Stretch {
   // ── delivery ──────────────────────────────────────────────────────────────
 
   private photoOf(id: string) {
-    const m = /\{\{(\w+)\|[^|}]+(\|tall)?\}\}/.exec(NODES[id].text);
+    const m = /\{\{(\w+)\|[^|}]+(\|tall)?\}\}/.exec(this.nodes[id].text);
     return m ? m[1] : null;
   }
 
@@ -346,14 +360,14 @@ export class Stretch {
       t.removeAttribute("aria-busy");
     };
     const color = getComputedStyle(document.documentElement)
-      .getPropertyValue(NODES[id].color ?? "--color-yellow")
+      .getPropertyValue(this.nodes[id].color ?? "--color-yellow")
       .trim();
     this.courier({
       id,
       trigger: t,
       from: origin,
       color,
-      kick: NODES[id].kick ?? [id],
+      kick: this.nodes[id].kick ?? [id],
       photo: this.photoOf(id),
       land: () => {
         done();
@@ -412,7 +426,7 @@ export class Stretch {
 
   pulse(el: HTMLElement | null, id: string) {
     if (!el) return;
-    el.style.setProperty("--c", `var(${NODES[id].color})`);
+    el.style.setProperty("--c", `var(${this.nodes[id].color})`);
     el.classList.remove("st-pulse");
     void el.offsetWidth;
     el.classList.add("st-pulse");
@@ -484,8 +498,8 @@ export class Stretch {
       [...this.open.keys()].every((id) => this.depthOf(id) === 1) &&
       level1.every((id) => this.open.has(id));
     const depth =
-      this.open.size === 0 ? "0" : this.open.size === TOTAL_NODES ? "9" : isMore ? "1" : null;
-    this.o.onChange({ open: this.open.size, total: TOTAL_NODES, depth });
+      this.open.size === 0 ? "0" : this.open.size === this.total ? "9" : isMore ? "1" : null;
+    this.o.onChange({ open: this.open.size, total: this.total, depth });
   }
 
   // ── the margin ────────────────────────────────────────────────────────────
@@ -519,7 +533,7 @@ export class Stretch {
       for (const it of items) {
         const r = document.createElement("div");
         r.className = "st-mrule";
-        r.style.setProperty("--c", `var(${NODES[it.id].color})`);
+        r.style.setProperty("--c", `var(${this.nodes[it.id].color})`);
         r.style.top = `${it.top + 4}px`;
         r.style.height = `${Math.max(8, it.bottom - it.top - 8)}px`;
         r.style.right = `${(wide ? 12 : 4) + (it.depth - 1) * step}px`;
@@ -530,8 +544,8 @@ export class Stretch {
       for (const it of items.sort((a, b) => a.top - b.top)) {
         const l = document.createElement("div");
         l.className = "st-mlabel";
-        l.style.setProperty("--c", `var(${NODES[it.id].color})`);
-        const [a, b] = NODES[it.id].kick ?? [it.id];
+        l.style.setProperty("--c", `var(${this.nodes[it.id].color})`);
+        const [a, b] = this.nodes[it.id].kick ?? [it.id];
         l.textContent = a;
         if (b) {
           const s = document.createElement("span");
