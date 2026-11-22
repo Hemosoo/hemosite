@@ -28,6 +28,17 @@ interface Props {
 const smooth = (): ScrollBehavior =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
+/**
+ * The tools, as a sentence: "Built with React, Lambda and DynamoDB." Nothing
+ * when the line above already names them all (AtaxiaV's does).
+ */
+function BuiltWith({ stack, said = "" }: { stack: string[]; said?: string }) {
+  const lower = said.toLowerCase();
+  if (!stack.length || stack.every((t) => lower.includes(t.toLowerCase()))) return null;
+  const list = stack.length < 2 ? stack[0] : `${stack.slice(0, -1).join(", ")} and ${stack[stack.length - 1]}`;
+  return <p className="stk">Built with {list}.</p>;
+}
+
 /** Light an element for a moment, to show where a stat or a link came to. */
 function flash(el: Element | null) {
   if (!el) return;
@@ -65,7 +76,7 @@ function AmazonGroup({ roles }: { roles: Role[] }) {
             <p className="what">
               <span className="svc">{r.service}.</span> {r.summary}
             </p>
-            <p className="stk">{r.stack.join(" · ")}</p>
+            <BuiltWith stack={r.stack} said={r.summary} />
           </li>
         ))}
       </ol>
@@ -88,7 +99,7 @@ function RoleRow({ r }: { r: Role }) {
       <p className="what">
         <span className="svc">{r.service}.</span> {r.summary}
       </p>
-      <p className="stk">{r.stack.join(" · ")}</p>
+      <BuiltWith stack={r.stack} said={r.summary} />
     </li>
   );
 }
@@ -268,7 +279,7 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
                 </a>
               </h3>
               <p className="what">{featured.what}</p>
-              <p className="stk">{featured.stack.join(" · ")}</p>
+              <BuiltWith stack={featured.stack} said={featured.what} />
               {featured.preview ? (
                 <img className="v1-preview" src={featured.preview} alt={`${featured.name}, a screenshot`} loading="lazy" />
               ) : (
@@ -286,7 +297,7 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
                     </a>
                   </div>
                   <p className="what">{p.what}</p>
-                  <p className="stk">{p.stack.join(" · ")}</p>
+                  <BuiltWith stack={p.stack} said={p.what} />
                 </li>
               ))}
             </ol>

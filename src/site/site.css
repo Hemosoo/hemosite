@@ -375,7 +375,14 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 .v1-stint .team { color: var(--v-muted); font-weight: 600; }
 .v1-stint .when { margin-left: auto; font: 500 12.5px var(--v-mono); white-space: nowrap; }
 .v1-stint .what { margin-top: 6px; }
-.v1-role .stk, .v1-stint .stk, .v1-feature .stk, .v1-project .stk { margin: 8px 0 0; font: 500 12px/1.6 var(--v-mono); color: var(--v-dim); }
+/* "Built with …": a sentence in the page's own sans, coloured a dimmed
+   version of its section's colour (gold under experience, blue under
+   projects) rather than a grey row of code-font tags. */
+.v1-role .stk, .v1-stint .stk, .v1-feature .stk, .v1-project .stk {
+  margin: 6px 0 0; font-size: 14px; line-height: 1.5; font-weight: 500;
+  color: color-mix(in oklab, var(--c) 62%, var(--v-bg));
+}
+.v1-feature, .v1-project { --c: var(--c-eng); }
 
 /* The featured project leads, a size up; the rest follow as rows. */
 .v1-feature { max-width: 44rem; padding: 4px 0 22px 18px; margin-bottom: 4px; border-left: 2px solid var(--c-eng); }
