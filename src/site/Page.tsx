@@ -34,6 +34,43 @@ function flash(el: Element | null) {
   el.classList.add("flash");
 }
 
+/**
+ * Amazon, once: the employer, the role and the span of years as one heading,
+ * then each summer as its own entry underneath. The three internships read as
+ * one relationship rather than three repeats of the same name.
+ */
+function AmazonGroup({ roles }: { roles: Role[] }) {
+  const years = roles.map((r) => Number(r.year));
+  return (
+    <li className="v1-role v1-group">
+      <div className="head">
+        <span className="org">{roles[0].org}</span>
+        <span className="when">
+          {Math.min(...years)} – {Math.max(...years)}
+        </span>
+      </div>
+      <p className="meta">
+        {roles[0].title} · {roles[0].place} · {roles.length} summers
+      </p>
+      <ol className="v1-stints">
+        {roles.map((r) => (
+          <li key={r.id} className="v1-stint" data-row={r.id}>
+            <p className="sub">
+              <span className="yr">{r.year}</span>
+              <span className="team">{r.team}</span>
+              <span className="when">{r.period}</span>
+            </p>
+            <p className="what">
+              <span className="svc">{r.service}.</span> {r.summary}
+            </p>
+            <p className="stk">{r.stack.join(" · ")}</p>
+          </li>
+        ))}
+      </ol>
+    </li>
+  );
+}
+
 /** One role: the employer first and strongest, everything else quieter. */
 function RoleRow({ r }: { r: Role }) {
   return (
@@ -199,9 +236,7 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
               Experience
             </h2>
             <ol className="v1-roles">
-              {EXPERIENCE.map((r) => (
-                <RoleRow key={r.id} r={r} />
-              ))}
+              <AmazonGroup roles={EXPERIENCE} />
               <RoleRow r={EARLIER} />
             </ol>
           </section>

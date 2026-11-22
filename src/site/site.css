@@ -358,7 +358,15 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 .v1-role .meta { margin: 3px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--v-dim); }
 .v1-role .what { margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: var(--v-muted); max-width: 38rem; }
 .v1-role .svc { color: var(--c); font-weight: 600; }
-.v1-role .stk, .v1-feature .stk, .v1-project .stk { margin: 8px 0 0; font: 500 12px/1.6 var(--v-mono); color: var(--v-dim); }
+/* The Amazon group: the summers hang off one heading on a gold rule. */
+.v1-stints { list-style: none; margin: 16px 0 0; padding: 0 0 0 18px; border-left: 1px solid color-mix(in oklab, var(--c-exp) 45%, transparent); display: grid; gap: 22px; }
+.v1-stint { border-radius: 4px; padding: 2px 10px 2px 0; margin-right: -10px; scroll-margin-top: 120px; }
+.v1-stint .sub { margin: 0; display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; font-size: 13.5px; color: var(--v-dim); }
+.v1-stint .yr { font: 600 13px var(--v-mono); color: var(--c-exp); }
+.v1-stint .team { color: var(--v-muted); font-weight: 600; }
+.v1-stint .when { margin-left: auto; font: 500 12.5px var(--v-mono); white-space: nowrap; }
+.v1-stint .what { margin-top: 6px; }
+.v1-role .stk, .v1-stint .stk, .v1-feature .stk, .v1-project .stk { margin: 8px 0 0; font: 500 12px/1.6 var(--v-mono); color: var(--v-dim); }
 
 /* The featured project leads, a size up; the rest follow as rows. */
 .v1-feature { max-width: 44rem; padding: 4px 0 22px 18px; margin-bottom: 4px; border-left: 2px solid var(--c-eng); }
