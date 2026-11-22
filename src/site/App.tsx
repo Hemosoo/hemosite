@@ -29,7 +29,7 @@ export default function App() {
 
   return (
     <div className="v1">
-      <Hero onGo={go} />
+      <Hero />
 
       <nav className="v1-bar" aria-label="Site">
         <div className="v1-bar-in">

@@ -4,8 +4,7 @@
  * The name keeps its cursor rings (hooks/useCursorBands.ts) but is about a
  * sixth smaller than the original, which leaves room for a hierarchy the
  * original lacked: what he builds, the three facts a recruiter scans for, and
- * a row that goes straight to the résumé, the experience, the projects and
- * the contacts. The deck sits to the left of the type: the card leaves it,
+ * the three links that matter before scrolling: résumé, GitHub, LinkedIn. The deck sits to the left of the type: the card leaves it,
  * folds into a plane beside the name, and on scroll lands as the player card.
  */
 import { useRef } from "react";
@@ -14,11 +13,7 @@ import { useCursorBands, bandGradient } from "../hooks/useCursorBands";
 import CardBackdrop from "../components/CardBackdrop";
 import { PERSON } from "../content/profile";
 
-interface Props {
-  onGo: (where: "experience" | "projects" | "contact") => void;
-}
-
-export default function Hero({ onGo }: Props) {
+export default function Hero() {
   const ref = useRef<HTMLElement>(null);
   const nameRef = useRef<HTMLHeadingElement>(null);
   useCursorBands(nameRef);
@@ -64,22 +59,12 @@ export default function Hero({ onGo }: Props) {
           <a className="resume" href={PERSON.links.resume} target="_blank" rel="noreferrer">
             Résumé <span className="arrow">↗</span>
           </a>
-          <button type="button" onClick={() => onGo("experience")}>
-            Experience <span className="arrow">↓</span>
-          </button>
-          <button type="button" onClick={() => onGo("projects")}>
-            Projects <span className="arrow">↓</span>
-          </button>
-          <span className="sep" aria-hidden />
           <a href={PERSON.links.github} target="_blank" rel="noreferrer">
             GitHub <span className="arrow">↗</span>
           </a>
           <a href={PERSON.links.linkedin} target="_blank" rel="noreferrer">
             LinkedIn <span className="arrow">↗</span>
           </a>
-          <button type="button" onClick={() => onGo("contact")}>
-            Email
-          </button>
         </nav>
       </motion.div>
     </header>

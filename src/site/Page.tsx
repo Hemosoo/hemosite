@@ -2,13 +2,15 @@
  * Everything below the hero: the player card at the left, and beside it a
  * short bio, the experience and the projects, then contact.
  *
- * The bio is three plain paragraphs. Colour means a word does something:
- * Amazon goes to the experience, "building things" to the projects, poker
- * opens the table, dunk goes to the attempts. The card is where the hero's plane lands (three/landing.ts), and
+ * The bio is three plain paragraphs. Five words show their photograph while
+ * you point at them (Peek): Amazon, Penn, a cappella, poker and dunk. Some
+ * also go somewhere: Amazon to the experience, "building things" to the
+ * projects, poker opens the table, dunk goes to the attempts. The card is where the hero's plane lands (three/landing.ts), and
  * each stat on its back points at the row it comes from.
  */
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import Card, { type CardHandle } from "./Card";
+import Peek from "./Peek";
 import { landing } from "../three/landing";
 import { EARLIER, EXPERIENCE, PERSON, PROJECTS, type Role } from "../content/profile";
 
@@ -191,21 +193,35 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
             <p>
               I build backend systems, infrastructure, and tools that make AI useful in practice. I've spent three
               summers building software for internal teams and real customers at{" "}
-              <a className="w exp" href="#experience" onClick={goExperience}>
-                Amazon
-              </a>
-              . I study computer science at <span className="w strong">Penn</span>, where I'm also doing my master's in
+              <Peek name="amazon">
+                <a className="w exp" href="#experience" onClick={goExperience}>
+                  Amazon
+                </a>
+              </Peek>
+              . I study computer science at{" "}
+              <Peek name="heyday" tapToShow>
+                <span className="w edu">Penn</span>
+              </Peek>
+              , where I'm also doing my master's in
               CIS.
             </p>
             <p>
-              Outside of engineering, I sing a cappella, play{" "}
-              <button type="button" className="w per" onClick={onPoker}>
-                poker
-              </button>
+              Outside of engineering, I sing{" "}
+              <Peek name="acapella" tapToShow>
+                <span className="w per">a cappella</span>
+              </Peek>
+              , play{" "}
+              <Peek name="poker">
+                <button type="button" className="w per" onClick={onPoker}>
+                  poker
+                </button>
+              </Peek>
               , and am trying to{" "}
-              <a className="w per" href={PERSON.links.instagram} target="_blank" rel="noreferrer">
-                dunk
-              </a>
+              <Peek name="dunking">
+                <a className="w per" href={PERSON.links.instagram} target="_blank" rel="noreferrer">
+                  dunk
+                </a>
+              </Peek>
               . I also spend a lot of my free time{" "}
               <a className="w eng" href="#projects" onClick={goProjects}>
                 building things

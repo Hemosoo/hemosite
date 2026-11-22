@@ -102,7 +102,6 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 }
 .v1-access .resume .arrow { color: rgba(5,5,5,.6); }
 .v1-access .resume:hover { color: var(--v-bg); background: #efcf94; }
-.v1-access .sep { width: 1px; height: 18px; background: var(--v-line); margin: 0 6px; }
 
 @media (max-width: 1100px) {
   .v1-hero-inner { padding-left: clamp(0px, calc(30vw - 20px), 340px); }
@@ -120,7 +119,6 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
   .v1-hero-inner { padding-left: 0; }
   .v1-name { font-size: clamp(3rem, 17vw, 4.6rem); }
   .v1-access { gap: 4px 2px; }
-  .v1-access .sep { display: none; }
 }
 
 /* ── the bar ────────────────────────────────────────────────────────────── */
@@ -328,8 +326,19 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 .v1-bio .w.exp { --c: var(--c-exp); }
 .v1-bio .w.per { --c: var(--c-per); }
 .v1-bio .w.eng { --c: var(--c-eng); }
-/* Penn names a place, not a link: emphasis without colour. */
-.v1-bio .strong { font-weight: 650; }
+.v1-bio .w.edu { --c: var(--c-edu); }
+/* Penn and a cappella only show a photo: a dotted line, not a link's. */
+.v1-bio span.w { cursor: default; text-decoration-style: dotted; }
+
+/* The photograph a word shows while you point at it. */
+.v1-peek { display: inline; }
+.v1-peek-photo {
+  position: fixed; z-index: 15; display: block; pointer-events: none;
+  overflow: hidden; border-radius: 10px; background: var(--v-surface);
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: 0 24px 60px -18px rgba(0,0,0,.95), 0 8px 18px -10px rgba(0,0,0,.8);
+}
+.v1-peek-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .v1-bio .mail { font-family: var(--v-mono); font-size: .8em; user-select: all; -webkit-user-select: all; }
 
 /* Where a stat on the card points: a moment of its colour. */
