@@ -72,15 +72,6 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
   color: var(--v-text);
   text-wrap: balance;
 }
-.v1-facts {
-  margin: 12px 0 0;
-  font: 500 13.5px/1.6 var(--v-mono);
-  color: var(--v-muted);
-}
-.v1-facts span { white-space: nowrap; }
-.v1-facts i { font-style: normal; color: var(--v-dim); padding-left: .45em; }
-.v1-facts .k1 { color: var(--c-edu); }
-.v1-facts .k3 { color: var(--c-exp); }
 .v1-access {
   margin: clamp(22px, 3vw, 34px) 0 0;
   display: flex; flex-wrap: wrap; align-items: center;
@@ -95,12 +86,10 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
   transition: color .2s, background-color .2s;
 }
 .v1-access a:hover, .v1-access button:hover { color: var(--v-text); background: rgba(255,255,255,.04); }
-.v1-access .arrow { font-family: var(--v-mono); font-size: .85em; color: var(--v-dim); }
 .v1-access .first { padding-left: 0; }
 .v1-access .resume {
   color: var(--v-bg); background: var(--c-exp); font-weight: 650; padding: 0 16px; margin-right: 8px;
 }
-.v1-access .resume .arrow { color: rgba(5,5,5,.6); }
 .v1-access .resume:hover { color: var(--v-bg); background: #efcf94; }
 
 @media (max-width: 1100px) {
@@ -171,8 +160,6 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 .v1-bioarea { grid-area: bio; padding-left: var(--gut); min-width: 0; }
 .v1-index { grid-area: index; padding-left: var(--gut); min-width: 0; }
 .v1-foot { grid-area: foot; padding-left: var(--gut); min-width: 0; }
-.v1-cardhint { margin: 0; font-size: 13px; line-height: 1.5; color: var(--v-dim); max-width: var(--cardw); }
-.v1-cardhint b { color: var(--v-muted); font-weight: 600; }
 
 @media (max-width: 899px) {
   :root { --gut: 14px; --cardw: min(76vw, 300px); }
@@ -182,13 +169,14 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
     padding-top: 32px;
   }
   .v1-hold { position: static; justify-items: center; margin-bottom: 36px; }
-  .v1-cardhint { text-align: center; }
-}
+  }
 @media (max-width: 639px) {
   /* A phone reads first: the bio, then the card to turn over, then the
      index. The plane doesn't fly here, so the card can be anywhere. */
   .v1-layout { grid-template-areas: "bio" "card" "index" "foot"; padding-top: 28px; }
-  .v1-hold { margin: 40px 0 8px; }
+  /* Smaller here, so the experience starts sooner. */
+  :root { --cardw: min(60vw, 230px); }
+  .v1-hold { margin: 32px 0 0; }
 }
 
 /* ── the card ───────────────────────────────────────────────────────────── */
@@ -294,11 +282,9 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 .v1c-stat.lead { grid-template-columns: auto 1fr; align-items: center; column-gap: 3.4cqi; border-bottom: .3cqi solid rgba(255,255,255,.08); border-radius: 1.4cqi 1.4cqi 0 0; }
 .v1c-stat.lead .v { font-size: 13cqi; color: var(--gold); }
 .v1c-stat.lead .l { margin: 0; font-size: 3.6cqi; color: #e3e6ec; }
-.v1c-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; column-gap: 4cqi; row-gap: .4cqi; }
-.v1c-kit { margin: 0; display: grid; gap: 1.1cqi; padding-top: 2.6cqi; border-top: .3cqi solid rgba(255,255,255,.08); }
-.v1c-kit div { display: grid; grid-template-columns: 15cqi 1fr; gap: 2cqi; font-size: 3.1cqi; line-height: 1.35; }
-.v1c-kit dt { font-family: var(--v-mono); color: var(--v-dim); font-size: 2.8cqi; padding-top: .2cqi; }
-.v1c-kit dd { margin: 0; color: #d6dae2; }
+.v1c-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; column-gap: 4cqi; row-gap: 2.4cqi; }
+.v1c-grid .v1c-stat .v { font-size: 8cqi; }
+.v1c-grid .v1c-stat .l { font-size: 3.6cqi; }
 .v1c-bf { display: flex; gap: 3.6cqi; align-items: baseline; font-size: 3.3cqi; }
 .v1c-bf a { color: var(--c-eng); text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--c-eng) 40%, transparent); text-underline-offset: .5cqi; }
 .v1c-bf .turn { margin-left: auto; font: 500 2.9cqi var(--v-mono); color: var(--v-dim); }
@@ -326,6 +312,9 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 .v1-bio .w.exp { --c: var(--c-exp); }
 .v1-bio .w.per { --c: var(--c-per); }
 .v1-bio .w.eng { --c: var(--c-eng); }
+/* Colour belongs to the five words with photos; other links are plain. */
+.v1-bio .w.plain { color: inherit; text-decoration-color: color-mix(in oklab, var(--v-text) 35%, transparent); }
+.v1-bio .w.plain:hover { text-decoration-color: var(--v-text); }
 .v1-bio .w.edu { --c: var(--c-edu); }
 /* Penn and a cappella only show a photo: a dotted line, not a link's. */
 .v1-bio span.w { cursor: default; text-decoration-style: dotted; }
@@ -351,7 +340,7 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 /* ── experience and projects ────────────────────────────────────────────── */
 .v1-index { margin-top: clamp(56px, 8vw, 96px); display: grid; gap: clamp(48px, 6vw, 72px); }
 .v1-index section { scroll-margin-top: 80px; }
-.v1-h { margin: 0 0 8px; font: 500 12.5px var(--v-mono); color: var(--v-dim); }
+.v1-h { margin: 0 0 14px; font-size: clamp(22px, 1.3rem + .5vw, 28px); font-weight: 800; line-height: 1.1; letter-spacing: -0.025em; color: var(--v-text); }
 
 /* A role: the employer first and strongest; what, when and where quieter;
    then the one line that matters, and the stack. */
@@ -393,20 +382,11 @@ body { background: var(--v-bg); color: var(--v-text); font-family: var(--v-sans)
 }
 .v1-feature h3 a:hover, .v1-project .head a:hover { text-decoration-color: var(--c-eng); }
 .v1-feature .what { margin: 6px 0 0; font-size: 16px; line-height: 1.55; color: var(--v-muted); }
-/* Where the screenshot goes. Until there is one, an honest empty frame at
-   the size it will be, so adding it later moves nothing. */
+/* The project's screenshot, when there is one (Project.preview). */
 .v1-preview {
   display: block; width: 100%; aspect-ratio: 16 / 10; margin-top: 18px;
   border: 1px solid var(--v-line); border-radius: 8px; object-fit: cover; background: var(--v-surface);
 }
-.v1-preview.empty {
-  display: grid; place-items: center;
-  border-style: dashed; border-color: #343b47;
-  background:
-    repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0 1px, transparent 1px 12px),
-    var(--v-bg);
-}
-.v1-preview.empty span { font: 500 12.5px var(--v-mono); color: var(--v-dim); }
 .v1-projects { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px solid var(--v-line); max-width: 44rem; }
 .v1-project { padding: 18px 0; border-bottom: 1px solid var(--v-line); }
 .v1-project .head { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }

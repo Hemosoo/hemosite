@@ -50,13 +50,13 @@ export default function App() {
           </button>
           <span className="grow" />
           <a className="ext" href={PERSON.links.resume} target="_blank" rel="noreferrer">
-            Résumé ↗
+            Résumé
           </a>
           <a className="ext ext-opt" href={PERSON.links.github} target="_blank" rel="noreferrer">
-            GitHub ↗
+            GitHub
           </a>
           <a className="ext ext-opt" href={PERSON.links.linkedin} target="_blank" rel="noreferrer">
-            LinkedIn ↗
+            LinkedIn
           </a>
         </div>
       </nav>

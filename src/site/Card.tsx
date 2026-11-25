@@ -8,15 +8,15 @@
  * little further under the pointer.
  *
  * The back is the same object's reverse: the same frame and hairline, the
- * accomplishments first (one lead figure, then the rest as a grid of values
- * that read at a glance), then a compact toolkit. Every figure points at the
+ * accomplishments: one lead figure, then the rest as a grid of values that
+ * read at a glance. (The full skills list is on the résumé.) Every figure points at the
  * role it comes from: hovering lights the row, clicking goes there.
  *
  * Tilt runs on its own requestAnimationFrame loop writing CSS variables and
  * stops when it settles: no React state per frame.
  */
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { PERSON, STATS, TOOLKIT, ACCENT } from "../content/profile";
+import { PERSON, STATS, ACCENT } from "../content/profile";
 import { TYPE_LINE, FOOT_LINE } from "../three/playerFace";
 
 export interface CardHandle {
@@ -209,15 +209,6 @@ const Card = forwardRef<CardHandle, Props>(function Card({ onStat, onLight }, re
                 </li>
               ))}
             </ul>
-
-            <dl className="v1c-kit">
-              {TOOLKIT.map((g) => (
-                <div key={g.group}>
-                  <dt>{g.group}</dt>
-                  <dd>{g.items.join(" · ")}</dd>
-                </div>
-              ))}
-            </dl>
 
             <div className="v1c-bf">
               <a href={PERSON.links.resume} target="_blank" rel="noreferrer" tabIndex={tab}>

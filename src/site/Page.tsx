@@ -2,7 +2,7 @@
  * Everything below the hero: the player card at the left, and beside it a
  * short bio, the experience and the projects, then contact.
  *
- * The bio is three plain paragraphs. Five words show their photograph while
+ * The bio is two plain paragraphs; contact lives in the bar and the footer. Five words show their photograph while
  * you point at them (Peek): Amazon, Penn, a cappella, poker and dunk. Some
  * also go somewhere: Amazon to the experience, "building things" to the
  * projects, poker opens the table, dunk goes to the attempts. The card is where the hero's plane lands (three/landing.ts), and
@@ -113,7 +113,6 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
   const projRef = useRef<HTMLElement>(null);
   const contactRef = useRef<HTMLElement>(null);
   const [copied, setCopied] = useState(false);
-  const [coarse] = useState(() => window.matchMedia("(pointer: coarse)").matches);
 
   useImperativeHandle(ref, () => ({
     get about() {
@@ -192,10 +191,6 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
         <aside className="v1-cardcol" aria-label="Player card">
           <div ref={holdRef} className="v1-hold" data-card-slot>
             <Card ref={cardRef} onStat={onStat} onLight={onLight} />
-            <p className="v1-cardhint">
-              <b>{coarse ? "Tap" : "Click"} the card</b> to turn it over. Each stat on the back points to where it
-              happened.
-            </p>
           </div>
         </aside>
 
@@ -234,23 +229,8 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
                 </a>
               </Peek>
               . I also spend a lot of my free time{" "}
-              <a className="w eng" href="#projects" onClick={goProjects}>
+              <a className="w plain" href="#projects" onClick={goProjects}>
                 building things
-              </a>
-              .
-            </p>
-            <p>
-              You can reach me at <span className="mail">{PERSON.email}</span>, on{" "}
-              <a className="w eng" href={PERSON.links.github} target="_blank" rel="noreferrer">
-                GitHub
-              </a>{" "}
-              or{" "}
-              <a className="w eng" href={PERSON.links.linkedin} target="_blank" rel="noreferrer">
-                LinkedIn
-              </a>
-              , or through my{" "}
-              <a className="w eng" href={PERSON.links.resume} target="_blank" rel="noreferrer">
-                résumé
               </a>
               .
             </p>
@@ -275,17 +255,13 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
             <article className="v1-feature">
               <h3>
                 <a href={featured.href} target="_blank" rel="noreferrer">
-                  {featured.name} ↗
+                  {featured.name}
                 </a>
               </h3>
               <p className="what">{featured.what}</p>
               <BuiltWith stack={featured.stack} said={featured.what} />
-              {featured.preview ? (
+              {featured.preview && (
                 <img className="v1-preview" src={featured.preview} alt={`${featured.name}, a screenshot`} loading="lazy" />
-              ) : (
-                <div className="v1-preview empty" role="img" aria-label={`A preview of ${featured.name} is coming`}>
-                  <span>Preview coming soon</span>
-                </div>
               )}
             </article>
             <ol className="v1-projects">
@@ -293,7 +269,7 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
                 <li key={p.id} className="v1-project">
                   <div className="head">
                     <a href={p.href} target="_blank" rel="noreferrer">
-                      {p.name} ↗
+                      {p.name}
                     </a>
                   </div>
                   <p className="what">{p.what}</p>
@@ -315,16 +291,16 @@ const Main = forwardRef<MainHandle, Props>(function Main({ onPoker }, ref) {
             </div>
             <div className="row">
               <a href={PERSON.links.resume} target="_blank" rel="noreferrer">
-                Résumé ↗
+                Résumé
               </a>
               <a href={PERSON.links.github} target="_blank" rel="noreferrer">
-                GitHub ↗
+                GitHub
               </a>
               <a href={PERSON.links.linkedin} target="_blank" rel="noreferrer">
-                LinkedIn ↗
+                LinkedIn
               </a>
               <a href={PERSON.links.instagram} target="_blank" rel="noreferrer">
-                Instagram ↗
+                Instagram
               </a>
             </div>
           </div>

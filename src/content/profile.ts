@@ -280,13 +280,6 @@ export const STATS: Stat[] = [
   { value: "2027", label: "BSE CS + MSE CIS, Penn", node: "penn", category: "education" },
 ];
 
-/** The résumé's skills, compacted: what a reader scans for. */
-export const TOOLKIT: { group: string; items: string[] }[] = [
-  { group: "Languages", items: ["TypeScript", "Python", "Java", "C", "SQL"] },
-  { group: "AWS", items: ["Lambda", "API Gateway", "DynamoDB", "SNS", "CDK", "SageMaker", "Bedrock"] },
-  { group: "Also", items: ["React", "Spark SQL", "Docker", "pandas", "TensorFlow"] },
-];
-
 export const CERTIFICATIONS = [{ name: "AWS Certified Cloud Practitioner", date: "Jan 2022" }];
 
 export { TRACKS };
