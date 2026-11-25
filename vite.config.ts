@@ -8,8 +8,8 @@ const page = (p: string) => fileURLToPath(new URL(p, import.meta.url))
 // public/CNAME is what tells Pages the domain; the two have to agree or every
 // asset 404s under a path prefix that is no longer there.
 //
-// The site is at /. Three redesign alternatives are built alongside it at
-// /a/, /b/ and /c/, each its own HTML entry (plain directories on Pages, no
+// The site is at /. Redesign alternatives are built alongside it at /a/
+// to /f/, each its own HTML entry (plain directories on Pages, no
 // router), so they can be compared without touching the site.
 export default defineConfig({
   base: '/',
@@ -26,6 +26,9 @@ export default defineConfig({
         a: page('./a/index.html'),
         b: page('./b/index.html'),
         c: page('./c/index.html'),
+        d: page('./d/index.html'),
+        e: page('./e/index.html'),
+        f: page('./f/index.html'),
       },
     },
   },
