@@ -113,10 +113,11 @@ body { background: var(--bg); color: var(--body); font-family: var(--sans); font
 .c-back { transform: rotateY(180deg); padding: 8cqi 7.5cqi; display: flex; flex-direction: column; justify-content: space-between; }
 .c-major { list-style: none; margin: 0; padding: 0; display: grid; gap: 6cqi; }
 .c-major li { display: grid; gap: 1cqi; }
-.c-major .v { font-size: 11.5cqi; font-weight: 600; line-height: 1; color: var(--text); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.c-major .v { font-size: 11.5cqi; font-weight: 600; line-height: 1; color: var(--text); letter-spacing: -0.025em; }
 .c-major .l { font-size: 5.8cqi; line-height: 1.3; color: var(--sec); }
 .c-minor { margin: 0; font-size: 4.8cqi; line-height: 1.45; color: var(--sec); border-top: 1px solid var(--line); padding-top: 4cqi; }
 @container (max-width: 190px) {
+  .c-back { justify-content: center; }
   .c-minor { display: none; }
   .c-major .l { font-size: 6.2cqi; }
 }
