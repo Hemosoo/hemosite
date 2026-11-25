@@ -35,9 +35,12 @@ export default function Peek({ name, tap, children }: { name: Name; tap: boolean
     const el = ref.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    const col = (el.closest("[data-measure]") ?? el).getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
+    // A late pointer event after the page has scrolled away from the word
+    // mustn't open a photo for a word that isn't on screen.
+    if (r.bottom < 0 || r.top > vh) return;
+    const col = (el.closest("[data-measure]") ?? el).getBoundingClientRect();
     const size = (w: number) => {
       const width = Math.round(Math.min(w, 280, (vh - 120) / shot.ratio));
       return { width, height: Math.round(width * shot.ratio) };

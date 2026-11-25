@@ -234,6 +234,10 @@ export default function FoldingCard({
         metalness: 0,
         side: THREE.FrontSide,
         alphaTest: 0.5,
+        // The face has to match the page's card exactly when it lands, and
+        // tone mapping would grey its cream stock: the face is shown as
+        // printed, the lights only shade it.
+        toneMapped: false,
       }),
     [face]
   );

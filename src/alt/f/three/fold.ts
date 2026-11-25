@@ -72,9 +72,11 @@ export function startFold(card: HTMLElement, opts: FoldOptions): FoldHandle | nu
   const scene = new THREE.Scene();
   const FOV = 30;
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 10);
-  scene.add(new THREE.HemisphereLight(0xfff8ee, 0x2a2622, 1.5));
-  const sun = new THREE.DirectionalLight(0xffffff, 1.9);
-  sun.position.set(-0.4, 0.8, 1);
+  // Soft, mostly from in front: paper in a room, not a spotlit prop. Faces
+  // turned from the light still read as the same cream, a shade darker.
+  scene.add(new THREE.HemisphereLight(0xfff8ee, 0x8a8174, 1.7));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.25);
+  sun.position.set(-0.35, 0.7, 1);
   scene.add(sun);
 
   let VW = 1;
@@ -283,7 +285,9 @@ export function startFold(card: HTMLElement, opts: FoldOptions): FoldHandle | nu
     // Shadow: down and right of the plane, more spread the higher it is.
     const size = pose.scale * CW * 1.05;
     const a = pose.alt;
-    shadow.position.set(root.position.x + a * 0.25 + 6, root.position.y - a * 0.45 - 10, -2);
+    // On the page, behind every part of the folded card: the wings and keel
+    // reach a card's height either side of its middle.
+    shadow.position.set(root.position.x + a * 0.25 + 6, root.position.y - a * 0.45 - 10, -pose.scale * CH * 1.1 - 4);
     shadow.scale.set(size * (1 + a / 300), size * 1.2 * (1 + a / 300), 1);
     shadow.material.opacity = 0.42 * smooth(clamp01(pose.p * 1.6)) * clamp01(1 - a / 600);
   };
@@ -397,11 +401,12 @@ export function startFold(card: HTMLElement, opts: FoldOptions): FoldHandle | nu
       pose.c.x += (T.x + dx * 0.55 - pose.c.x) * k;
       pose.c.y += (T.y + dy * 0.55 - pose.c.y) * k;
       pose.alt += (pose.p * 40 - pose.alt) * k;
-      // It turns to point the way it's being pulled as it takes shape.
+      // It stays face up while the nose corners fold in, so you see it fold,
+      // then turns to point the way it's being pulled as the wings form.
       if (dist > 2) head.set(dx, -dy, 0).normalize();
       else head.set(0, 1, 0);
       orient(qFly, head, 0);
-      pose.q.copy(FLAT_FACE).slerp(qFly, smooth(pose.p));
+      pose.q.copy(FLAT_FACE).slerp(qFly, smooth(span(pose.p, 0.3, 1)));
     } else if (mode === "back" && ret) {
       ret.t += dt;
       const u = easeInOut(clamp01(ret.t / ret.dur));
