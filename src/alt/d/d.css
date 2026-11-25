@@ -1,0 +1,305 @@
+/* ── Alternative D: Landing ──────────────────────────────────────────────────
+   Alternative A's page, with the paper plane back. A narrow side column and
+   a reading column, the same for the whole page: in the hero the side column
+   is the stage where the card folds and the plane rests, beside the name; in
+   About it holds the card the plane lands on. Every section's heading hangs
+   from that same edge. (Class names keep A's prefix: they're this page's.)
+
+   One warm monochrome palette. Gold appears in three places only: the
+   résumé link's rule, a link's underline on hover, and the mark left on an
+   entry a stat points to. The card has its own stock and ink.
+
+   Type: Schibsted Grotesk throughout, never heavier than 650. JetBrains Mono
+   only for dates. One spacing scale: 4 8 12 16 24 32 48 72 112. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0c0c0c;
+  --text: #eae8e3;
+  --soft: #a3a19d;
+  --muted: #8c8a86;
+  --line: #272727;
+  --gold: #d6b477;
+  --sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --side: 264px;
+  --gap: 72px;
+  --read: 640px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+html { background: var(--bg); scroll-behavior: auto; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 16.5px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection { background: color-mix(in oklab, var(--gold) 35%, transparent); }
+.a-site :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
+.a-site strong { font-weight: 600; color: var(--text); }
+
+.a-skip { position: absolute; left: -9999px; top: 8px; }
+.a-skip:focus { left: 16px; z-index: 30; background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 4px; }
+
+/* ── the plane's layer ──────────────────────────────────────────────────── */
+/* Fixed to the window, under the page while the plane is in the hero (it
+   flies behind the writing) and raised over it, by the scene, while it lands. */
+.d-stage-layer { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+.a-page { position: relative; z-index: 2; }
+/* The box beside the name the scene composes itself in: the card's size. */
+.a-stage { width: var(--side); max-width: 100%; aspect-ratio: 5 / 7; }
+/* The card the plane lands on, under the About heading. */
+.a-hold { margin-top: 28px; }
+
+/* ── the grid ───────────────────────────────────────────────────────────── */
+.a-page {
+  /* Exactly the two columns, centred: the nav's right edge is the text's. */
+  max-width: calc(var(--side) + var(--gap) + var(--read) + 48px);
+  margin: 0 auto;
+  padding: 0 max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px));
+}
+.a-hero, .a-section {
+  display: grid;
+  grid-template-columns: var(--side) minmax(0, var(--read));
+  column-gap: var(--gap);
+  align-items: start;
+}
+.a-side { grid-column: 1; min-width: 0; }
+.a-main { grid-column: 2; min-width: 0; }
+
+/* ── nav ────────────────────────────────────────────────────────────────── */
+.a-nav {
+  display: flex; justify-content: flex-end; gap: 24px;
+  padding: 24px 0 0; font-size: 14.5px;
+}
+.a-nav a { color: var(--soft); text-decoration: none; padding: 8px 0; transition: color .15s; }
+.a-nav a:hover { color: var(--text); }
+
+/* ── links ──────────────────────────────────────────────────────────────── */
+.a-link {
+  color: inherit; font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .22em;
+  text-decoration-color: color-mix(in oklab, currentColor 38%, transparent);
+  transition: text-decoration-color .15s;
+}
+.a-link:hover { text-decoration-color: var(--gold); }
+/* A word that only has a photograph: the underline is dotted. */
+.a-word {
+  text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: .22em;
+  text-decoration-color: color-mix(in oklab, currentColor 45%, transparent); cursor: default;
+}
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.a-hero { padding: 64px 0 96px; }
+.a-hero-text { display: flex; flex-direction: column; align-self: stretch; padding-top: 4px; }
+.a-name {
+  margin: 0;
+  font-size: clamp(56px, 2.4rem + 4.4vw, 104px);
+  font-weight: 600; line-height: .94; letter-spacing: -0.042em;
+  color: var(--text);
+  text-wrap: balance;
+}
+.a-intro {
+  margin: 28px 0 0; max-width: 26ch;
+  font-size: clamp(19px, 1rem + .45vw, 22px); line-height: 1.42; font-weight: 400; letter-spacing: -0.008em;
+  color: var(--text);
+  text-wrap: pretty;
+}
+.a-actions { margin: auto 0 0; padding-top: 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; font-size: 15.5px; }
+.a-resume {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px;
+  border: 1px solid color-mix(in oklab, var(--gold) 70%, transparent); border-radius: 6px;
+  color: var(--text); text-decoration: none; font-weight: 500;
+  transition: background-color .15s, border-color .15s;
+}
+.a-resume:hover { background: color-mix(in oklab, var(--gold) 12%, transparent); border-color: var(--gold); }
+.a-actions .a-link { color: var(--soft); }
+.a-actions .a-link:hover { color: var(--text); }
+
+/* ── sections ───────────────────────────────────────────────────────────── */
+.a-section { padding: 0 0 112px; scroll-margin-top: 24px; }
+.a-h {
+  margin: 0; padding-top: 6px;
+  font-size: 28px; font-weight: 550; letter-spacing: -0.02em; line-height: 1.1; color: var(--text);
+}
+.a-about p { margin: 0; font-size: clamp(18px, 1rem + .25vw, 20px); line-height: 1.6; max-width: 34em; text-wrap: pretty; }
+.a-about p + p { margin-top: 20px; }
+
+/* ── work ───────────────────────────────────────────────────────────────── */
+.a-employer h3 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+.a-role { margin: 6px 0 0; color: var(--soft); font-size: 15.5px; }
+.a-role .a-date { margin-left: 4px; }
+.a-later { margin-top: 72px; }
+.a-date { font: 400 12.5px/1.4 var(--mono); color: var(--muted); letter-spacing: 0; white-space: nowrap; }
+
+.a-entry { margin-top: 48px; scroll-margin-top: 96px; border-radius: 4px; outline: none; }
+.a-entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 24px; flex-wrap: wrap; }
+.a-entry h4 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.012em; line-height: 1.3; }
+.a-entry h4 .team { margin-left: 10px; font-weight: 400; color: var(--soft); font-size: 16px; letter-spacing: 0; }
+.a-what { margin: 8px 0 0; color: var(--soft); max-width: 36em; }
+.a-did { margin: 14px 0 0; padding: 0; list-style: none; max-width: 36em; display: grid; gap: 8px; }
+.a-did li { position: relative; padding-left: 20px; }
+.a-did li::before { content: "–"; position: absolute; left: 0; color: var(--muted); }
+.a-tools { margin: 14px 0 0; font-size: 14.5px; color: var(--muted); }
+/* Where a stat on the card points: a moment of gold behind the entry. */
+.a-entry.marked { animation: a-mark 1.6s var(--ease); }
+@keyframes a-mark {
+  0%, 25% { box-shadow: -16px 0 0 0 color-mix(in oklab, var(--gold) 14%, transparent), 16px 0 0 0 color-mix(in oklab, var(--gold) 14%, transparent); background: color-mix(in oklab, var(--gold) 14%, transparent); }
+  100% { box-shadow: -16px 0 0 0 transparent, 16px 0 0 0 transparent; background: transparent; }
+}
+
+/* ── projects ───────────────────────────────────────────────────────────── */
+.a-feature h3 { margin: 0; font-size: clamp(32px, 1.4rem + 1.6vw, 44px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; }
+.a-feature h3 a, .a-project h3 a { color: inherit; text-decoration: none; }
+.a-feature h3 a:hover, .a-project h3 a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .14em; text-decoration-color: var(--gold); }
+.a-feature-what { margin: 12px 0 0; font-size: clamp(18px, 1rem + .25vw, 20px); line-height: 1.5; max-width: 30em; }
+.a-shot { display: block; width: 100%; height: auto; margin-top: 24px; border-radius: 6px; }
+.a-shot-fig { margin: 24px 0 0; }
+.a-shot-fig .a-shot { margin-top: 0; border: 1px solid var(--line); background: #111; }
+.a-shot-fig figcaption { margin-top: 10px; font-size: 14.5px; color: var(--soft); }
+.a-project { margin-top: 72px; }
+.a-project h3 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+.a-project .a-what { color: var(--text); }
+
+/* ── contact ────────────────────────────────────────────────────────────── */
+.a-foot { padding-bottom: 72px; }
+.a-contact-lead { margin: 0; font-size: clamp(19px, 1rem + .45vw, 22px); line-height: 1.4; letter-spacing: -0.008em; }
+.a-mail { margin: 14px 0 0; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; font-size: 17px; }
+.a-copy {
+  min-height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: none;
+  color: var(--soft); font: 400 13px var(--sans); cursor: pointer; transition: color .15s, border-color .15s;
+}
+.a-copy:hover { color: var(--text); border-color: #3a3a3a; }
+.a-elsewhere { margin: 20px 0 0; color: var(--soft); }
+.a-elsewhere .a-link { color: var(--text); }
+.a-colophon { margin: 72px 0 0; font-size: 13px; color: var(--muted); }
+
+/* ── the photograph a word shows ────────────────────────────────────────── */
+.a-peek { display: inline; }
+.a-peek-photo {
+  position: fixed; z-index: 20; display: block; overflow: hidden; pointer-events: none;
+  border-radius: 6px; background: #1a1a1a;
+  box-shadow: 0 18px 48px -16px rgba(0,0,0,.9);
+  animation: a-in .18s var(--ease);
+}
+.a-peek-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@keyframes a-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ── the card ───────────────────────────────────────────────────────────── */
+.a-cardwrap { margin: 0; display: grid; justify-items: start; gap: 12px; }
+.a-card {
+  --rx: 0deg; --ry: 0deg; --lx: 50%; --ly: 50%; --light: 0;
+  --stock: #ece6d9; --ink: #1d1b18; --ink-soft: #5c574e;
+  width: var(--side); max-width: 100%; aspect-ratio: 5 / 7;
+  perspective: 1000px; cursor: pointer; container-type: inline-size;
+  -webkit-tap-highlight-color: transparent;
+}
+.a-card-tilt {
+  position: relative; width: 100%; height: 100%; transform-style: preserve-3d;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform .5s var(--ease);
+}
+.a-card:hover .a-card-tilt { transition-duration: .12s; }
+.a-card-flip { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .7s var(--ease); }
+.a-card.flipped .a-card-flip { transform: rotateY(180deg); }
+.a-face {
+  position: absolute; inset: 0; overflow: hidden; border-radius: 3.2cqi;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  background: var(--stock); color: var(--ink);
+  /* A close, small shadow: on a near-black page a large one only reads as a
+     dark box around the card. */
+  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 10px 18px -12px rgba(0,0,0,.8);
+}
+/* Front: the photograph, set into the stock, and the name printed under it. */
+.a-front { display: grid; grid-template-rows: 1fr auto; padding: 4.5cqi 4.5cqi 0; }
+.a-photo { position: relative; overflow: hidden; border-radius: 1.4cqi; background: #2a2723; }
+.a-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+.a-print { display: flex; justify-content: space-between; align-items: baseline; padding: 4.4cqi .6cqi 5cqi; }
+.a-print-name { font-size: 7cqi; font-weight: 600; letter-spacing: -0.02em; line-height: 1; }
+.a-print-meta { font: 400 4.4cqi var(--mono); color: var(--ink-soft); }
+.a-light {
+  position: absolute; inset: 0; pointer-events: none; opacity: calc(var(--light) * .55);
+  background: radial-gradient(circle at var(--lx) var(--ly), rgba(255,255,255,.4), transparent 55%);
+  mix-blend-mode: soft-light; transition: opacity .3s;
+}
+/* Back: the same stock turned over. */
+.a-back { transform: rotateY(180deg); padding: 7cqi 7cqi 6cqi; display: flex; flex-direction: column; }
+.a-back-head { margin: 0; font-size: 4.6cqi; color: var(--ink-soft); }
+.a-leads { list-style: none; margin: 3cqi 0 0; padding: 0; display: grid; gap: 0; }
+.a-leads button {
+  display: grid; width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+  padding: 2.2cqi 2.4cqi; margin: 0 -2.4cqi; width: calc(100% + 4.8cqi); border-radius: 1.6cqi; color: inherit; font: inherit;
+  transition: background-color .15s;
+}
+.a-leads button:hover, .a-leads button:focus-visible { background: rgba(29,27,24,.07); outline-offset: 0; }
+.a-leads .v { font-size: 12.5cqi; font-weight: 600; letter-spacing: -0.035em; line-height: 1; }
+.a-leads .l { margin-top: 1.6cqi; font-size: 5cqi; line-height: 1.3; color: #3b3832; }
+.a-small { margin: auto 0 0; font-size: 4.2cqi; line-height: 1.45; color: var(--ink-soft); }
+.a-leads .l.short { display: none; }
+/* A small card (a phone): short labels, larger, and no small print. */
+@container (max-width: 219px) {
+  .a-back { padding: 7cqi 6cqi; }
+  .a-back-head { font-size: 6cqi; }
+  .a-leads { margin-top: 3cqi; gap: 0; }
+  .a-leads .v { font-size: 12.5cqi; }
+  .a-leads .l { display: none; }
+  .a-leads .l.short { display: block; font-size: 6.4cqi; margin-top: 1.2cqi; }
+  .a-small { display: none; }
+  .a-print-name { font-size: 7.6cqi; }
+  .a-print-meta { font-size: 5.4cqi; }
+}
+.a-turn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0;
+  background: none; border: 0; color: var(--soft); font: 400 13.5px var(--sans); cursor: pointer; transition: color .15s;
+}
+.a-turn:hover { color: var(--text); }
+.a-turn span { font-size: 15px; }
+
+/* ── tablet ─────────────────────────────────────────────────────────────── */
+@media (max-width: 1080px) {
+  :root { --side: 216px; --gap: 48px; }
+}
+/* ── phone: one column, the card beside the links ──────────────────────── */
+@media (max-width: 719px) {
+  :root { --gap: 0px; }
+  body { font-size: 16px; }
+  .a-hero, .a-section { grid-template-columns: minmax(0, 1fr); }
+  .a-side, .a-main { grid-column: 1; }
+  .a-nav { justify-content: flex-start; gap: 20px; padding-top: 16px; }
+  .a-nav a { padding: 10px 0; }
+  /* The card sits beside the links, part of the introduction rather than a
+     block of its own. */
+  .a-hero {
+    grid-template-columns: min(44vw, 200px) minmax(0, 1fr); column-gap: 20px;
+    grid-template-areas: "name name" "intro intro" "card actions";
+    padding: 28px 0 64px;
+  }
+  .a-hero-text { display: contents; }
+  .a-name { grid-area: name; font-size: clamp(48px, 13.5vw, 64px); }
+  .a-intro { grid-area: intro; margin-top: 16px; font-size: 19px; }
+  .a-hero > .a-side { grid-area: card; margin-top: 28px; }
+  .a-actions { grid-area: actions; margin: 28px 0 0; padding: 0; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .a-card { width: 100%; }
+  .a-hold { margin-top: 20px; }
+  .a-hold .a-card { width: min(60vw, 240px); }
+  .a-section { padding-bottom: 72px; }
+  .a-h { font-size: 24px; margin-bottom: 20px; padding-top: 0; }
+  .a-entry { margin-top: 36px; }
+  .a-entry h4 .team { display: block; margin: 2px 0 0; }
+  .a-later { margin-top: 56px; }
+  .a-project { margin-top: 56px; }
+  .a-colophon { margin-top: 48px; }
+}
+
+@media (pointer: coarse) {
+  .a-turn, .a-copy { min-height: 44px; }
+  .a-actions .a-link, .a-elsewhere .a-link { padding: 10px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a-card-tilt, .a-card-flip, .a-light { transition: none; }
+  .a-entry.marked { animation: none; background: color-mix(in oklab, var(--gold) 10%, transparent); }
+  .a-peek-photo { animation: none; }
+}

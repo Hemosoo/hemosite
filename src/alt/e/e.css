@@ -1,0 +1,223 @@
+/* ── Alternative E: Send ─────────────────────────────────────────────────────
+   C's page: one column of reading, one typeface, one accent. Hierarchy comes
+   from size, weight and the four text tones, never from colour-coding;
+   sections are separated by space, not rules. Mono is used for dates and
+   nothing else. The only motion that isn't a reply to a click is none: the
+   paper plane flies when you copy the address, and then it's gone. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0c0c0c;
+  --text: #eae8e3;
+  /* Running text: a step below the headings, still easy to read. */
+  --body: #cbc9c4;
+  --sec: #a3a19d;
+  --muted: #8c8a86;
+  --line: #272727;
+  --gold: #d6b477;
+  --sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --col: 640px;
+  --card: 208px;
+  --gap: clamp(40px, 5vw, 72px);
+}
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--body); font-family: var(--sans); font-weight: 400; -webkit-font-smoothing: antialiased; }
+
+.c {
+  max-width: calc(var(--col) + var(--gap) + var(--card));
+  margin: 0 auto;
+  padding: 0 max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px));
+  font-size: 16px;
+  line-height: 1.6;
+}
+.c :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
+.c a { color: inherit; }
+
+.c-skip { position: absolute; left: -9999px; }
+.c-skip:focus { left: 16px; top: 12px; padding: 11px 14px; background: var(--text); color: var(--bg); z-index: 50; }
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.c-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; font-size: 14px; }
+.c-top a { color: var(--sec); text-decoration: none; display: inline-flex; align-items: center; min-height: 40px; transition: color .15s; }
+.c-top a:hover { color: var(--text); }
+.c-home { font-weight: 600; color: var(--text) !important; }
+.c-top nav { display: flex; gap: 22px; }
+
+/* ── introduction, with the card beside it ──────────────────────────────── */
+.c-intro {
+  display: grid;
+  grid-template-columns: minmax(0, var(--col)) var(--card);
+  column-gap: var(--gap);
+  align-items: start;
+  padding-top: clamp(40px, 7vw, 88px);
+}
+.c-intro h1 {
+  margin: 0;
+  font-size: clamp(2.5rem, 1.55rem + 3vw, 4.25rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.032em;
+  color: var(--text);
+}
+.c-lede { margin: 18px 0 0; max-width: 30em; font-size: clamp(1.15rem, 1.05rem + .35vw, 1.3rem); line-height: 1.45; color: var(--text); }
+.c-links { margin: 22px 0 0; display: flex; flex-wrap: wrap; gap: 0 22px; font-size: 15px; }
+.c-links a {
+  display: inline-flex; align-items: center; min-height: 40px; color: var(--sec);
+  text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 5px; text-decoration-thickness: 1px;
+  transition: color .15s, text-decoration-color .15s;
+}
+.c-links a:hover { color: var(--text); text-decoration-color: currentColor; }
+.c-links a.primary { color: var(--gold); text-decoration-color: color-mix(in oklab, var(--gold) 45%, transparent); font-weight: 500; }
+.c-links a.primary:hover { text-decoration-color: var(--gold); }
+
+.c-prose { margin-top: 40px; max-width: 36em; }
+.c-prose p { margin: 0; font-size: 17px; line-height: 1.65; color: var(--body); text-wrap: pretty; }
+.c-prose p + p { margin-top: 14px; }
+
+/* Words with something behind them: a photo (dotted), or a link (solid).
+   Same colour as the sentence either way. */
+.c .word { color: var(--text); text-decoration: underline dotted; text-decoration-color: color-mix(in oklab, var(--text) 45%, transparent); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.c .word.link, .c button.link { text-decoration-style: solid; cursor: pointer; }
+.c .word:hover, .c button.link:hover { text-decoration-color: currentColor; }
+.c button.link { font: inherit; color: var(--text); padding: 0; text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--text) 45%, transparent); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.c-peek { display: inline; }
+.c-peek-photo {
+  position: fixed; z-index: 15; display: block; pointer-events: none; overflow: hidden;
+  border-radius: 6px; background: #161616; border: 1px solid #2f2f2f;
+  box-shadow: 0 18px 40px -16px rgba(0,0,0,.9);
+}
+.c-peek-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ── the card ───────────────────────────────────────────────────────────── */
+.c-card-wrap { margin: 6px 0 0; width: var(--card); display: grid; gap: 4px; justify-items: center; }
+.c-card {
+  width: 100%; aspect-ratio: 5 / 7; perspective: 900px; cursor: pointer;
+  container-type: inline-size; -webkit-tap-highlight-color: transparent; border-radius: 10px;
+}
+.c-card:focus-visible { outline-offset: 5px; }
+.c-card-turn { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+.c-card:hover .c-card-turn { transform: translateY(-2px); }
+.c-card.is-back .c-card-turn { transform: rotateY(180deg); }
+.c-card.is-back:hover .c-card-turn { transform: rotateY(180deg) translateY(-2px); }
+.c-face {
+  position: absolute; inset: 0; border-radius: 10px; overflow: hidden;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  background: #181613; border: 1px solid #36322b;
+  box-shadow: 0 14px 30px -18px rgba(0,0,0,.95);
+}
+.c-front { display: grid; grid-template-rows: 1fr auto; padding: 3.6cqi 3.6cqi 0; }
+.c-front img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; border-radius: 6px; display: block; min-height: 0; }
+.c-strip { display: flex; justify-content: space-between; align-items: baseline; gap: 2cqi; padding: 3.4cqi 1cqi 3.8cqi; }
+.c-strip .nm { font-size: 6.6cqi; font-weight: 600; color: var(--text); letter-spacing: -0.01em; white-space: nowrap; }
+.c-strip .no { font: 500 5cqi var(--mono); color: var(--sec); white-space: nowrap; }
+
+.c-back { transform: rotateY(180deg); padding: 8cqi 7.5cqi; display: flex; flex-direction: column; justify-content: space-between; }
+.c-major { list-style: none; margin: 0; padding: 0; display: grid; gap: 6cqi; }
+.c-major li { display: block; }
+.c-major button {
+  display: grid; gap: 1cqi; width: 100%; text-align: left; font: inherit; color: inherit;
+  padding: 1.5cqi 2cqi; margin: -1.5cqi -2cqi; width: calc(100% + 4cqi); border-radius: 4px; cursor: pointer;
+  transition: background-color .15s;
+}
+.c-major button:hover { background: rgba(255,255,255,.04); }
+.c-major button:hover .v { color: var(--gold); }
+.c-major .v { font-size: 11.5cqi; font-weight: 600; line-height: 1; color: var(--text); letter-spacing: -0.025em; }
+.c-major .l { font-size: 5.8cqi; line-height: 1.3; color: var(--sec); }
+.c-minor { margin: 0; font-size: 4.8cqi; line-height: 1.45; color: var(--sec); border-top: 1px solid var(--line); padding-top: 4cqi; }
+@container (max-width: 190px) {
+  .c-back { justify-content: center; }
+  .c-minor { display: none; }
+  .c-major .l { font-size: 6.2cqi; }
+}
+
+.c-turn { font: inherit; font-size: 13px; color: var(--sec); padding: 0 8px; min-height: 40px; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 4px; text-decoration-color: var(--line); }
+.c-turn:hover { color: var(--text); }
+
+/* ── sections ───────────────────────────────────────────────────────────── */
+.c-section { margin-top: clamp(80px, 11vw, 136px); max-width: var(--col); scroll-margin-top: 24px; }
+.c-section h2 { margin: 0 0 28px; font-size: clamp(1.5rem, 1.3rem + .6vw, 1.85rem); font-weight: 600; letter-spacing: -0.022em; line-height: 1.15; color: var(--text); }
+.c .what { margin: 6px 0 0; font-size: 16px; color: var(--sec); }
+.c .tools { margin: 10px 0 0; font-size: 14px; color: var(--muted); }
+
+.c-project + .c-project { margin-top: 56px; }
+.c-project h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; font-size: 20px; }
+.c-project.featured h3 { font-size: clamp(1.55rem, 1.35rem + .7vw, 2rem); }
+.c-project h3 a { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 6px; text-decoration-thickness: 1px; color: var(--text); }
+.c-project h3 a:hover { text-decoration-color: currentColor; }
+.c-project.featured .what { font-size: 17px; color: var(--body); }
+.c-project .notes { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.c-project .notes li { padding-left: 18px; position: relative; color: var(--body); }
+.c-project .notes li::before { content: ""; position: absolute; left: 2px; top: .78em; width: 7px; height: 1px; background: var(--muted); }
+.c-shot { margin: 22px 0 0; }
+.c-shot img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); background: #111; }
+.c-shot figcaption { margin-top: 10px; font-size: 14px; color: var(--sec); }
+
+.c-employer + .c-employer { margin-top: 64px; }
+.c-employer > header h3 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); }
+.c-employer > header p { margin: 4px 0 0; font-size: 15px; color: var(--sec); }
+.c time { font: 500 12.5px var(--mono); color: var(--muted); white-space: nowrap; letter-spacing: 0; }
+.c-employer > header time { margin-left: 4px; display: inline-block; }
+.c-entry { margin-top: 34px; scroll-margin-top: 24px; border-radius: 6px; }
+.c-entry h4:focus { outline: none; }
+/* Where a figure on the card's back came from: a moment of light. */
+.c-entry.is-marked { animation: e-mark 1.6s ease-out; }
+@keyframes e-mark {
+  0%, 25% { box-shadow: 0 0 0 10px rgba(214,180,119,.08); background: rgba(214,180,119,.08); }
+  100% { box-shadow: 0 0 0 10px transparent; background: transparent; }
+}
+.c-entry > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px; }
+.c-entry h4 { margin: 0; font-size: 17.5px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
+.c-entry h4 .team { margin-left: 10px; font-weight: 400; font-size: 15px; color: var(--sec); letter-spacing: 0; }
+.c-entry .did { margin: 10px 0 0; display: grid; gap: 8px; }
+.c-entry .did p { margin: 0; color: var(--body); text-wrap: pretty; }
+.c-entry strong { font-weight: 600; color: var(--text); }
+
+.c-contact p { margin: 0; font-size: 17px; color: var(--body); }
+.c-mail { margin-top: 10px !important; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+.c-mail a { display: inline-flex; align-items: center; min-height: 40px; font-size: 19px; color: var(--text); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 5px; text-decoration-thickness: 1px; }
+.c-mail a:hover { text-decoration-color: currentColor; }
+/* The address the plane just landed on. */
+.c-mail a { transition: text-decoration-color .6s, color .6s; }
+.c-mail a.is-arrived { text-decoration-color: var(--gold); color: #fff; transition: none; }
+.c-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* The layer the plane flies in: over the page, never in the way. */
+.e-sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 40; }
+.c-copy { font: inherit; font-size: 13px; color: var(--sec); padding: 8px 4px; cursor: pointer; min-height: 40px; }
+.c-copy:hover { color: var(--text); }
+.c-elsewhere { margin-top: 14px !important; font-size: 15px !important; color: var(--sec) !important; }
+.c-elsewhere a { color: var(--body); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; }
+.c-elsewhere a:hover { color: var(--text); text-decoration-color: currentColor; }
+
+.c-foot { margin-top: clamp(96px, 12vw, 144px); padding: 24px 0 40px; display: flex; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--muted); max-width: var(--col); }
+.c-foot a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; display: inline-flex; align-items: center; min-height: 40px; margin-top: -10px; }
+.c-foot a:hover { color: var(--text); }
+
+/* ── narrower screens ───────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  :root { --card: 184px; --gap: 40px; }
+}
+/* A phone: the card sits beside the links, under the introduction, so the
+   first screen has the name, what I do, the links and the photo. */
+@media (max-width: 640px) {
+  :root { --card: min(44vw, 180px); }
+  .c-intro { grid-template-columns: minmax(0, 1fr) var(--card); column-gap: 20px; padding-top: 24px;
+    grid-template-areas: "name name" "lede lede" "links card" "prose prose"; }
+  .c-intro-text { display: contents; }
+  .c-intro h1 { grid-area: name; }
+  .c-lede { grid-area: lede; }
+  .c-links { grid-area: links; flex-direction: column; align-items: flex-start; gap: 0; margin-top: 18px; }
+  .c-card-wrap { grid-area: card; margin-top: 22px; }
+  .c-prose { grid-area: prose; margin-top: 32px; }
+  .c-prose p { font-size: 16.5px; }
+  .c-top nav { gap: 16px; }
+  .c-entry h4 .team { display: block; margin: 2px 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-card-turn { transition: none; }
+  .c-entry.is-marked { animation: none; background: rgba(214,180,119,.08); }
+  .c-card:hover .c-card-turn { transform: none; }
+  .c-card.is-back:hover .c-card-turn { transform: rotateY(180deg); }
+}

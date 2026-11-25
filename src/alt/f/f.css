@@ -1,0 +1,263 @@
+/* ── F · In hand ────────────────────────────────────────────────────────────
+   One object carries the identity: a printed card in cream stock, which you
+   can also pick up, fold into a paper plane and throw. The page around it is
+   plain type on near-black in one warm off-white and two greys; gold appears
+   only as the card's foil and the focus ring. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0c0c0c;
+  --text: #eae8e3;
+  --sec: #a3a19d;
+  --mut: #85837f;
+  --line: #272727;
+  --rule: #4a4946;
+  --gold: #d6b477;
+  /* The card's own material, which stays on the card. */
+  --stock: #ece5d6;
+  --ink: #1b1a17;
+  --ink2: #57524a;
+  --foil: #7a5c25;
+
+  --sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --max: 1120px;
+  --pad: 40px;
+  --gap: 72px;
+  --cardw: 264px;
+}
+@media (max-width: 1100px) { :root { --cardw: 232px; --gap: 56px; } }
+@media (max-width: 859px) { :root { --cardw: 200px; --pad: 24px; --gap: 44px; } }
+@media (max-width: 599px) { :root { --cardw: min(46vw, 184px); --pad: 20px; } }
+
+html, body { background: var(--bg); }
+body { margin: 0; color: var(--text); font-family: var(--sans); font-weight: 400; -webkit-font-smoothing: antialiased; }
+.b :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 3px; }
+.b ::selection { background: rgba(214, 180, 119, .3); }
+.b-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.b-skip { position: absolute; left: 12px; top: -48px; padding: 8px 12px; background: var(--text); color: var(--bg); border-radius: 4px; z-index: 30; }
+.b-skip:focus { top: 12px; }
+
+/* ── links ─────────────────────────────────────────────────────────────── */
+.b-link, .b h3 a {
+  color: inherit; text-decoration: underline; text-decoration-thickness: 1px;
+  text-underline-offset: .22em; text-decoration-color: var(--rule);
+  transition: text-decoration-color .15s;
+}
+.b-link:hover, .b h3 a:hover { text-decoration-color: currentColor; }
+button.b-link { font: inherit; padding: 0; background: none; border: 0; cursor: pointer; }
+/* Words that only show a photograph: dotted, not a link's line. */
+span.b-w { text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: .22em; text-decoration-color: #6a6864; cursor: default; }
+
+/* ── top ───────────────────────────────────────────────────────────────── */
+.b-nav {
+  max-width: var(--max); margin: 0 auto; box-sizing: border-box;
+  display: flex; justify-content: flex-end; gap: 28px;
+  padding: 28px var(--pad) 0; font-size: 14px; color: var(--sec);
+}
+.b-nav a { padding: 6px 0; transition: color .15s; }
+.b-nav a:hover { color: var(--text); }
+
+/* ── the grid: the card's column, and the writing ───────────────────────── */
+.b-grid {
+  max-width: var(--max); margin: 0 auto; box-sizing: border-box;
+  padding: 44px var(--pad) 96px;
+  display: grid; grid-template-columns: var(--cardw) minmax(0, 1fr); column-gap: var(--gap);
+  align-items: start;
+}
+.b-grid > * { grid-column: 2; min-width: 0; }
+.b-cardcol { grid-column: 1; grid-row: 1 / span 6; align-self: stretch; }
+.b-hold { position: sticky; top: 40px; }
+
+/* ── hero: the name level with the top of the card, the links level with
+      its foot ──────────────────────────────────────────────────────────── */
+.b-hero { min-height: 0; }
+.b-hero h1 {
+  margin: -.09em 0 0; font-size: clamp(46px, 6.4vw, 92px); font-weight: 600;
+  line-height: 1; letter-spacing: -0.035em; color: var(--text);
+}
+.b-intro { margin: 22px 0 0; max-width: 24em; font-size: clamp(18px, 1.05rem + .35vw, 21px); line-height: 1.45; color: var(--text); }
+.b-links { display: flex; align-items: center; gap: 26px; margin-top: 34px; font-size: 15px; color: var(--sec); }
+.b-links .b-link:hover { color: var(--text); }
+.b-resume {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 6px;
+  border: 1px solid #44423e; color: var(--text); font-weight: 500;
+  transition: border-color .15s;
+}
+.b-resume:hover { border-color: var(--gold); }
+
+/* ── sections ──────────────────────────────────────────────────────────── */
+.b-section { margin-top: 128px; scroll-margin-top: 32px; }
+.b-about { margin-top: 72px; }
+.b h2 { margin: 0 0 36px; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; color: var(--text); }
+.b-about p { margin: 0; max-width: 33em; font-size: 19px; line-height: 1.6; color: var(--text); }
+.b-about p + p { margin-top: 1em; }
+
+/* ── work ──────────────────────────────────────────────────────────────── */
+.b-employer + .b-employer { margin-top: 80px; }
+.b-employer h3 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+.b-emp-meta { margin: 6px 0 0; font-size: 14.5px; color: var(--sec); }
+.b-entry { margin: 30px -16px 0; padding: 14px 16px; border-radius: 8px; max-width: 40rem; scroll-margin-top: 40px; }
+.b-entry-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px; }
+.b-entry h4 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.b-entry .team { margin-left: .55em; font-size: 15px; font-weight: 400; color: var(--sec); }
+.b-date { font: 12.5px var(--mono); color: var(--mut); white-space: nowrap; }
+.b-what { margin: 6px 0 0; max-width: 38em; font-size: 15.5px; line-height: 1.55; color: var(--sec); }
+.b-did { margin: 10px 0 0; max-width: 37em; font-size: 16px; line-height: 1.6; color: var(--text); }
+.b-did strong { font-weight: 600; }
+.b-tools { margin: 12px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--mut); }
+.b-mark { animation: b-mark 1.8s ease-out; }
+@keyframes b-mark { 0%, 35% { background: rgba(214, 180, 119, .09); } 100% { background: transparent; } }
+
+/* ── projects ──────────────────────────────────────────────────────────── */
+.b-feature h3 { margin: 0; font-size: clamp(26px, 1.4rem + .8vw, 34px); font-weight: 600; letter-spacing: -0.025em; }
+.b-feature-what { margin: 10px 0 0; max-width: 30em; font-size: 19px; line-height: 1.5; color: var(--text); }
+.b-project { margin-top: 64px; max-width: 40rem; }
+.b-project h3 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
+.b-project .b-what { color: var(--text); font-size: 16px; }
+.b-project .b-did { color: var(--sec); font-size: 15.5px; }
+.b-shot { margin: 20px 0 0; }
+.b-shot img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); background: #111; }
+.b-shot figcaption { margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--sec); }
+
+/* ── contact ───────────────────────────────────────────────────────────── */
+.b-contact-lead { margin: 0; font-size: 19px; line-height: 1.5; }
+.b-mailrow { margin: 14px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 17px; }
+.b-copy {
+  font: 13px var(--sans); color: var(--sec); background: none; cursor: pointer;
+  border: 1px solid #3a3936; border-radius: 5px; min-height: 30px; padding: 0 10px;
+}
+.b-copy:hover { color: var(--text); border-color: #5a5854; }
+.b-elsewhere { margin: 22px 0 0; display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 15px; color: var(--sec); }
+.b-elsewhere .b-link:hover { color: var(--text); }
+
+/* ── the photograph a word shows ───────────────────────────────────────── */
+.b-peek { display: inline; }
+.b-peek-photo {
+  position: fixed; z-index: 15; display: block; pointer-events: none; overflow: hidden;
+  border-radius: 6px; background: #1a1a1a; border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 24px 50px -18px rgba(0,0,0,.9);
+}
+.b-peek-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ── the card ──────────────────────────────────────────────────────────── */
+.bc {
+  --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%; --lit: 0;
+  position: relative; width: var(--cardw); max-width: 100%; aspect-ratio: 5 / 7;
+  perspective: 1100px; cursor: pointer; container-type: inline-size;
+  -webkit-tap-highlight-color: transparent; outline: none; touch-action: manipulation;
+}
+.bc:focus-visible .bc-tilt { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--gold), 0 18px 40px -18px rgba(0,0,0,.85); }
+.bc-tilt {
+  position: absolute; inset: 0; transform-style: preserve-3d; border-radius: 3.4cqi;
+  transform: translateY(calc(var(--lit) * -3px)) rotateX(var(--rx)) rotateY(var(--ry));
+  /* A visible edge of card stock under the face, and the shadow it casts. */
+  box-shadow: 0 .9cqi 0 0 #a49a84, 0 18px 40px -18px rgba(0,0,0,.85);
+}
+.bc-flip { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+.bc.flipped .bc-flip { transform: rotateY(180deg); }
+.bc-ground {
+  position: absolute; left: 10%; right: 10%; bottom: -12px; height: 18px; z-index: -1;
+  background: radial-gradient(closest-side, rgba(0,0,0,.65), transparent); filter: blur(4px);
+}
+.bc-face {
+  position: absolute; inset: 0; overflow: hidden; border-radius: 3.4cqi;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  color: var(--ink);
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .3  0 0 0 0 .22  0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    linear-gradient(170deg, #f1ebdd, var(--stock) 60%, #e3dbca);
+  box-shadow: inset 0 0 0 .3cqi rgba(255,255,255,.45), inset 0 -.4cqi 0 rgba(0,0,0,.06);
+}
+.bc-sheen {
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
+  background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.55), transparent 50%);
+  opacity: calc(var(--lit) * .8);
+}
+
+/* Front: the photograph is the card. */
+.bc-photo {
+  position: absolute; left: 5.4cqi; right: 5.4cqi; top: 5.4cqi; height: 107cqi;
+  border-radius: 1.6cqi; overflow: hidden; background: #2a2723;
+  box-shadow: inset 0 0 0 .25cqi rgba(0,0,0,.18);
+}
+.bc-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
+.bc-cap { display: flex; justify-content: space-between; align-items: baseline; gap: 3cqi; }
+.bc-front .bc-cap { position: absolute; left: 5.4cqi; right: 5.4cqi; top: 117.5cqi; }
+.bc-name { font-size: 6.6cqi; font-weight: 650; letter-spacing: -0.02em; line-height: 1; }
+.bc-serial { font: 500 3.4cqi var(--mono); color: var(--foil); letter-spacing: .02em; }
+.bc-line { position: absolute; left: 5.4cqi; top: 127cqi; font-size: 3.7cqi; font-weight: 500; color: var(--ink2); }
+.bc-turn { position: absolute; right: 5cqi; bottom: 4.4cqi; font-size: 4.6cqi; line-height: 1; color: var(--ink2); opacity: .75; transition: transform .3s ease, opacity .2s; }
+.bc:hover .bc-turn { opacity: 1; transform: rotate(-35deg); }
+
+/* Score marks: where the creases run out at the edge. Quiet until the card
+   is under the pointer, when they say it folds. */
+.bc-score { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.bc-score line { stroke: rgba(27, 26, 23, .32); stroke-width: 1.1px; vector-effect: non-scaling-stroke; stroke-linecap: round; transition: stroke .2s; }
+.bc[data-foldable]:hover .bc-score line { stroke: rgba(27, 26, 23, .62); }
+
+/* Foldable: it can be picked up. A finger pulls it sideways; up and down
+   still scrolls the page. */
+.bc[data-foldable] { cursor: grab; touch-action: pan-y; }
+.bc[data-folding] { cursor: grabbing; }
+/* While the 3D double has it, the printed card steps aside, keeping its place. */
+.bc[data-folding] .bc-tilt, .bc[data-folding] .bc-ground { opacity: 0; }
+
+/* The 3D card's sky: over the page, never in the way of a click. */
+.f-sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 25; }
+
+/* Back: three things that happened, and a footnote. */
+.bc-back { transform: rotateY(180deg); display: flex; flex-direction: column; padding: 6.4cqi 6.4cqi 6cqi; box-sizing: border-box; }
+.bc-name.sm { font-size: 5cqi; }
+.bc-figs { list-style: none; margin: 8cqi 0 0; padding: 0; display: grid; gap: 5.4cqi; }
+.bc-figs button {
+  display: grid; width: 100%; text-align: left; padding: 0; background: none; border: 0;
+  color: var(--ink); cursor: pointer; border-radius: 1cqi; font-family: var(--sans);
+}
+.bc-figs .v { font-size: max(16px, 12.5cqi); font-weight: 600; line-height: 1; letter-spacing: -0.03em; }
+.bc-figs .l { margin-top: 1.4cqi; font-size: max(10.5px, 3.7cqi); line-height: 1.3; color: var(--ink2); }
+.bc-figs .l.short { display: none; }
+.bc-figs button:hover .v { color: var(--foil); }
+.bc-figs button:focus-visible { outline: 2px solid var(--foil); outline-offset: 2px; }
+.bc-also { margin: auto 0 0; padding-top: 3.6cqi; border-top: .25cqi solid rgba(27,26,23,.16); font-size: 3.2cqi; line-height: 1.4; color: var(--ink2); }
+@container (max-width: 230px) {
+  .bc-figs { margin: auto 0; gap: 6cqi; }
+  .bc-figs .l.long, .bc-also { display: none; }
+  .bc-figs .l.short { display: block; }
+  .bc-front .bc-cap { top: 116.5cqi; }
+  .bc-name { font-size: max(11px, 6.6cqi); }
+  .bc-line { font-size: max(9.5px, 3.7cqi); top: 127cqi; }
+}
+
+/* ── phone: one column; the card beside the links ───────────────────────── */
+@media (max-width: 719px) {
+  .b-nav { gap: 22px; padding-top: 20px; }
+  .b-grid {
+    grid-template-columns: var(--cardw) minmax(0, 1fr); column-gap: 24px; padding-top: 32px;
+  }
+  .b-grid > * { grid-column: 1 / -1; }
+  .b-hero { grid-row: 1; }
+  .b-cardcol { grid-column: 1; grid-row: 2; margin-top: 28px; }
+  .b-hold { position: static; }
+  .b-links { grid-column: 2; grid-row: 2; margin-top: 28px; align-self: center; flex-direction: column; align-items: flex-start; gap: 16px; }
+  .b-hero h1 { margin-top: 0; }
+  .b-about { margin-top: 64px; }
+  .b-section { margin-top: 96px; }
+  .b-employer + .b-employer { margin-top: 64px; }
+  .b-entry { margin-top: 24px; }
+}
+@media (max-width: 599px) {
+  .b-hero h1 { font-size: clamp(40px, 12vw, 52px); }
+  .b-intro { margin-top: 16px; }
+  .b-about p { font-size: 17.5px; }
+  .b h2 { font-size: 25px; margin-bottom: 24px; }
+  .b-section { margin-top: 80px; }
+  .b-about { margin-top: 56px; }
+  .b-entry { margin-left: -12px; margin-right: -12px; padding: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bc-flip, .bc-turn { transition: none; }
+  .b-mark { animation: none; }
+  html { scroll-behavior: auto; }
+}
